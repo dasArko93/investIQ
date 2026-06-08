@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+sqlalchemy
+plotly
+openpyxl
+reportlab
+scipy
+PyPortfolioOpt
+streamlit-aggrid
+yfinance
