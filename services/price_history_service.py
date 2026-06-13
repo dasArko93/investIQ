@@ -10,12 +10,13 @@ class PriceHistoryService:
     """Fetch and analyze historical stock prices for statistical analysis."""
 
     @staticmethod
-    def fetch_180_days(ticker, auto_map_nse=True):
+    def fetch_days(ticker, days=180, auto_map_nse=True):
         """
-        Fetch 180 days of historical price data from Yahoo Finance.
+        Fetch historical price data from Yahoo Finance.
         
         Args:
             ticker: Stock ticker (e.g., 'HDFC' or 'HDFCBANK.NS' for NSE)
+            days: Number of calendar days to fetch
             auto_map_nse: If True, assume Indian stock and append .NS suffix
         
         Returns:
@@ -25,9 +26,8 @@ class PriceHistoryService:
             # Map ticker for NSE if needed
             yahoo_ticker = f"{ticker}.NS" if auto_map_nse else ticker
             
-            # Fetch 180 days of data
             end_date = datetime.utcnow()
-            start_date = end_date - timedelta(days=180)
+            start_date = end_date - timedelta(days=days)
             
             df = yf.download(yahoo_ticker, start=start_date, end=end_date, progress=False)
             
@@ -35,7 +35,11 @@ class PriceHistoryService:
                 return pd.DataFrame()
             
             df.reset_index(inplace=True)
-            df.columns = ['date', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = [column[0].lower().replace(" ", "_") for column in df.columns]
+            else:
+                df.columns = [str(column).lower().replace(" ", "_") for column in df.columns]
+            df = df.rename(columns={"datetime": "date"})
             df['ticker'] = ticker
             
             return df[['ticker', 'date', 'open', 'high', 'low', 'close', 'volume']]
@@ -43,6 +47,16 @@ class PriceHistoryService:
         except Exception as e:
             print(f"Error fetching data for {ticker}: {e}")
             return pd.DataFrame()
+
+    @staticmethod
+    def fetch_180_days(ticker, auto_map_nse=True):
+        """Fetch 180 days of historical price data from Yahoo Finance."""
+        return PriceHistoryService.fetch_days(ticker, days=180, auto_map_nse=auto_map_nse)
+
+    @staticmethod
+    def fetch_365_days(ticker, auto_map_nse=True):
+        """Fetch 365 days of historical price data from Yahoo Finance."""
+        return PriceHistoryService.fetch_days(ticker, days=365, auto_map_nse=auto_map_nse)
 
     @staticmethod
     def store_price_history(ticker, df):

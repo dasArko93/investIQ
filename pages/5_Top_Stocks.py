@@ -6,8 +6,11 @@ import altair as alt
 import streamlit as st
 
 from services.ranking_service import RankingService
-from utils.page_utils import load_universe, require_data
+from utils.page_utils import load_universe, require_data, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Top Ranked Stocks")
 st.write("View the universe ranked by quality, momentum, or ranking rules as defined in your configuration.")

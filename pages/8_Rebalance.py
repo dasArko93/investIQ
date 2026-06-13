@@ -6,8 +6,11 @@ import pandas as pd
 import streamlit as st
 
 from services.rebalance_service import RebalanceService
-from utils.page_utils import load_holdings, require_data
+from utils.page_utils import load_holdings, require_data, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Rebalance")
 portfolio = load_holdings()

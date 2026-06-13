@@ -6,10 +6,15 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from utils.page_utils import render_sidebar
+
 from engines.cvar_engine import CVaREngine
 from engines.var_engine import VaREngine
 from services.quant_service import QuantService
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Quant Analytics")
 st.write(

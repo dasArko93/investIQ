@@ -5,8 +5,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import streamlit as st
 
 from services.health_service import HealthService
-from utils.page_utils import load_holdings, merged_holdings, require_data
+from utils.page_utils import load_holdings, merged_holdings, require_data, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Portfolio Health")
 st.info(

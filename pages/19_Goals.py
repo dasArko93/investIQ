@@ -5,10 +5,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import pandas as pd
 import streamlit as st
 
+from utils.page_utils import render_sidebar
+
 from database.models import Goal
 from database.repositories.goal_repository import GoalRepository
 from services.goal_service import GoalService
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Goals")
 

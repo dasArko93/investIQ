@@ -5,8 +5,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import streamlit as st
 
 from engines.missing_sector_engine import MissingSectorEngine
-from utils.page_utils import merged_holdings
+from utils.page_utils import merged_holdings, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Portfolio Gaps")
 merged = merged_holdings()
