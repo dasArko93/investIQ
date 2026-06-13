@@ -3,6 +3,8 @@ Admin Settings & Maintenance Page for InvestIQ
 Manage database, clear data, and system maintenance
 """
 import streamlit as st
+
+from utils.page_utils import render_sidebar
 from database.db import SessionLocal
 from database.models import (
     Holding, PriceHistory, TrendSnapshot, PortfolioSnapshot,
@@ -11,7 +13,8 @@ from database.models import (
 from pathlib import Path
 
 
-st.set_page_config(page_title="Admin Settings", page_icon="⚙️", layout="wide")
+st.set_page_config(page_title="Admin Settings", page_icon="⚙️", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 # Custom CSS
 st.markdown("""

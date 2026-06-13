@@ -5,8 +5,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import streamlit as st
 
 from services.ranking_service import RankingService
-from utils.page_utils import load_holdings, load_universe, require_data
+from utils.page_utils import load_holdings, load_universe, require_data, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Opportunity Dashboard")
 universe = load_universe()

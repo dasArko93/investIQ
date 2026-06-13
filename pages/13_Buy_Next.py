@@ -6,8 +6,11 @@ import pandas as pd
 import streamlit as st
 
 from services.buy_next_service import BuyNextService
-from utils.page_utils import load_holdings, load_universe, require_data
+from utils.page_utils import load_holdings, load_universe, require_data, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Buy Next")
 cash = st.number_input("Cash", min_value=0, value=25000, step=1000)

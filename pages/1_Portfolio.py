@@ -8,8 +8,11 @@ import streamlit as st
 
 from services.health_service import HealthService
 from services.holdings_service import HoldingsService
-from utils.page_utils import load_holdings, merged_holdings, require_data
+from utils.page_utils import load_holdings, merged_holdings, require_data, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Holdings & Portfolio Analysis")
 st.write(

@@ -6,8 +6,11 @@ import plotly.express as px
 import streamlit as st
 
 from engines.sector_engine import SectorEngine
-from utils.page_utils import merged_holdings, require_data
+from utils.page_utils import merged_holdings, require_data, render_sidebar
 
+
+st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+render_sidebar()
 
 st.title("Sector Analysis")
 st.info(
