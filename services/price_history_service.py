@@ -55,8 +55,94 @@ class PriceHistoryService:
 
     @staticmethod
     def fetch_365_days(ticker, auto_map_nse=True):
-        """Fetch 365 days of historical price data from Yahoo Finance."""
-        return PriceHistoryService.fetch_days(ticker, days=365, auto_map_nse=auto_map_nse)
+        """
+        Fetch 365 days of historical price data.
+        Maintains a database cache. If first time (or cache has < 365 records), 
+        fetches 550 calendar days of data to guarantee at least 365 trading days.
+        On subsequent calls, fetches incremental data from the latest stored date to today, 
+        appends it to the database table, and returns the last 365 data points.
+        """
+        db = SessionLocal()
+        try:
+            # Check existing records in DB
+            records = db.query(PriceHistory).filter(PriceHistory.ticker == ticker).order_by(PriceHistory.date.asc()).all()
+            
+            if not records or len(records) < 365:
+                # First time or insufficient cache: fetch 550 calendar days from Yahoo Finance
+                df = PriceHistoryService.fetch_days(ticker, days=550, auto_map_nse=auto_map_nse)
+                if not df.empty:
+                    PriceHistoryService.store_price_history(ticker, df)
+                    # Re-query to get stored records
+                    records = db.query(PriceHistory).filter(PriceHistory.ticker == ticker).order_by(PriceHistory.date.asc()).all()
+                else:
+                    db.close()
+                    return pd.DataFrame()
+            
+            # check latest date in DB
+            max_db_date = max([r.date for r in records])
+            today = datetime.utcnow()
+            
+            # If the latest date is older than today by at least 1 day, fetch incremental data
+            if (today - max_db_date).days >= 1:
+                start_date = max_db_date + timedelta(days=1)
+                yahoo_ticker = f"{ticker}.NS" if auto_map_nse else ticker
+                try:
+                    df_new = yf.download(yahoo_ticker, start=start_date, end=today, progress=False)
+                    if not df_new.empty:
+                        df_new.reset_index(inplace=True)
+                        if isinstance(df_new.columns, pd.MultiIndex):
+                            df_new.columns = [column[0].lower().replace(" ", "_") for column in df_new.columns]
+                        else:
+                            df_new.columns = [str(column).lower().replace(" ", "_") for column in df_new.columns]
+                        df_new = df_new.rename(columns={"datetime": "date"})
+                        df_new['ticker'] = ticker
+                        
+                        # Add new records to DB
+                        new_records = []
+                        for _, row in df_new.iterrows():
+                            # Double check to prevent duplicates
+                            exists = db.query(PriceHistory).filter(
+                                PriceHistory.ticker == ticker,
+                                PriceHistory.date == row['date']
+                            ).first()
+                            if not exists:
+                                new_records.append(
+                                    PriceHistory(
+                                        ticker=ticker,
+                                        date=row['date'],
+                                        open=row['open'],
+                                        high=row['high'],
+                                        low=row['low'],
+                                        close=row['close'],
+                                        volume=row['volume']
+                                    )
+                                )
+                        if new_records:
+                            db.bulk_save_objects(new_records)
+                            db.commit()
+                except Exception as ex:
+                    print(f"Error fetching incremental data for {ticker}: {ex}")
+            
+            # Query all records from DB and return the last 365 data points
+            updated_records = db.query(PriceHistory).filter(PriceHistory.ticker == ticker).order_by(PriceHistory.date.asc()).all()
+            rows = [
+                {
+                    "ticker": r.ticker,
+                    "date": r.date,
+                    "open": r.open,
+                    "high": r.high,
+                    "low": r.low,
+                    "close": r.close,
+                    "volume": r.volume
+                }
+                for r in updated_records
+            ]
+            df_all = pd.DataFrame(rows)
+            db.close()
+            return df_all.tail(365)
+        
+        finally:
+            db.close()
 
     @staticmethod
     def store_price_history(ticker, df):

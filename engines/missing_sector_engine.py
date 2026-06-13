@@ -1,30 +1,9 @@
-TARGET_SECTORS = [
-
-    "Technology",
-    "Consumer",
-    "Insurance",
-    "Private Banking",
-    "Pharma",
-    "Infrastructure",
-    "Energy",
-    "ETF"
-]
-
 class MissingSectorEngine:
-
     @staticmethod
-    def identify(
-        current_sectors
-    ):
-
+    def identify(current_sectors, universe_sectors):
         return [
-
             s
-
             for s
-
-            in TARGET_SECTORS
-
+            in universe_sectors
             if s not in current_sectors
-
         ]
