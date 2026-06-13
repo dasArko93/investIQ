@@ -8,7 +8,7 @@ import streamlit as st
 
 from services.health_service import HealthService
 from services.holdings_service import HoldingsService
-from utils.page_utils import load_holdings, merged_holdings, require_data, render_sidebar
+from utils.page_utils import load_holdings, load_universe, merged_holdings, require_data, render_sidebar
 
 
 st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
@@ -103,6 +103,50 @@ else:
             st.altair_chart(allocation_chart, use_container_width=True)
             st.markdown("### Allocation Details")
             st.dataframe(allocation_table, use_container_width=True)
+
+            st.markdown("### Portfolio Gaps (Sector Coverage)")
+            universe = load_universe()
+            if not universe.empty:
+                all_sectors = set(universe["Sub-Sector"].dropna().unique())
+                have_sectors = set(merged["Sub-Sector"].dropna().unique())
+                missing_sectors = sorted(list(all_sectors - have_sectors))
+                have_sectors_sorted = sorted(list(have_sectors))
+
+                have_html = "".join([
+                    f'<span style="background: rgba(72, 214, 109, 0.12); color: #48d66d; border: 1px solid rgba(72, 214, 109, 0.3); border-radius: 4px; padding: 6px 12px; margin: 4px; display: inline-block; font-size: 0.85rem; font-weight: 500;">{s}</span>'
+                    for s in have_sectors_sorted
+                ])
+                if not have_html:
+                    have_html = '<span style="color: #94a3b8; font-size: 0.85rem; font-style: italic;">No sectors currently held.</span>'
+
+                missing_html = "".join([
+                    f'<span style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; padding: 6px 12px; margin: 4px; display: inline-block; font-size: 0.85rem; font-weight: 500;">{s}</span>'
+                    for s in missing_sectors
+                ])
+                if not missing_html:
+                    missing_html = '<span style="background: rgba(72, 214, 109, 0.12); color: #48d66d; border: 1px solid rgba(72, 214, 109, 0.3); border-radius: 4px; padding: 6px 12px; margin: 4px; display: inline-block; font-size: 0.85rem; font-weight: 500;">✓ Fully Diversified</span>'
+
+                gaps_layout = f"""
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; margin-bottom: 25px;">
+                    <div style="background: #0e1624; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 18px; min-height: 120px;">
+                        <div style="font-weight: 700; color: #48d66d; margin-bottom: 12px; font-size: 0.95rem; display: flex; align-items: center;">
+                            <span style="margin-right: 8px;">🟢</span> Sectors in Portfolio ({len(have_sectors_sorted)})
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                            {have_html}
+                        </div>
+                    </div>
+                    <div style="background: #0e1624; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 18px; min-height: 120px;">
+                        <div style="font-weight: 700; color: #ef4444; margin-bottom: 12px; font-size: 0.95rem; display: flex; align-items: center;">
+                            <span style="margin-right: 8px;">🔴</span> Missing Sectors (Gaps) ({len(missing_sectors)})
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                            {missing_html}
+                        </div>
+                    </div>
+                </div>
+                """
+                st.markdown(gaps_layout, unsafe_allow_html=True)
 
             contribution = (
                 merged.groupby("Security", dropna=False)["PnL Rs"]
