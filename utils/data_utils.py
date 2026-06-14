@@ -1,13 +1,109 @@
 import re
 import csv
 from io import StringIO
+from datetime import datetime
 
 import pandas as pd
 from pandas.errors import ParserError
 
 
+def parse_holdings_file(file):
+    if hasattr(file, "read"):
+        if hasattr(file, "seek"):
+            file.seek(0)
+        raw = file.read()
+        if isinstance(raw, bytes):
+            text = raw.decode("utf-8-sig", errors="ignore")
+        else:
+            text = raw
+    else:
+        with open(file, "r", encoding="utf-8-sig", errors="ignore") as f:
+            text = f.read()
+
+    # 1. Extract date from the first few lines
+    snapshot_date = None
+    lines = text.splitlines()
+    for line in lines[:15]:
+        if "Holdings - " in line:
+            # Extract date string like '09-Jun-26'
+            match = re.search(r"Holdings\s*-\s*([A-Za-z0-9\-]+)", line)
+            if match:
+                date_str = match.group(1)
+                for fmt in ("%d-%b-%y", "%d-%b-%Y", "%Y-%m-%d"):
+                    try:
+                        snapshot_date = datetime.strptime(date_str, fmt)
+                        break
+                    except ValueError:
+                        pass
+            if snapshot_date:
+                break
+
+    if not snapshot_date:
+        snapshot_date = datetime.utcnow()
+    # Normalize to date only (00:00:00) to keep group/distinct clean
+    snapshot_date = datetime(snapshot_date.year, snapshot_date.month, snapshot_date.day)
+
+    # 2. Extract headers and rows
+    reader = csv.reader(StringIO(text))
+    rows = list(reader)
+
+    header_row = None
+    header_idx = -1
+    for idx, r in enumerate(rows):
+        r_clean = [col.strip() for col in r]
+        if "Security" in r_clean and ("Quantity" in r_clean or "Qty" in r_clean or "Qty." in r_clean):
+            header_row = r_clean
+            header_idx = idx
+            break
+
+    if header_row is None:
+        return pd.DataFrame(), snapshot_date
+
+    valid_rows = []
+    for r in rows[header_idx + 1:]:
+        if not r or len(r) == 0:
+            continue
+        sec = r[0].strip()
+        # Skip labels/sections
+        if sec in ("", "Stocks/ETFs", "Smallcases", "Security") or "Visit:" in sec:
+            continue
+
+        # Skip rows where Quantity/Avg Cost are '-' (indicates smallcases or non-stock lines)
+        qty_idx = -1
+        for i, col in enumerate(header_row):
+            if "Quantity" in col or "Qty" in col:
+                qty_idx = i
+                break
+        if qty_idx != -1 and qty_idx < len(r):
+            qty_val = r[qty_idx].strip()
+            if qty_val in ("", "-", "0.00", "0"):
+                if qty_val == "-":
+                    continue
+
+        avg_cost_idx = -1
+        for i, col in enumerate(header_row):
+            if "Average Cost" in col or "Avg Cost" in col:
+                avg_cost_idx = i
+                break
+        if avg_cost_idx != -1 and avg_cost_idx < len(r):
+            cost_val = r[avg_cost_idx].strip()
+            if cost_val == "-":
+                continue
+
+        valid_rows.append(r[:len(header_row)])
+
+    # Pad shorter rows
+    for r in valid_rows:
+        if len(r) < len(header_row):
+            r.extend([""] * (len(header_row) - len(r)))
+
+    df = pd.DataFrame(valid_rows, columns=header_row)
+    return df, snapshot_date
+
+
 HOLDING_COLUMNS = [
     "Security",
+    "No. of Smallcases",
     "Quantity",
     "Average Cost Rs",
     "Portfolio Weight %",
@@ -15,6 +111,11 @@ HOLDING_COLUMNS = [
     "Invested Value Rs",
     "Current Value Rs",
     "PnL Rs",
+    "PnL %",
+    "Day PnL",
+    "Day PnL %",
+    "Broker Sector",
+    "Asset Class",
 ]
 
 UNIVERSE_COLUMNS = [
@@ -39,7 +140,7 @@ UNIVERSE_COLUMNS = [
 
 
 def key(value):
-    return re.sub(r"[^a-z0-9]+", "", str(value).lower())
+    return re.sub(r"[^a-z0-9%]+", "", str(value).lower())
 
 
 def read_table(file):
@@ -110,6 +211,7 @@ def holdings_to_frame(records):
     rows = [
         {
             "Security": item.security,
+            "No. of Smallcases": item.no_of_smallcases,
             "Quantity": item.quantity,
             "Average Cost Rs": item.average_cost,
             "Portfolio Weight %": item.portfolio_weight,
@@ -117,6 +219,11 @@ def holdings_to_frame(records):
             "Invested Value Rs": item.invested_value,
             "Current Value Rs": item.current_value,
             "PnL Rs": item.pnl,
+            "PnL %": item.pnl_pct,
+            "Day PnL": item.day_pnl,
+            "Day PnL %": item.day_pnl_pct,
+            "Broker Sector": item.broker_sector,
+            "Asset Class": item.asset_class,
         }
         for item in records
     ]

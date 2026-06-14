@@ -144,14 +144,18 @@ if require_data(portfolio, "Upload holdings to generate a report."):
             use_container_width=True,
             hide_index=True,
             column_config={
-                "Security": "Ticker Symbol",
-                "Quantity": "Shares",
-                "Average Cost Rs": st.column_config.NumberColumn("Avg Cost (₹)", format="₹%.2f"),
-                "Portfolio Weight %": st.column_config.NumberColumn("Weight (%)", format="%.2f%%"),
-                "LTP Rs": st.column_config.NumberColumn("Current Price (₹)", format="₹%.2f"),
-                "Invested Value Rs": st.column_config.NumberColumn("Invested Value (₹)", format="₹%.2f"),
-                "Current Value Rs": st.column_config.NumberColumn("Current Value (₹)", format="₹%.2f"),
-                "PnL Rs": st.column_config.NumberColumn("Gains/Losses (₹)", format="₹%.2f")
+                "Security": "Security",
+                "No. of Smallcases": st.column_config.NumberColumn("No. of Smallcases", format="%d"),
+                "Quantity": "Quantity",
+                "Average Cost Rs": st.column_config.NumberColumn("Average Cost ₹", format="₹%.2f"),
+                "Portfolio Weight %": st.column_config.NumberColumn("Portfolio Weight %", format="%.2f%%"),
+                "LTP Rs": st.column_config.NumberColumn("LTP ₹", format="₹%.2f"),
+                "Invested Value Rs": st.column_config.NumberColumn("Invested Value ₹", format="₹%.2f"),
+                "Current Value Rs": st.column_config.NumberColumn("Current Value ₹", format="₹%.2f"),
+                "PnL Rs": st.column_config.NumberColumn("P & L ₹", format="₹%.2f"),
+                "PnL %": st.column_config.NumberColumn("Net Change %", format="%.2f%%"),
+                "Day PnL": st.column_config.NumberColumn("Daily Change ₹", format="₹%.2f"),
+                "Day PnL %": st.column_config.NumberColumn("Daily Change %", format="%.2f%%"),
             }
         )
 
@@ -257,11 +261,22 @@ if require_data(portfolio, "Upload holdings to generate a report."):
         with col_preview[0]:
             st.info("📄 **Report Structure Preview:**\n- **Page 1:** Executive Summary, P&L Metrics, and Top Holdings Breakdown Table.\n- **Page 2:** Risk Concentration warnings, Market Cap alignment checklist, and top investment recommendations from the universe.")
             
-            pdf_data = ReportService.generate_pdf(summary)
-            st.download_button(
-                label="📥 Download Executive Portfolio PDF Report",
-                data=pdf_data,
-                file_name="investiq_portfolio_report.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
+            if "pdf_ready" not in st.session_state:
+                st.session_state.pdf_ready = False
+                
+            if not st.session_state.pdf_ready:
+                if st.button("Generate PDF Report", use_container_width=True):
+                    st.session_state.pdf_ready = True
+                    st.rerun()
+            else:
+                pdf_data = ReportService.generate_pdf(summary)
+                st.download_button(
+                    label="📥 Download Executive Portfolio PDF Report",
+                    data=pdf_data,
+                    file_name="investiq_portfolio_report.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+                if st.button("Clear / Regenerate", use_container_width=True):
+                    st.session_state.pdf_ready = False
+                    st.rerun()

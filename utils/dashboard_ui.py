@@ -358,6 +358,55 @@ def performance_figure(summary):
     return fig
 
 
+
+
+
+def historical_trend_figure():
+    from services.holdings_service import HoldingsService
+    snapshots = HoldingsService.get_snapshot_summary()
+    
+    if len(snapshots) < 2:
+        return None
+        
+    dates = [s["date"].strftime("%d-%b-%y") for s in snapshots]
+    invested = [s["invested"] for s in snapshots]
+    pnl = [s["pnl"] for s in snapshots]
+    
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=dates,
+            y=invested,
+            name="Net Investment",
+            marker_color="#48d66d",
+            hovertemplate="Rs %{y:,.0f}<extra></extra>",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=dates,
+            y=pnl,
+            name="Net Profit/Loss",
+            marker_color="#ef4444",
+            hovertemplate="Rs %{y:,.0f}<extra></extra>",
+        )
+    )
+    
+    fig.update_layout(
+        barmode='group',
+        height=360,
+        margin=dict(l=40, r=20, t=20, b=40),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#cbd5e1", size=12),
+        legend=dict(orientation="h", y=1.02, x=0.02),
+        hovermode="x unified",
+        xaxis=dict(showgrid=False),
+        yaxis=dict(gridcolor="rgba(148,163,184,0.12)", tickprefix="Rs ", separatethousands=True),
+    )
+    return fig
+
+
 def allocation_figure(merged):
     if merged.empty or "Sub-Sector" not in merged:
         labels = ["Equity", "Debt", "Cash", "Gold"]
@@ -514,8 +563,14 @@ def render_investiq_dashboard():
         st.page_link("pages/1_Portfolio.py", label="View detailed analysis ->")
 
     # Main performance chart below the small panels: show title only, make chart interactive
-    st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Performance</div></div>', unsafe_allow_html=True)
-    st.plotly_chart(performance_figure(summary), use_container_width=True, config={"displayModeBar": True})
+    trend_fig = historical_trend_figure()
+    if trend_fig is not None:
+        st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Historical Trend (Last 15 Uploads)</div></div>', unsafe_allow_html=True)
+        st.plotly_chart(trend_fig, use_container_width=True, config={"displayModeBar": True})
+    else:
+        st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Performance (Simulated)</div></div>', unsafe_allow_html=True)
+        st.plotly_chart(performance_figure(summary), use_container_width=True, config={"displayModeBar": True})
+
 
     holdings_col, sector_col, opp_col = st.columns([1.1, 1.25, 1.1])
 

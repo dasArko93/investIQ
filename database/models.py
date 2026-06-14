@@ -36,6 +36,18 @@ class Holding(Base):
 
     pnl = Column(Float)
 
+    pnl_pct = Column(Float)
+
+    day_pnl = Column(Float)
+
+    day_pnl_pct = Column(Float)
+
+    broker_sector = Column(String)
+
+    asset_class = Column(String)
+
+    no_of_smallcases = Column(Float)
+
     snapshot_date = Column(DateTime, default=datetime.utcnow, index=True)  # Track holding version date
 
     created_at = Column(
