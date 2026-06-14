@@ -10,5 +10,7 @@ from utils.dashboard_ui import render_investiq_dashboard
 
 
 st.set_page_config(page_title="InvestIQ Dashboard", layout="wide", initial_sidebar_state="expanded")
+from utils.page_utils import require_auth
+require_auth()
 render_sidebar()
 render_investiq_dashboard()

@@ -19,25 +19,65 @@ def render_sidebar():
         
         st.write("") # subtle spacing
         
-        # Home Link
-        st.page_link("app.py", label="Home", icon="🏠")
+        # Only render navigation links if authenticated
+        if st.session_state.get("authenticated", False):
+            # Home Link
+            st.page_link("app.py", label="Home", icon="🏠")
+            
+            # Holdings Page Link placed under Home
+            st.page_link("pages/1_Portfolio.py", label="Holdings", icon="💼")
+            
+            st.divider()
+            
+            st.caption("🔍 Research")
+            st.page_link("pages/2_Stock_Universe.py", label="Stock Universe")
+            st.page_link("pages/4_Stock_Analysis.py", label="Fundamental Analysis")
+            st.caption("🤖 Advisor")
+            st.page_link("pages/9_Recommendations.py", label="Recommendations")
+            st.caption("⚡ Actions")
+            st.page_link("pages/8_Rebalance.py", label="Rebalance")
+            st.caption("📊 Reports")
+            st.page_link("pages/17_Portfolio_Report.py", label="Portfolio Report")
+            st.caption("🧹 Database Operations")
+            st.page_link("pages/18_Clear_Data.py", label="Clear Database", icon="🗑️")
+            
+            st.divider()
+            if st.button("🚪 Log Out", use_container_width=True):
+                st.session_state.authenticated = False
+                st.rerun()
+
+
+def require_auth():
+    # Check if authenticated
+    if st.session_state.get("authenticated", False):
+        return True
+
+    # Otherwise, render login form on the page
+    st.markdown("<h2 style='text-align: center; margin-top: 50px; font-weight: 800; color: #f8fafc;'>🔒 Secure Portal Login</h2>", unsafe_allow_html=True)
+    st.write("")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        try:
+            allowed_email = st.secrets.get("ALLOWED_EMAIL", "virus@investIQ")
+            allowed_password = st.secrets.get("ALLOWED_PASSWORD", "Mylife123!@#")
+        except Exception:
+            allowed_email = "virus@investIQ"
+            allowed_password = "Mylife123!@#"
         
-        # Holdings Page Link placed under Home
-        st.page_link("pages/1_Portfolio.py", label="Holdings", icon="💼")
+        email_input = st.text_input("User ID / Email", key="login_email_input")
+        password_input = st.text_input("Password", type="password", key="login_password_input")
         
-        st.divider()
-        
-        st.caption("🔍 Research")
-        st.page_link("pages/2_Stock_Universe.py", label="Stock Universe")
-        st.page_link("pages/4_Stock_Analysis.py", label="Fundamental Analysis")
-        st.caption("🤖 Advisor")
-        st.page_link("pages/9_Recommendations.py", label="Recommendations")
-        st.caption("⚡ Actions")
-        st.page_link("pages/8_Rebalance.py", label="Rebalance")
-        st.caption("📊 Reports")
-        st.page_link("pages/17_Portfolio_Report.py", label="Portfolio Report")
-        st.caption("🧹 Database Operations")
-        st.page_link("pages/18_Clear_Data.py", label="Clear Database", icon="🗑️")
+        if st.button("Log In", type="primary", use_container_width=True):
+            if email_input == allowed_email and password_input == allowed_password:
+                st.session_state.authenticated = True
+                st.success("Access Granted! Loading portal...")
+                st.rerun()
+            else:
+                st.error("Invalid User ID or password.")
+
+                
+    st.stop()
 
 
 

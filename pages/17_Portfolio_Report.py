@@ -13,6 +13,8 @@ from utils.page_utils import load_holdings, load_universe, merged_holdings, requ
 
 
 st.set_page_config(page_title="InvestIQ - Executive Portfolio Report", layout="wide", initial_sidebar_state="expanded")
+from utils.page_utils import require_auth
+require_auth()
 render_sidebar()
 
 st.title("📊 Executive Portfolio Report")

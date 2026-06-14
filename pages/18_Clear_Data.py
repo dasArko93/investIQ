@@ -18,6 +18,8 @@ from utils.page_utils import render_sidebar
 
 # Set up Streamlit Page
 st.set_page_config(page_title="InvestIQ - Clear Data", layout="wide", initial_sidebar_state="expanded")
+from utils.page_utils import require_auth
+require_auth()
 render_sidebar()
 
 st.title("🧹 Database Operations & Maintenance")

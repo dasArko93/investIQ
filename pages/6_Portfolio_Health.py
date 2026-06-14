@@ -9,6 +9,8 @@ from utils.page_utils import load_holdings, merged_holdings, require_data, rende
 
 
 st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+from utils.page_utils import require_auth
+require_auth()
 render_sidebar()
 
 st.title("Portfolio Health")

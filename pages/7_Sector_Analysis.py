@@ -10,6 +10,8 @@ from utils.page_utils import merged_holdings, require_data, render_sidebar
 
 
 st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+from utils.page_utils import require_auth
+require_auth()
 render_sidebar()
 
 st.title("Sector Analysis")
