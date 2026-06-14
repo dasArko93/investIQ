@@ -1243,6 +1243,8 @@ def deep_dive(selected, style, sector_base, deep_sector):
 
 
 st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+from utils.page_utils import require_auth
+require_auth()
 render_sidebar()
 
 st.title("Fundamental Analysis")

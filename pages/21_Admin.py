@@ -14,6 +14,8 @@ from pathlib import Path
 
 
 st.set_page_config(page_title="Admin Settings", page_icon="⚙️", layout="wide", initial_sidebar_state="expanded")
+from utils.page_utils import require_auth
+require_auth()
 render_sidebar()
 
 # Custom CSS
