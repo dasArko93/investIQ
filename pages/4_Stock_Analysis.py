@@ -1118,35 +1118,48 @@ def deep_dive(selected, style, sector_base, deep_sector):
         st.subheader("Deep Dive")
         sector_scope = sector_base
 
-        if deep_sector != "All" and not sector_scope.empty:
-            st.markdown(f"#### {deep_sector} Sector View")
-            metric_columns = [
-                column for column in ["Market Cap", "Close Price", "ROCE", "PE Ratio", "5Y CAGR", "Debt to Equity"]
-                if column in sector_scope.columns
-            ]
-            sector_summary = sector_scope[metric_columns].apply(pd.to_numeric, errors="coerce").mean().reset_index()
-            sector_summary.columns = ["Metric", "Sector Average"]
-            st.dataframe(sector_summary, use_container_width=True)
+        if not sector_scope.empty:
+            unique_sectors = sector_scope["Sub-Sector"].dropna().unique()
+            if len(unique_sectors) == 1:
+                st.markdown(f"#### {unique_sectors[0]} Sector View")
+                metric_columns = [
+                    column for column in ["Market Cap", "Close Price", "ROCE", "PE Ratio", "5Y CAGR", "Debt to Equity"]
+                    if column in sector_scope.columns
+                ]
+                sector_summary = sector_scope[metric_columns].apply(pd.to_numeric, errors="coerce").mean().reset_index()
+                sector_summary.columns = ["Metric", "Sector Average"]
+                st.dataframe(sector_summary, use_container_width=True)
 
-            sector_chart_data = sector_scope[["Ticker"] + metric_columns].copy()
-            for column in metric_columns:
-                sector_chart_data[column] = pd.to_numeric(sector_chart_data[column], errors="coerce")
-            sector_long = sector_chart_data.melt("Ticker", var_name="Metric", value_name="Value").dropna()
-            if not sector_long.empty:
-                sector_chart = alt.Chart(sector_long).mark_bar().encode(
-                    x=alt.X("Ticker:N", title="Stock"),
-                    y=alt.Y("Value:Q", title="Value"),
-                    color=alt.Color("Metric:N", title="Metric"),
-                    column=alt.Column("Metric:N", title=None),
-                    tooltip=["Ticker", "Metric", alt.Tooltip("Value:Q", format=".2f")],
-                ).properties(height=220)
-                st.altair_chart(sector_chart, use_container_width=True)
+                sector_chart_data = sector_scope[["Ticker"] + metric_columns].copy()
+                for column in metric_columns:
+                    sector_chart_data[column] = pd.to_numeric(sector_chart_data[column], errors="coerce")
+                sector_long = sector_chart_data.melt("Ticker", var_name="Metric", value_name="Value").dropna()
+                if not sector_long.empty:
+                    sector_chart = alt.Chart(sector_long).mark_bar().encode(
+                        x=alt.X("Ticker:N", title="Stock"),
+                        y=alt.Y("Value:Q", title="Value"),
+                        color=alt.Color("Metric:N", title="Metric"),
+                        column=alt.Column("Metric:N", title=None),
+                        tooltip=["Ticker", "Metric", alt.Tooltip("Value:Q", format=".2f")],
+                    ).properties(height=220)
+                    st.altair_chart(sector_chart, use_container_width=True)
+            elif len(unique_sectors) > 1:
+                st.markdown("#### Sector Comparison View (Averages)")
+                metric_columns = [
+                    column for column in ["Market Cap", "Close Price", "ROCE", "PE Ratio", "5Y CAGR", "Debt to Equity"]
+                    if column in sector_scope.columns
+                ]
+                temp_df = sector_scope.copy()
+                for col in metric_columns:
+                    temp_df[col] = pd.to_numeric(temp_df[col], errors="coerce")
+                sector_summary = temp_df.groupby("Sub-Sector")[metric_columns].mean().round(2).reset_index()
+                st.dataframe(sector_summary, use_container_width=True)
 
         if selected.empty:
-            st.info("No selected stocks are available in this sector.")
+            st.info("No selected stocks are available for deep dive.")
             if not sector_scope.empty:
-                st.caption(f"{len(sector_scope)} stocks are available in {deep_sector} from the filtered universe.")
-                st.dataframe(sector_scope, use_container_width=True)
+                st.caption(f"{len(sector_scope)} stocks are available from the filtered universe.")
+                st.dataframe(sector_scope[display_columns(sector_scope)], use_container_width=True)
             return
 
         st.dataframe(selected, use_container_width=True)
@@ -1323,15 +1336,60 @@ with st.expander("📖 Fundamental Analysis & Stock Selection Guide", expanded=F
 
 universe = load_universe()
 
-style_name = st.selectbox("Investing Style", list(ANALYSIS_STYLES.keys()))
-style = ANALYSIS_STYLES[style_name]
-
-st.subheader(style_name)
-st.write(f"Goal: {style['goal']}")
-
 if require_data(universe, "Upload a stock universe to perform fundamental analysis."):
-    style_sector = st.selectbox("Investing Style Sector", sector_options(universe), key="style_sector")
-    universe_scope = filter_by_sector(universe, style_sector)
+    def classify_mcap(val):
+        if pd.isna(val) or val <= 0:
+            return "Small Cap"
+        if val > 10000000:
+            val = val / 10000000.0  # Scale raw to Crores
+        if val > 20000:
+            return "Large Cap"
+        elif val > 5000:
+            return "Mid Cap"
+        else:
+            return "Small Cap"
+
+    universe["Market Cap Category"] = universe["Market Cap"].apply(classify_mcap)
+
+    # 1. Market Cap Selection & 2. Sector Selection (all/multi)
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_mcaps = st.multiselect(
+            "Market Cap Selection",
+            options=["Large Cap", "Mid Cap", "Small Cap"],
+            default=["Large Cap", "Mid Cap", "Small Cap"],
+            help="Filter stock universe by market cap category"
+        )
+
+    # Filter universe by Market Cap
+    if selected_mcaps:
+        universe_mcap = universe[universe["Market Cap Category"].isin(selected_mcaps)].copy()
+    else:
+        universe_mcap = universe.copy()
+
+    # Get available sectors for the selected market caps
+    all_sectors = sorted(universe_mcap["Sub-Sector"].dropna().astype(str).unique())
+
+    with col2:
+        selected_sectors = st.multiselect(
+            "Select Sector (all/multi)",
+            options=["All"] + all_sectors,
+            default=["All"],
+            help="Select specific sector(s) or choose 'All'"
+        )
+
+    # Filter universe by Sector
+    if not selected_sectors or "All" in selected_sectors:
+        universe_scope = universe_mcap.copy()
+    else:
+        universe_scope = universe_mcap[universe_mcap["Sub-Sector"].astype(str).isin(selected_sectors)].copy()
+
+    # 3. Choose Style of Investment
+    style_name = st.selectbox("Investing Style", list(ANALYSIS_STYLES.keys()))
+    style = ANALYSIS_STYLES[style_name]
+
+    st.subheader(style_name)
+    st.write(f"Goal: {style['goal']}")
 
     st.subheader("Data Filtration")
     _, default_rules = apply_style_filter(universe_scope, style_name)
@@ -1355,7 +1413,11 @@ if require_data(universe, "Upload a stock universe to perform fundamental analys
     with button_col2:
         clear_clicked = st.button("Clear Filter", use_container_width=True)
 
-    state_key = f"fundamental_filter_{style_name}_{style_sector}"
+    # Construct unique state key based on filter selections
+    mc_key = "-".join(sorted(selected_mcaps)) if selected_mcaps else "all"
+    sec_key = "-".join(sorted(selected_sectors)) if selected_sectors else "all"
+    state_key = f"fundamental_filter_{style_name}_{mc_key}_{sec_key}"
+
     if clear_clicked:
         st.session_state.pop(state_key, None)
     if filter_clicked:
@@ -1378,19 +1440,18 @@ if require_data(universe, "Upload a stock universe to perform fundamental analys
             st.caption(f"{len(filtered)} stocks match the selected filters.")
             st.dataframe(filtered[display_columns(filtered)], use_container_width=True)
 
-            deep_sector = st.selectbox("Deep Dive Sector", sector_options(filtered), key="deep_dive_sector")
-            deep_scope = filter_by_sector(filtered, deep_sector)
+            # 4. Deep Dive Stock Selection
             ticker_labels = [
-                f"{row.get('Ticker')} - {row.get('Name', '')}"
-                for _, row in deep_scope.sort_values("Ticker").iterrows()
+                f"{row.get('Ticker')} - {row.get('Name', '')} ({row.get('Sub-Sector', '')})"
+                for _, row in filtered.sort_values("Ticker").iterrows()
             ]
             label_to_ticker = {label: label.split(" - ", 1)[0] for label in ticker_labels}
             selected_labels = st.multiselect("Select stocks for deep dive", ticker_labels)
             selected_tickers = [label_to_ticker[label] for label in selected_labels]
 
             if selected_tickers:
-                selected = deep_scope[deep_scope["Ticker"].astype(str).isin(selected_tickers)].copy()
-                deep_dive(selected, style, deep_scope, deep_sector)
+                selected = filtered[filtered["Ticker"].astype(str).isin(selected_tickers)].copy()
+                deep_dive(selected, style, filtered, "All")
 
 st.subheader("What To Study")
 for item in style.get("look_for", []):
