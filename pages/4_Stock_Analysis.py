@@ -1308,13 +1308,13 @@ with st.expander("📖 Fundamental Analysis & Stock Selection Guide", expanded=F
     4. **Analyze the 12-Module Outputs:** Review the exact mathematical models (Prophet, XGBoost, LSTM, Linear Regression) to understand support zones, momentum, and risk bias before executing trades.
     """)
     
-    # PDF Link to Download directly
-    pdf_path = "static/fundamental_analysis_guide.pdf"
-    if os.path.exists(pdf_path):
+    # Link to HTML user guide (opens in new tab) and PDF download
+    html_path = "static/fundamental_analysis_guide.html"
+    if os.path.exists(html_path):
         st.markdown(
             """
-            <div style="margin-top: 15px;">
-                <a href="/app/static/fundamental_analysis_guide.pdf" download="fundamental_analysis_user_guide.pdf" style="text-decoration: none;">
+            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+                <a href="/app/static/fundamental_analysis_guide.html" target="_blank" style="text-decoration: none;">
                     <span style="
                         display: inline-block;
                         padding: 8px 16px;
@@ -1325,7 +1325,25 @@ with st.expander("📖 Fundamental Analysis & Stock Selection Guide", expanded=F
                         border-radius: 4px;
                         text-align: center;
                         cursor: pointer;
-                    ">
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+                        📖 Open Interactive User Guide (HTML)
+                    </span>
+                </a>
+                <a href="/app/static/fundamental_analysis_guide.pdf" download="fundamental_analysis_user_guide.pdf" style="text-decoration: none;">
+                    <span style="
+                        display: inline-block;
+                        padding: 8px 16px;
+                        background: transparent;
+                        border: 1px solid rgba(255, 255, 255, 0.15);
+                        color: #f8fafc;
+                        font-weight: 700;
+                        font-size: 0.85rem;
+                        border-radius: 4px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
                         📥 Download User Guide PDF
                     </span>
                 </a>
