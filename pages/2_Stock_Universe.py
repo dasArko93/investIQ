@@ -31,6 +31,11 @@ if file:
 universe = UniverseService.dataframe()
 if universe.empty:
     st.info("Upload the stock universe CSV to enable analysis and recommendations.")
+    st.info(
+        "💡 **Data Reset Note:** Deployed apps on Streamlit can reset due to inactivity, losing temporary data. "
+        "If you previously downloaded a database backup, you can restore it under the 'Backup & Restore' tab in "
+        "the [Database Admin](pages/18_Clear_Data.py) page. You can also configure permanent cloud database persistence there."
+    )
 else:
     st.subheader("Universe Sample")
     st.dataframe(universe.head(200), use_container_width=True)

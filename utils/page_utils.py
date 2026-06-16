@@ -39,7 +39,7 @@ def render_sidebar():
             st.caption("📊 Reports")
             st.page_link("pages/17_Portfolio_Report.py", label="Portfolio Report")
             st.caption("🧹 Database Operations")
-            st.page_link("pages/18_Clear_Data.py", label="Clear Database", icon="🗑️")
+            st.page_link("pages/18_Clear_Data.py", label="Database Admin", icon="⚙️")
             
             st.divider()
             if st.button("🚪 Log Out", use_container_width=True):
