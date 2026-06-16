@@ -37,6 +37,11 @@ if holdings.empty:
         "Upload your holdings file to populate the portfolio. "
         "For richer allocation and performance analysis, also upload universe data in Stock Screener."
     )
+    st.info(
+        "💡 **Data Reset Note:** Deployed apps on Streamlit can reset due to inactivity, losing temporary data. "
+        "If you previously downloaded a database backup, you can restore it under the 'Backup & Restore' tab in "
+        "the [Database Admin](pages/18_Clear_Data.py) page. You can also configure permanent cloud database persistence there."
+    )
 else:
     holdings = holdings.fillna(0)
     holdings["No. of Smallcases"] = pd.to_numeric(holdings["No. of Smallcases"], errors="coerce").fillna(0)

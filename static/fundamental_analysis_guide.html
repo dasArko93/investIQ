@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvestIQ - Fundamental Analysis & Quant Forecasting Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #020617;
+            --bg-secondary: rgba(15, 23, 42, 0.45);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #20d3c2;
+            --accent-glow: rgba(32, 211, 194, 0.15);
+            --card-bg: rgba(30, 41, 59, 0.3);
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 30%, #0f172a 0%, var(--bg-primary) 100%) no-repeat fixed;
+            color: var(--text-primary);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            padding: 40px 24px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #3b82f6, var(--accent));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #020617;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(32, 211, 194, 0.3);
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 12px;
+        }
+
+        .nav-link {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent);
+            background: rgba(32, 211, 194, 0.06);
+            border-left-color: var(--accent);
+            padding-left: 20px;
+        }
+
+        /* Main Content Container */
+        .content-container {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 60px 80px;
+            max-width: 1100px;
+        }
+
+        header {
+            margin-bottom: 50px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 40px;
+            scroll-margin-top: 40px;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 20px;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 0.975rem;
+            line-height: 1.7;
+        }
+
+        strong {
+            color: var(--text-primary);
+        }
+
+        /* Callout block */
+        .callout {
+            background: rgba(32, 211, 194, 0.05);
+            border-left: 4px solid var(--accent);
+            padding: 20px 24px;
+            border-radius: 0 12px 12px 0;
+            margin: 25px 0;
+        }
+
+        .callout-title {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .callout-body {
+            color: var(--text-primary);
+            font-style: italic;
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        /* Bullet points / lists */
+        .styled-list {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .styled-list li {
+            position: relative;
+            padding-left: 28px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .styled-list li::before {
+            content: "✦";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .styled-list li strong {
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+
+        /* Grid metrics table */
+        .metrics-table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: rgba(30, 41, 59, 0.6);
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 14px 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
+        }
+
+        .ideal-benchmark {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Step layout cards */
+        .step-card {
+            background: rgba(15, 23, 42, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .step-num {
+            display: inline-block;
+            background: var(--accent-glow);
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .step-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 24px;
+            }
+            .content-container {
+                margin-left: 0;
+                padding: 40px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="brand-header">
+            <div class="brand-logo">IQ</div>
+            <div class="brand-name">InvestIQ</div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="#intro" class="nav-link active">1. Introduction</a></li>
+            <li class="nav-item"><a href="#styles" class="nav-link">2. Investment Styles</a></li>
+            <li class="nav-item"><a href="#metrics" class="nav-link">3. Core Metrics Table</a></li>
+            <li class="nav-item"><a href="#forecasting" class="nav-link">4. Forecasting Engine</a></li>
+            <li class="nav-item"><a href="#steps" class="nav-link">5. Step-by-Step Guide</a></li>
+        </ul>
+    </aside>
+
+    <main class="content-container">
+        <header>
+            <h1>Fundamental Analysis & Quant Forecasting Guide</h1>
+            <p class="subtitle">A Comprehensive Guide to Stock Selection, Valuation Styles, and Quantitative Forecasting Models</p>
+        </header>
+
+        <!-- Section 1 -->
+        <section id="intro">
+            <h2>1. Introduction to Fundamental Analysis</h2>
+            <p>
+                Fundamental analysis is the process of evaluating a security's intrinsic value by examining related economic, financial, and other qualitative and quantitative factors. It is the cornerstone of intelligent capital allocation, aiming to separate high-quality assets from speculative market noise.
+            </p>
+            <p>
+                While traditional fundamental analysis asks: <strong>"Is this a good company with a durable competitive moat?"</strong>, 
+                InvestIQ's <strong>Quantitative Analytics</strong> builds a bridge to statistics, asking: <strong>"What does the data say about the probability of this stock outperforming over the next period?"</strong>
+            </p>
+
+            <div class="callout">
+                <div class="callout-title">Key Rule of Investing</div>
+                <div class="callout-body">
+                    "Never buy a business you do not understand. A stock is not just a ticker symbol; it represents fractional ownership in a real enterprise with revenues, costs, debts, and cash flows."
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section id="styles">
+            <h2>2. Selecting Stocks via Investment Styles</h2>
+            <p>
+                InvestIQ filters the stock universe based on six standard investment philosophies derived from academic financial research. Choose a style that matches your target duration and risk threshold:
+            </p>
+            <ul class="styled-list">
+                <li>
+                    <strong>Growth Investing:</strong> Focuses on companies with rapid earnings and top-line revenue growth (typically >15% CAGR). Investors look for expanding market share, high return on capital, and strong reinvestment opportunities.
+                </li>
+                <li>
+                    <strong>Value Investing:</strong> Targets businesses trading below their intrinsic value. Key parameters include low Price-to-Earnings (P/E), low Price-to-Book (P/B), and positive free cash flows, seeking a margin of safety.
+                </li>
+                <li>
+                    <strong>Quality Compounders:</strong> Focuses on businesses with exceptionally high returns on capital (ROCE >20%), near-zero debt, durable competitive advantages, and strong brand pricing power. Best held for long-term compound gains.
+                </li>
+                <li>
+                    <strong>GARP (Growth at a Reasonable Price):</strong> Blends Growth and Value styles by looking for companies with robust growth prospects but avoiding purchasing them at extreme valuations. The PEG ratio (<1.5) is the primary filter.
+                </li>
+                <li>
+                    <strong>Dividend Investing:</strong> Focuses on stable dividend yields (>3%) backed by strong free cash flows and healthy payout ratios (30-70%), protecting investors from dividend traps paid via debt.
+                </li>
+                <li>
+                    <strong>Turnaround Investing:</strong> Targets distressed companies undergoing operational restructuring (e.g. debt reduction, new management). High-risk but offers outsized recovery rewards if profitability turns positive.
+                </li>
+            </ul>
+        </section>
+
+        <!-- Section 3 -->
+        <section id="metrics">
+            <h2>3. Core Financial Metrics Reference</h2>
+            <p>
+                Use these target thresholds when filtering the stock universe to filter out speculative bets:
+            </p>
+
+            <div class="metrics-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric Group</th>
+                            <th>Key Metric</th>
+                            <th>Ideal Benchmark</th>
+                            <th>Why it Matters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Valuation</td>
+                            <td>P/E Ratio</td>
+                            <td class="ideal-benchmark">Below Sector Avg</td>
+                            <td>Compares price to earnings. Low relative P/E implies value.</td>
+                        </tr>
+                        <tr>
+                            <td>Valuation</td>
+                            <td>PEG Ratio</td>
+                            <td class="ideal-benchmark">&lt; 1.5</td>
+                            <td>P/E ratio divided by growth rate. Standards growth for price paid.</td>
+                        </tr>
+                        <tr>
+                            <td>Valuation</td>
+                            <td>P/B Ratio</td>
+                            <td class="ideal-benchmark">&lt; 3.0</td>
+                            <td>Compares price to book value. Used for financial and asset-heavy firms.</td>
+                        </tr>
+                        <tr>
+                            <td>Quality</td>
+                            <td>ROCE</td>
+                            <td class="ideal-benchmark">&gt; 18% - 20%</td>
+                            <td>Return on Capital Employed. Measures profit efficiency on total capital.</td>
+                        </tr>
+                        <tr>
+                            <td>Quality</td>
+                            <td>ROE</td>
+                            <td class="ideal-benchmark">&gt; 15%</td>
+                            <td>Return on Equity. Measures profitability efficiency on shareholder equity.</td>
+                        </tr>
+                        <tr>
+                            <td>Solvency</td>
+                            <td>Debt to Equity</td>
+                            <td class="ideal-benchmark">&lt; 0.5</td>
+                            <td>Measures financial leverage. Low debt protects during recessions.</td>
+                        </tr>
+                        <tr>
+                            <td>Growth</td>
+                            <td>Revenue Growth</td>
+                            <td class="ideal-benchmark">&gt; 15% CAGR</td>
+                            <td>Top-line revenue growth rate. Drives earnings expansion.</td>
+                        </tr>
+                        <tr>
+                            <td>Cash Flow</td>
+                            <td>Free Cash Flow</td>
+                            <td class="ideal-benchmark">Positive</td>
+                            <td>Operating cash minus capital expenditures. Actual cash available.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 4 -->
+        <section id="forecasting">
+            <h2>4. InvestIQ Trend & Forecasting Engine</h2>
+            <p>
+                The InvestIQ Quant Engine builds a 12-module ensemble model based on a stock's 365-day historical OHLCV data. Below is how the engine calculates signals and predictions:
+            </p>
+            <ul class="styled-list">
+                <li>
+                    <strong>Modules 1 & 5: Trend & Strength (ADX):</strong> Analyzes order of 20, 50, 100, and 200 DMAs. If 20 > 50 > 100 > 200, a Strong Uptrend is declared. Trend strength is measured via ADX; values above 25 confirm a strong trending regime.
+                </li>
+                <li>
+                    <strong>Module 2: Momentum Analysis:</strong> Calculates price returns over 7, 30, 90, 180, and 365 trading days, measuring Relative Strength against benchmark indices (Nifty 50) and sector peers.
+                </li>
+                <li>
+                    <strong>Modules 3 & 4: Volatility & Support/Resistance:</strong> Computes historical price volatility and Average True Range (ATR). Detects structural support (price floor) and resistance (price ceiling) zones based on volume concentration.
+                </li>
+                <li>
+                    <strong>Module 6: Volume Confirmation:</strong> Checks price-volume correlation. Higher volume on up-days confirms "Accumulation" (institutional buying). Higher volume on down-days indicates "Distribution".
+                </li>
+                <li>
+                    <strong>Modules 7 & 8: Ensemble Forecast & Confidence:</strong> Combines Prophet (seasonal components), XGBoost (lag features), LSTM (neural returns model), and Linear Regression. The engine runs a 30-day historical validation backtest to measure MAPE and MAE, displaying the forecast accuracy.
+                </li>
+                <li>
+                    <strong>Modules 9 - 12: Interpretation & Trading Signals:</strong> Analyzes expected move direction and compile signals (STRONG BUY, BUY, HOLD, REDUCE, or SELL) based on weighted scores: Trend (30%), Momentum (20%), Forecast Return (25%), Volume (15%), and Volatility (10%).
+                </li>
+            </ul>
+        </section>
+
+        <!-- Section 5 -->
+        <section id="steps">
+            <h2>5. Step-by-Step Guide: How to Analyze & Pick Stocks</h2>
+            
+            <div class="step-card">
+                <div class="step-num">Step 1</div>
+                <div class="step-title">Select the Investing Style</div>
+                <p>Choose an investing philosophy from the dropdown. GARP and Quality Compounders are recommended for long-term investing, while Value and Dividend yields fit income-focused portfolios.</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-num">Step 2</div>
+                <div class="step-title">Filter the Universe</div>
+                <p>Select your target sectors (choose specific ones or select 'All'). Tweak any cutoff rules in the interactive data editor, and click <strong>Filter Stock</strong>. Matching stocks will be shown in the table below.</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-num">Step 3</div>
+                <div class="step-title">Conduct Comparative Deep Dives</div>
+                <p>Select multiple stocks from the filtered list. Scroll down to review sector averages, valuation scatter plots, and key quality metrics charts comparing the selected companies.</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-num">Step 4</div>
+                <div class="step-title">Run the Quant Forecast Engine</div>
+                <p>Click the <strong>Download & Run Quant Analytics Engine</strong> button. The app downloads 365-day price history and runs the forecasting models. Analyze the 12-module JSON outputs, support zones, and the 7-day predicted price channel before making capital allocations.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Simple scrollspy to highlight active sidebar link
+        window.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    if (entry.intersectionRatio > 0.3) {
+                        document.querySelectorAll('.nav-link').forEach(link => {
+                            link.classList.remove('active');
+                        });
+                        document.querySelector(`.nav-link[href="#${id}"]`).classList.add('active');
+                    }
+                });
+            }, { threshold: [0.1, 0.3, 0.5] });
+
+            document.querySelectorAll('section').forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
