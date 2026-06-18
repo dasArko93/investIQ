@@ -421,6 +421,24 @@ else:
                        - Fixed 10 points for liquidity buffer.
                     
                     ---
+                    ### 🎯 Score Ranges
+                    
+                    | Score | Rating |
+                    |---|---|
+                    | **80 – 100** | 🟢 Excellent |
+                    | **60 – 79** | 🟡 Good |
+                    | **40 – 59** | 🟠 Fair |
+                    | **0 – 39** | 🔴 Poor |
+                    
+                    ---
+                    ### 🚀 How to Improve Your Score
+                    
+                    1. **Hold 13+ stocks** — each stock adds 2 pts (max 25).
+                    2. **Keep top holding ≤ 25% weight** — exceeding this loses 15 pts.
+                    3. **Spread across 10+ sectors** — each sector adds 2 pts (max 20).
+                    4. **Pick higher quality stocks** — replace low-quality holdings with fundamentally strong ones.
+                    
+                    ---
                     ### 💡 Concrete Examples
                     
                     #### Example 1: Well-Diversified Portfolio
@@ -433,7 +451,7 @@ else:
                       - *Sector Diversity:* 5 × 2 = 10 pts
                       - *Quality Score:* (75 / 100) × 20 = 15 pts
                       - *Cash Buffer:* 10 pts (fixed)
-                      - **Total Health Score:** 16 + 25 + 10 + 15 + 10 = **76.00**
+                      - **Total Health Score:** 16 + 25 + 10 + 15 + 10 = **76.00** 🟡
                     
                     #### Example 2: Concentrated Portfolio
                     - **Holdings:** 3 stocks (largest weight is 45%)
@@ -445,7 +463,19 @@ else:
                       - *Sector Diversity:* 2 × 2 = 4 pts
                       - *Quality Score:* (85 / 100) × 20 = 17 pts
                       - *Cash Buffer:* 10 pts (fixed)
-                      - **Total Health Score:** 6 + 10 + 4 + 17 + 10 = **47.00**
+                      - **Total Health Score:** 6 + 10 + 4 + 17 + 10 = **47.00** 🟠
+                    
+                    #### Example 3: Ideal Portfolio
+                    - **Holdings:** 15 stocks (largest weight is 12%)
+                    - **Sectors:** 10 unique sub-sectors
+                    - **Avg Quality:** 80.0 / 100
+                    - **Calculation:**
+                      - *Diversification:* 15 × 2 = 30 → capped at 25 pts
+                      - *Concentration:* 25 pts (no stock exceeds 25%)
+                      - *Sector Diversity:* 10 × 2 = 20 pts
+                      - *Quality Score:* (80 / 100) × 20 = 16 pts
+                      - *Cash Buffer:* 10 pts (fixed)
+                      - **Total Health Score:** 25 + 25 + 20 + 16 + 10 = **96.00** 🟢
                     """)
             health_col2.metric("Avg Quality Score", f"{avg_quality:.2f}")
             health_col3.metric("Sector Diversity", sector_count)
