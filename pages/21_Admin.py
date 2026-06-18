@@ -18,32 +18,41 @@ from utils.page_utils import require_auth
 require_auth()
 render_sidebar()
 
-# Custom CSS
 st.markdown("""
 <style>
     .admin-section {
-        background-color: #f0f2f6;
+        background-color: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
         padding: 20px;
-        border-radius: 8px;
+        border-radius: 12px;
         margin-bottom: 20px;
         border-left: 4px solid #ff4b4b;
+        border-top: 1px solid rgba(255,255,255,0.5) !important;
+        border-right: 1px solid rgba(255,255,255,0.5) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.5) !important;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.03) !important;
     }
     .stat-box {
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
         padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
         text-align: center;
+        box-shadow: 0 4px 15px rgba(31, 38, 135, 0.02) !important;
     }
     .stat-number {
         font-size: 2em;
         font-weight: bold;
-        color: #1f77b4;
+        color: #4f46e5 !important;
     }
     .stat-label {
-        color: #666;
-        font-size: 0.9em;
+        color: #475569 !important;
+        font-size: 0.95em;
         margin-top: 5px;
+        font-weight: 500;
     }
 </style>
 """, unsafe_allow_html=True)

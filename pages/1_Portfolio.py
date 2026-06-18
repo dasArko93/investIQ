@@ -193,7 +193,7 @@ else:
                         domain=["Current Value", "Net Investment", "Net Profit/Loss"],
                         range=["#20d3c2", "#48d66d", "#ef4444"]
                     ),
-                    legend=alt.Legend(title="Metric")
+                    legend=alt.Legend(title="Metric", labelColor="#000000", titleColor="#000000")
                 ),
                 tooltip=["Date:N", "Metric:N", alt.Tooltip("Value:Q", format=",.2f")]
             ).properties(
@@ -353,16 +353,16 @@ else:
 
                     gaps_layout = f"""
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; margin-bottom: 25px;">
-                        <div style="background: #0e1624; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 18px; min-height: 120px;">
-                            <div style="font-weight: 700; color: #48d66d; margin-bottom: 12px; font-size: 0.95rem; display: flex; align-items: center;">
+                        <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 18px; min-height: 120px;">
+                            <div style="font-weight: 700; color: #16a34a; margin-bottom: 12px; font-size: 0.95rem; display: flex; align-items: center;">
                                 <span style="margin-right: 8px;">🟢</span> Sectors in Portfolio ({len(have_sectors_sorted)})
                             </div>
                             <div style="display: flex; flex-wrap: wrap; gap: 4px;">
                                 {have_html}
                             </div>
                         </div>
-                        <div style="background: #0e1624; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 18px; min-height: 120px;">
-                            <div style="font-weight: 700; color: #ef4444; margin-bottom: 12px; font-size: 0.95rem; display: flex; align-items: center;">
+                        <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 18px; min-height: 120px;">
+                            <div style="font-weight: 700; color: #dc2626; margin-bottom: 12px; font-size: 0.95rem; display: flex; align-items: center;">
                                 <span style="margin-right: 8px;">🔴</span> Missing Sectors (Gaps) ({len(missing_sectors)})
                             </div>
                             <div style="display: flex; flex-wrap: wrap; gap: 4px;">
@@ -414,7 +414,7 @@ else:
             quality_chart = alt.Chart(quality_by_sector).mark_circle(size=120).encode(
                 x=alt.X("QUALITY_SCORE:Q", title="Avg Quality Score"),
                 y=alt.Y("Sector:N", sort="-x"),
-                color=alt.Color("QUALITY_SCORE:Q", scale=alt.Scale(scheme="tealblues")),
+                color=alt.Color("QUALITY_SCORE:Q", scale=alt.Scale(scheme="tealblues"), legend=alt.Legend(title="Quality Score", labelColor="#000000", titleColor="#000000")),
                 tooltip=["Sector", alt.Tooltip("QUALITY_SCORE", format=".2f")],
             ).properties(height=420, title="Quality Score by Sector")
 

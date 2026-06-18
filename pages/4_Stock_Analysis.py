@@ -969,7 +969,7 @@ def render_price_history_expander(selected):
                 margin=dict(l=40, r=40, t=40, b=40),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#cbd5e1")
+                font=dict(color="#000000")
             )
             st.plotly_chart(fig_corr, use_container_width=True)
             st.divider()
@@ -994,20 +994,20 @@ def render_price_history_expander(selected):
                 # Overall Score Card Summary
                 card_html = f"""
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; margin-top: 10px;">
-                    <div style="background: linear-gradient(135deg, #0e1624, #111b2c); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 18px; text-align: center;">
-                        <div style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Quant Forecast Score</div>
-                        <div style="font-size: 2.5rem; font-weight: 800; color: #20d3c2; line-height: 1.1;">{res['module_11']['forecastScore']}</div>
-                        <div style="display: inline-block; background: rgba(32, 211, 194, 0.15); color: #20d3c2; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; margin-top: 8px;">{res['module_11']['signal']}</div>
+                    <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 18px; text-align: center; box-shadow: 0 4px 15px rgba(31, 38, 135, 0.02); backdrop-filter: blur(10px);">
+                        <div style="color: #475569; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 600;">Quant Forecast Score</div>
+                        <div style="font-size: 2.5rem; font-weight: 800; color: #4f46e5; line-height: 1.1;">{res['module_11']['forecastScore']}</div>
+                        <div style="display: inline-block; background: rgba(79, 70, 229, 0.12); color: #4f46e5; border-radius: 4px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; margin-top: 8px;">{res['module_11']['signal']}</div>
                     </div>
-                    <div style="background: linear-gradient(135deg, #0e1624, #111b2c); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 18px; text-align: center;">
-                        <div style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">7-Day Expected Move</div>
-                        <div style="font-size: 2.2rem; font-weight: 800; color: {'#48d66d' if res['module_10']['expectedMove'] >= 0 else '#ef4444'}; line-height: 1.1;">{res['module_10']['expectedMove']:+.2f}%</div>
-                        <div style="color: #cbd5e1; font-size: 0.75rem; margin-top: 8px; font-weight: 500;">Forecast Bias: <strong>{res['module_10']['forecastBias']}</strong></div>
+                    <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 18px; text-align: center; box-shadow: 0 4px 15px rgba(31, 38, 135, 0.02); backdrop-filter: blur(10px);">
+                        <div style="color: #475569; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 600;">7-Day Expected Move</div>
+                        <div style="font-size: 2.2rem; font-weight: 800; color: {'#16a34a' if res['module_10']['expectedMove'] >= 0 else '#dc2626'}; line-height: 1.1;">{res['module_10']['expectedMove']:+.2f}%</div>
+                        <div style="color: #000000; font-size: 0.75rem; margin-top: 8px; font-weight: 500;">Forecast Bias: <strong>{res['module_10']['forecastBias']}</strong></div>
                     </div>
-                    <div style="background: linear-gradient(135deg, #0e1624, #111b2c); border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 8px; padding: 18px; text-align: center;">
-                        <div style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Trend Direction</div>
-                        <div style="font-size: 1.25rem; font-weight: 750; color: #eef4ff; margin-top: 6px; line-height: 1.3;">{res['module_1']['trend']}</div>
-                        <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 6px;">Trend Strength: <strong>{res['module_5']['trendStrength']}/100</strong></div>
+                    <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 12px; padding: 18px; text-align: center; box-shadow: 0 4px 15px rgba(31, 38, 135, 0.02); backdrop-filter: blur(10px);">
+                        <div style="color: #475569; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 600;">Trend Direction</div>
+                        <div style="font-size: 1.25rem; font-weight: 750; color: #0f172a; margin-top: 6px; line-height: 1.3;">{res['module_1']['trend']}</div>
+                        <div style="color: #475569; font-size: 0.75rem; margin-top: 6px; font-weight: 500;">Trend Strength: <strong>{res['module_5']['trendStrength']}/100</strong></div>
                     </div>
                 </div>
                 """
@@ -1087,7 +1087,7 @@ def render_price_history_expander(selected):
                     price_chart = alt.Chart(line_data).mark_line(point=False).encode(
                         x=alt.X("date:T", title="Date"),
                         y=alt.Y("Price:Q", title="Price"),
-                        color=alt.Color("Series:N"),
+                        color=alt.Color("Series:N", legend=alt.Legend(title="Series", labelColor="#000000", titleColor="#000000")),
                         tooltip=["date:T", "Series:N", alt.Tooltip("Price:Q", format=",.2f")],
                     ).properties(height=360, title=f"{ticker} Close Price and Moving Averages")
                     st.altair_chart(price_chart, use_container_width=True)
@@ -1138,7 +1138,7 @@ def deep_dive(selected, style, sector_base, deep_sector):
                     sector_chart = alt.Chart(sector_long).mark_bar().encode(
                         x=alt.X("Ticker:N", title="Stock"),
                         y=alt.Y("Value:Q", title="Value"),
-                        color=alt.Color("Metric:N", title="Metric"),
+                        color=alt.Color("Metric:N", legend=alt.Legend(title="Metric", labelColor="#000000", titleColor="#000000")),
                         column=alt.Column("Metric:N", title=None),
                         tooltip=["Ticker", "Metric", alt.Tooltip("Value:Q", format=".2f")],
                     ).properties(height=220)
@@ -1236,8 +1236,8 @@ def deep_dive(selected, style, sector_base, deep_sector):
             valuation_chart = alt.Chart(scatter).mark_circle(opacity=0.85, size=180).encode(
                 x=alt.X("PE Ratio:Q", title="PE Ratio"),
                 y=alt.Y("ROCE:Q", title="ROCE"),
-                size=alt.Size(f"{size_field}:Q", title="Market Cap", scale=alt.Scale(range=[180, 900])) if size_field == "Market Cap" else size_field,
-                color=alt.Color("Sub-Sector:N", title="Sub-Sector") if "Sub-Sector" in scatter.columns else alt.value("#2563eb"),
+                size=alt.Size(f"{size_field}:Q", scale=alt.Scale(range=[180, 900]), legend=alt.Legend(title="Market Cap", labelColor="#000000", titleColor="#000000")) if size_field == "Market Cap" else size_field,
+                color=alt.Color("Sub-Sector:N", legend=alt.Legend(title="Sub-Sector", labelColor="#000000", titleColor="#000000")) if "Sub-Sector" in scatter.columns else alt.value("#2563eb"),
                 tooltip=[column for column in ["Name", "Ticker", "Sub-Sector", "Market Cap", "Close Price", "PE Ratio", "ROCE"] if column in scatter.columns],
             ).properties(height=380, title="Valuation vs Return Quality")
             st.altair_chart(valuation_chart, use_container_width=True)
@@ -1335,15 +1335,15 @@ with st.expander("📖 Fundamental Analysis & Stock Selection Guide", expanded=F
                         display: inline-block;
                         padding: 8px 16px;
                         background: transparent;
-                        border: 1px solid rgba(255, 255, 255, 0.15);
-                        color: #f8fafc;
+                        border: 1px solid rgba(0, 0, 0, 0.15);
+                        color: #0f172a;
                         font-weight: 700;
                         font-size: 0.85rem;
                         border-radius: 4px;
                         text-align: center;
                         cursor: pointer;
                         transition: all 0.3s ease;
-                    " onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                    " onmouseover="this.style.backgroundColor='rgba(0,0,0,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
                         📥 Download User Guide PDF
                     </span>
                 </a>
