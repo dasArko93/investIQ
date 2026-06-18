@@ -9,14 +9,16 @@ def inject_global_css():
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
         /* Pastel Holographic Background */
         html, body, [data-testid="stAppViewContainer"], .stApp {
             background: linear-gradient(135deg, #d3e5ff 0%, #ffdced 35%, #e1d8ff 70%, #d5f7ec 100%) !important;
             background-attachment: fixed !important;
             color: #000000 !important;
-            font-family: 'Outfit', 'Inter', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+            line-height: 1.55 !important;
+            letter-spacing: -0.015em !important;
         }
 
         /* Top header bar transparent background */
@@ -41,7 +43,7 @@ def inject_global_css():
         /* Sidebar Text Colors */
         [data-testid="stSidebar"] * {
             color: #000000 !important;
-            font-family: 'Outfit', 'Inter', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
         }
 
         [data-testid="stSidebar"] a {
@@ -62,13 +64,15 @@ def inject_global_css():
         /* Headings styling */
         h1, h2, h3, h4, h5, h6 {
             color: #000000 !important;
-            font-family: 'Outfit', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
             font-weight: 700 !important;
+            letter-spacing: -0.025em !important;
         }
 
         /* General text elements */
         p, li, label, span, small, .stText, [data-testid="stMarkdownContainer"] p {
             color: #000000 !important;
+            line-height: 1.55 !important;
         }
 
         /* Primary and secondary button styling */
@@ -79,7 +83,7 @@ def inject_global_css():
             border-radius: 12px !important;
             padding: 10px 20px !important;
             font-weight: 600 !important;
-            font-family: 'Outfit', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25) !important;
         }
@@ -97,7 +101,7 @@ def inject_global_css():
             color: #000000 !important;
             border-radius: 12px !important;
             font-weight: 500 !important;
-            font-family: 'Outfit', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
             backdrop-filter: blur(10px) !important;
             -webkit-backdrop-filter: blur(10px) !important;
             transition: all 0.3s ease !important;
@@ -225,13 +229,21 @@ def inject_global_css():
         div[data-baseweb="popover"] > div,
         div[data-baseweb="menu"], 
         [role="listbox"], 
-        [role="listbox"] ul,
-        div[class^="st-"] [role="listbox"],
-        div[class^="st-"] ul {
+        [role="listbox"] ul {
             background-color: #ffffff !important;
             border: 1px solid rgba(0, 0, 0, 0.15) !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
             border-radius: 12px !important;
+        }
+
+        /* Reset lists inside markdown blocks to prevent oval styling */
+        [data-testid="stMarkdownContainer"] ul, 
+        [data-testid="stMarkdownContainer"] ol, 
+        [data-testid="stMarkdownContainer"] li {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
         }
 
         /* Option list items */
@@ -464,12 +476,17 @@ def require_auth():
             unsafe_allow_html=True
         )
 
+        allowed_email = None
+        allowed_password = None
         try:
-            allowed_email = st.secrets.get("ALLOWED_EMAIL", "virus@investIQ")
-            allowed_password = st.secrets.get("ALLOWED_PASSWORD", "Mylife123!@#")
+            allowed_email = st.secrets.get("ALLOWED_EMAIL")
+            allowed_password = st.secrets.get("ALLOWED_PASSWORD")
         except Exception:
-            allowed_email = "virus@investIQ"
-            allowed_password = "Mylife123!@#"
+            pass
+
+        if not allowed_email or not allowed_password:
+            st.error("🚨 **Security Configuration Error:** `ALLOWED_EMAIL` and `ALLOWED_PASSWORD` are not configured in `.streamlit/secrets.toml`. Access is disabled until these credentials are set.")
+            st.stop()
         
         email_input = st.text_input("User ID", placeholder="Enter User ID", key="login_email_input")
         password_input = st.text_input("Password", type="password", placeholder="••••••••••••", key="login_password_input")

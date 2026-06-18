@@ -1472,18 +1472,16 @@ if require_data(universe, "Upload a stock universe to perform fundamental analys
                 deep_dive(selected, style, filtered, "All")
 
 st.subheader("What To Study")
-for item in style.get("look_for", []):
-    st.markdown(f"- {item}")
+if style.get("look_for"):
+    st.markdown("\n".join([f"- {item}" for item in style["look_for"]]))
 
 if style.get("examples"):
     st.subheader("Examples")
-    for item in style["examples"]:
-        st.markdown(f"- {item}")
+    st.markdown("\n".join([f"- {item}" for item in style["examples"]]))
 
 if style.get("avoid"):
     st.subheader("Avoid")
-    for item in style["avoid"]:
-        st.markdown(f"- {item}")
+    st.markdown("\n".join([f"- {item}" for item in style["avoid"]]))
 
 if style.get("warning"):
     st.warning(style["warning"])

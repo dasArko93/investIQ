@@ -169,11 +169,11 @@ with tab_backup:
             
             from database.repositories.metadata_repository import MetadataRepository
             
-            smtp_server_val = MetadataRepository.get("SMTP_SERVER") or "smtp.gmail.com"
-            smtp_port_val = MetadataRepository.get("SMTP_PORT") or "587"
-            smtp_user_val = MetadataRepository.get("SMTP_USER") or "arko686@gmail.com"
-            recipient_email_val = MetadataRepository.get("RECIPIENT_EMAIL") or "arko686@gmail.com"
-            smtp_pwd_stored = MetadataRepository.get("SMTP_PASSWORD") or "iufuukcqojnzygmb"
+            smtp_server_val = MetadataRepository.get("SMTP_SERVER") or st.secrets.get("SMTP_SERVER", "")
+            smtp_port_val = MetadataRepository.get("SMTP_PORT") or st.secrets.get("SMTP_PORT", "")
+            smtp_user_val = MetadataRepository.get("SMTP_USER") or st.secrets.get("SMTP_USER", "")
+            recipient_email_val = MetadataRepository.get("RECIPIENT_EMAIL") or st.secrets.get("RECIPIENT_EMAIL", "arko686@gmail.com")
+            smtp_pwd_stored = MetadataRepository.get("SMTP_PASSWORD") or st.secrets.get("SMTP_PASSWORD", "")
             
             with st.expander("⚙️ Configure SMTP Email Settings"):
                 smtp_server = st.text_input("SMTP Server", value=smtp_server_val, key="smtp_server_input")
