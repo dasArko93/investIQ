@@ -76,10 +76,6 @@ with tab_status:
         cols[1].metric("Stock Universe Master", f"{stats['Stock Universe Master']:,}")
         cols[2].metric("Price History Cache", f"{stats['Price History Cache']:,}")
         cols[3].metric("Watchlists & Alerts", f"{stats['Watchlist'] + stats['Alerts']:,}")
-        
-        # Detail expander
-        with st.expander("🔍 Show detailed database table counts"):
-            st.json(stats)
     else:
         st.warning("Could not retrieve database status. Verify database connectivity.")
         
@@ -175,14 +171,15 @@ with tab_backup:
             
             smtp_server_val = MetadataRepository.get("SMTP_SERVER") or "smtp.gmail.com"
             smtp_port_val = MetadataRepository.get("SMTP_PORT") or "587"
-            smtp_user_val = MetadataRepository.get("SMTP_USER") or ""
-            recipient_email_val = MetadataRepository.get("RECIPIENT_EMAIL") or ""
+            smtp_user_val = MetadataRepository.get("SMTP_USER") or "arko686@gmail.com"
+            recipient_email_val = MetadataRepository.get("RECIPIENT_EMAIL") or "arko686@gmail.com"
+            smtp_pwd_stored = MetadataRepository.get("SMTP_PASSWORD") or "iufuukcqojnzygmb"
             
             with st.expander("⚙️ Configure SMTP Email Settings"):
                 smtp_server = st.text_input("SMTP Server", value=smtp_server_val, key="smtp_server_input")
                 smtp_port = st.text_input("SMTP Port", value=smtp_port_val, key="smtp_port_input")
                 smtp_user = st.text_input("Sender Email", value=smtp_user_val, key="smtp_user_input")
-                smtp_password = st.text_input("Sender Password / App Password", type="password", placeholder="••••••••••••", key="smtp_pwd_input")
+                smtp_password = st.text_input("Sender Password / App Password", type="password", value=smtp_pwd_stored, key="smtp_pwd_input")
                 recipient_email = st.text_input("Recipient Email", value=recipient_email_val, key="smtp_rec_input")
                 
                 if st.button("💾 Save Settings", use_container_width=True, key="save_smtp_settings"):
@@ -196,7 +193,6 @@ with tab_backup:
                     st.rerun()
             
             db_path = DATA_DIR / "investiq.db"
-            smtp_pwd_stored = MetadataRepository.get("SMTP_PASSWORD")
             btn_disabled = not (smtp_user_val and recipient_email_val and db_path.exists())
             
             if st.button("📨 Send Backup to Email", type="primary", use_container_width=True, disabled=btn_disabled, key="send_backup_email_btn"):
