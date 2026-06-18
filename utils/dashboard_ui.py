@@ -17,7 +17,7 @@ def inject_dashboard_css():
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
         :root {
             --bg: #ffffff;
@@ -38,7 +38,9 @@ def inject_dashboard_css():
             background: linear-gradient(135deg, #d3e5ff 0%, #ffdced 35%, #e1d8ff 70%, #d5f7ec 100%) !important;
             background-attachment: fixed !important;
             color: var(--text) !important;
-            font-family: 'Outfit', 'Inter', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+            line-height: 1.55 !important;
+            letter-spacing: -0.015em !important;
         }
 
         [data-testid="stHeader"] {
@@ -312,7 +314,7 @@ def inject_dashboard_css():
             backdrop-filter: blur(10px) !important;
             -webkit-backdrop-filter: blur(10px) !important;
             box-shadow: 0 4px 12px rgba(31, 38, 135, 0.03) !important;
-            font-family: 'Inter', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
         }
 
         /* Ensure placeholder text inside inputs is dark gray and highly readable */
@@ -334,13 +336,21 @@ def inject_dashboard_css():
         div[data-baseweb="popover"] > div,
         div[data-baseweb="menu"], 
         [role="listbox"], 
-        [role="listbox"] ul,
-        div[class^="st-"] [role="listbox"],
-        div[class^="st-"] ul {
+        [role="listbox"] ul {
             background-color: #ffffff !important;
             border: 1px solid rgba(0, 0, 0, 0.15) !important;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
             border-radius: 12px !important;
+        }
+
+        /* Reset lists inside markdown blocks to prevent oval styling */
+        [data-testid="stMarkdownContainer"] ul, 
+        [data-testid="stMarkdownContainer"] ol, 
+        [data-testid="stMarkdownContainer"] li {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
         }
 
         /* Option list items */
@@ -696,7 +706,52 @@ def render_investiq_dashboard():
     c1, c2, c3 = st.columns([1, 1, 1])
     c1.metric("Portfolio Value", money(summary["current"]), f"Invested {money(summary['invested'])}")
     c2.metric("Total Returns", money(summary["pnl"]), percent(total_return))
-    c3.metric("Portfolio Health", f"{health}/100", "Very Good")
+    with c3:
+        st.metric("Portfolio Health", f"{health}/100", "Very Good")
+        with st.popover("❓ How is this calculated?"):
+            st.markdown("""
+            ### 📊 Portfolio Health Calculation
+            The health score is computed out of **100 points** based on the following rules:
+            
+            1. **Diversification (Max 25 pts):**
+               - `min(number_of_holdings * 2, 25)`
+            2. **Concentration Control (Max 25 pts):**
+               - **25 points** if no single stock exceeds `25%` weight.
+               - **10 points** if any stock exceeds `25%` weight (concentration penalty).
+            3. **Sector Diversity (Max 20 pts):**
+               - `min(unique_sectors * 2, 20)`
+            4. **Average Quality (Max 20 pts):**
+               - `(average_portfolio_quality / 100) * 20`
+            5. **Cash Buffer (Fixed 10 pts):**
+               - Fixed 10 points for liquidity buffer.
+            
+            ---
+            ### 💡 Concrete Examples
+            
+            #### Example 1: Well-Diversified Portfolio
+            - **Holdings:** 8 stocks (largest weight is 18%)
+            - **Sectors:** 5 unique sub-sectors
+            - **Avg Quality:** 75.0 / 100
+            - **Calculation:**
+              - *Diversification:* 8 × 2 = 16 pts
+              - *Concentration:* 25 pts (no stock exceeds 25%)
+              - *Sector Diversity:* 5 × 2 = 10 pts
+              - *Quality Score:* (75 / 100) × 20 = 15 pts
+              - *Cash Buffer:* 10 pts (fixed)
+              - **Total Health Score:** 16 + 25 + 10 + 15 + 10 = **76.00**
+            
+            #### Example 2: Concentrated Portfolio
+            - **Holdings:** 3 stocks (largest weight is 45%)
+            - **Sectors:** 2 unique sub-sectors
+            - **Avg Quality:** 85.0 / 100
+            - **Calculation:**
+              - *Diversification:* 3 × 2 = 6 pts
+              - *Concentration:* 10 pts (penalty applied as weight is 45% > 25%)
+              - *Sector Diversity:* 2 × 2 = 4 pts
+              - *Quality Score:* (85 / 100) × 20 = 17 pts
+              - *Cash Buffer:* 10 pts (fixed)
+              - **Total Health Score:** 6 + 10 + 4 + 17 + 10 = **47.00**
+            """)
 
     # Top small charts: show titles only (no surrounding panels)
     top_middle, top_right = st.columns([1, 1])

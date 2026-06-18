@@ -401,7 +401,52 @@ else:
             health_score = HealthService.evaluate(holdings, avg_quality, sector_count)
 
             health_col1, health_col2, health_col3 = st.columns(3)
-            health_col1.metric("Health Score", f"{health_score:.1f}")
+            with health_col1:
+                st.metric("Health Score", f"{health_score:.1f}")
+                with st.popover("❓ How is this calculated?"):
+                    st.markdown("""
+                    ### 📊 Portfolio Health Calculation
+                    The health score is computed out of **100 points** based on the following rules:
+                    
+                    1. **Diversification (Max 25 pts):**
+                       - `min(number_of_holdings * 2, 25)`
+                    2. **Concentration Control (Max 25 pts):**
+                       - **25 points** if no single stock exceeds `25%` weight.
+                       - **10 points** if any stock exceeds `25%` weight (concentration penalty).
+                    3. **Sector Diversity (Max 20 pts):**
+                       - `min(unique_sectors * 2, 20)`
+                    4. **Average Quality (Max 20 pts):**
+                       - `(average_portfolio_quality / 100) * 20`
+                    5. **Cash Buffer (Fixed 10 pts):**
+                       - Fixed 10 points for liquidity buffer.
+                    
+                    ---
+                    ### 💡 Concrete Examples
+                    
+                    #### Example 1: Well-Diversified Portfolio
+                    - **Holdings:** 8 stocks (largest weight is 18%)
+                    - **Sectors:** 5 unique sub-sectors
+                    - **Avg Quality:** 75.0 / 100
+                    - **Calculation:**
+                      - *Diversification:* 8 × 2 = 16 pts
+                      - *Concentration:* 25 pts (no stock exceeds 25%)
+                      - *Sector Diversity:* 5 × 2 = 10 pts
+                      - *Quality Score:* (75 / 100) × 20 = 15 pts
+                      - *Cash Buffer:* 10 pts (fixed)
+                      - **Total Health Score:** 16 + 25 + 10 + 15 + 10 = **76.00**
+                    
+                    #### Example 2: Concentrated Portfolio
+                    - **Holdings:** 3 stocks (largest weight is 45%)
+                    - **Sectors:** 2 unique sub-sectors
+                    - **Avg Quality:** 85.0 / 100
+                    - **Calculation:**
+                      - *Diversification:* 3 × 2 = 6 pts
+                      - *Concentration:* 10 pts (penalty applied as weight is 45% > 25%)
+                      - *Sector Diversity:* 2 × 2 = 4 pts
+                      - *Quality Score:* (85 / 100) × 20 = 17 pts
+                      - *Cash Buffer:* 10 pts (fixed)
+                      - **Total Health Score:** 6 + 10 + 4 + 17 + 10 = **47.00**
+                    """)
             health_col2.metric("Avg Quality Score", f"{avg_quality:.2f}")
             health_col3.metric("Sector Diversity", sector_count)
 
