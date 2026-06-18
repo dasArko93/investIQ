@@ -485,7 +485,6 @@ def require_auth():
 
         allowed_email = None
         allowed_password = None
-        using_defaults = False
         try:
             allowed_email = st.secrets.get("ALLOWED_EMAIL")
             allowed_password = st.secrets.get("ALLOWED_PASSWORD")
@@ -495,16 +494,6 @@ def require_auth():
         if not allowed_email or not allowed_password:
             allowed_email = "virus@investIQ"
             allowed_password = "Mylife123!@#"
-            using_defaults = True
-
-        if using_defaults:
-            st.warning(
-                "⚠️ **Using Default Credentials**\n\n"
-                "To secure your deployment, add `ALLOWED_EMAIL` and `ALLOWED_PASSWORD` to your Streamlit Cloud **Secrets** in the App Settings. "
-                "Meanwhile, you can log in using the defaults:\n"
-                "- **User ID:** `virus@investIQ`\n"
-                "- **Password:** `Mylife123!@#`"
-            )
         
         email_input = st.text_input("User ID", placeholder="Enter User ID", key="login_email_input")
         password_input = st.text_input("Password", type="password", placeholder="••••••••••••", key="login_password_input")
