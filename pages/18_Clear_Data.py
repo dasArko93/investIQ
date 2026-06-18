@@ -76,10 +76,6 @@ with tab_status:
         cols[1].metric("Stock Universe Master", f"{stats['Stock Universe Master']:,}")
         cols[2].metric("Price History Cache", f"{stats['Price History Cache']:,}")
         cols[3].metric("Watchlists & Alerts", f"{stats['Watchlist'] + stats['Alerts']:,}")
-        
-        # Detail expander
-        with st.expander("🔍 Show detailed database table counts"):
-            st.json(stats)
     else:
         st.warning("Could not retrieve database status. Verify database connectivity.")
         
