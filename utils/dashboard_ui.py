@@ -56,6 +56,12 @@ def inject_dashboard_css():
             border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
         }
 
+        /* Hide collapse/expand sidebar controls */
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedControl"] {
+            display: none !important;
+        }
+
         [data-testid="stSidebar"] * {
             color: #000000 !important;
         }

@@ -32,6 +32,12 @@ def inject_global_css():
             border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
         }
 
+        /* Hide collapse/expand sidebar controls */
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedControl"] {
+            display: none !important;
+        }
+
         /* Sidebar Text Colors */
         [data-testid="stSidebar"] * {
             color: #000000 !important;
