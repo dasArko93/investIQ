@@ -20,7 +20,7 @@ from utils.page_utils import render_sidebar
 
 # Set up Streamlit Page
 st.set_page_config(page_title="InvestIQ - Database Admin", page_icon="⚙️", layout="wide", initial_sidebar_state="expanded")
-from utils.page_utils import require_auth
+from utils.page_utils import require_auth, safe_get_secret
 require_auth()
 render_sidebar()
 
@@ -169,11 +169,11 @@ with tab_backup:
             
             from database.repositories.metadata_repository import MetadataRepository
             
-            smtp_server_val = MetadataRepository.get("SMTP_SERVER") or st.secrets.get("SMTP_SERVER", "")
-            smtp_port_val = MetadataRepository.get("SMTP_PORT") or st.secrets.get("SMTP_PORT", "")
-            smtp_user_val = MetadataRepository.get("SMTP_USER") or st.secrets.get("SMTP_USER", "")
-            recipient_email_val = MetadataRepository.get("RECIPIENT_EMAIL") or st.secrets.get("RECIPIENT_EMAIL", "arko686@gmail.com")
-            smtp_pwd_stored = MetadataRepository.get("SMTP_PASSWORD") or st.secrets.get("SMTP_PASSWORD", "")
+            smtp_server_val = MetadataRepository.get("SMTP_SERVER") or safe_get_secret("SMTP_SERVER", "")
+            smtp_port_val = MetadataRepository.get("SMTP_PORT") or safe_get_secret("SMTP_PORT", "")
+            smtp_user_val = MetadataRepository.get("SMTP_USER") or safe_get_secret("SMTP_USER", "")
+            recipient_email_val = MetadataRepository.get("RECIPIENT_EMAIL") or safe_get_secret("RECIPIENT_EMAIL", "arko686@gmail.com")
+            smtp_pwd_stored = MetadataRepository.get("SMTP_PASSWORD") or safe_get_secret("SMTP_PASSWORD", "")
             
             with st.expander("⚙️ Configure SMTP Email Settings"):
                 smtp_server = st.text_input("SMTP Server", value=smtp_server_val, key="smtp_server_input")
