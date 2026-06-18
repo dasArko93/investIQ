@@ -17,77 +17,80 @@ def inject_dashboard_css():
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
         :root {
-            --bg: #050912;
-            --panel: #0e1624;
-            --panel-2: #111b2c;
-            --line: rgba(148, 163, 184, 0.15);
-            --muted: #94a3b8;
-            --text: #eef4ff;
+            --bg: #ffffff;
+            --panel: rgba(255, 255, 255, 0.45);
+            --panel-2: rgba(255, 255, 255, 0.55);
+            --line: rgba(148, 163, 184, 0.2);
+            --muted: #000000;
+            --text: #000000;
             --blue: #2563eb;
-            --cyan: #20d3c2;
-            --green: #48d66d;
-            --violet: #8b5cf6;
-            --amber: #f59e0b;
-            --red: #ef4444;
+            --cyan: #0891b2;
+            --green: #16a34a;
+            --violet: #7c3aed;
+            --amber: #d97706;
+            --red: #dc2626;
         }
 
-        html, body, [data-testid="stAppViewContainer"] {
-            background:
-                radial-gradient(circle at 30% 0%, rgba(37, 99, 235, 0.16), transparent 30%),
-                radial-gradient(circle at 80% 20%, rgba(32, 211, 194, 0.09), transparent 24%),
-                var(--bg);
-            color: var(--text);
-            font-family: Inter, sans-serif;
+        html, body, [data-testid="stAppViewContainer"], .stApp {
+            background: linear-gradient(135deg, #d3e5ff 0%, #ffdced 35%, #e1d8ff 70%, #d5f7ec 100%) !important;
+            background-attachment: fixed !important;
+            color: var(--text) !important;
+            font-family: 'Outfit', 'Inter', sans-serif !important;
         }
 
         [data-testid="stHeader"] {
-            background: transparent;
+            background: transparent !important;
         }
 
         [data-testid="stSidebarNav"] {
-            display: none;
+            display: none !important;
         }
 
         [data-testid="stSidebar"] {
-            background: #060b14;
-            border-right: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.4) !important;
+            backdrop-filter: blur(25px) !important;
+            -webkit-backdrop-filter: blur(25px) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
         }
 
         [data-testid="stSidebar"] * {
-            color: #dbeafe;
+            color: #000000 !important;
         }
 
         .block-container {
-            padding-top: 1rem;
-            padding-bottom: 1.4rem;
-            max-width: 1420px;
+            padding-top: 1rem !important;
+            padding-bottom: 1.4rem !important;
+            max-width: 1420px !important;
         }
 
         div[data-testid="stMetric"] {
-            background: linear-gradient(145deg, rgba(17, 27, 44, 0.96), rgba(12, 18, 30, 0.96));
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 16px 18px;
-            min-height: 110px;
-            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+            background: var(--panel) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 16px !important;
+            padding: 16px 18px !important;
+            min-height: 110px !important;
+            box-shadow: 0 10px 30px rgba(31, 38, 135, 0.04) !important;
         }
 
         div[data-testid="stMetric"] label {
             color: var(--muted) !important;
             font-size: 0.75rem !important;
+            font-weight: 600 !important;
         }
 
         div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-            color: var(--text);
-            font-size: 1.85rem;
-            font-weight: 700;
+            color: var(--text) !important;
+            font-size: 1.85rem !important;
+            font-weight: 700 !important;
         }
 
         div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
-            color: var(--green);
+            color: var(--green) !important;
         }
 
         .iq-topbar {
@@ -99,24 +102,27 @@ def inject_dashboard_css():
         }
 
         .iq-kicker {
-            color: var(--muted);
+            color: var(--muted) !important;
             font-size: 0.86rem;
             margin-top: 5px;
+            font-weight: 500;
         }
 
         .iq-title {
             font-size: 1.32rem;
             font-weight: 750;
             letter-spacing: 0;
+            color: var(--text) !important;
         }
 
         .iq-search {
-            background: #0c1320;
-            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 8px;
-            color: #9fb0c8;
+            color: var(--text);
             padding: 12px 14px;
             font-size: 0.82rem;
+            backdrop-filter: blur(10px);
         }
 
         .iq-avatar {
@@ -129,12 +135,14 @@ def inject_dashboard_css():
         }
 
         .iq-panel {
-            background: linear-gradient(145deg, rgba(17, 27, 44, 0.96), rgba(10, 16, 27, 0.96));
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 18px;
+            background: var(--panel) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 16px !important;
+            padding: 18px !important;
             min-height: 360px !important;
-            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+            box-shadow: 0 10px 30px rgba(31, 38, 135, 0.04) !important;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -143,7 +151,7 @@ def inject_dashboard_css():
         .iq-panel-title {
             font-size: 1.02rem;
             font-weight: 700;
-            color: var(--text);
+            color: var(--text) !important;
             margin-bottom: 14px;
         }
 
@@ -155,6 +163,7 @@ def inject_dashboard_css():
             border-bottom: 1px solid var(--line);
             padding: 10px 0;
             font-size: 0.82rem;
+            color: var(--text) !important;
         }
 
         .iq-row:last-child {
@@ -162,8 +171,9 @@ def inject_dashboard_css():
         }
 
         .iq-muted {
-            color: var(--muted);
+            color: var(--muted) !important;
             font-size: 0.72rem;
+            font-weight: 500;
         }
 
         .iq-positive {
@@ -174,8 +184,8 @@ def inject_dashboard_css():
         .iq-chip {
             border-radius: 999px;
             padding: 4px 8px;
-            background: rgba(37, 99, 235, 0.18);
-            color: #9ec5ff;
+            background: rgba(99, 102, 241, 0.12);
+            color: #4f46e5;
             font-size: 0.72rem;
             font-weight: 650;
         }
@@ -184,31 +194,36 @@ def inject_dashboard_css():
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 9px;
-            border: 1px solid var(--line);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             font-size: 0.78rem;
-            background: rgba(17, 27, 44, 0.78);
+            background: rgba(255, 255, 255, 0.35);
+            color: var(--text) !important;
         }
 
         .iq-alert.red {
             border-color: rgba(239, 68, 68, 0.28);
-            background: rgba(239, 68, 68, 0.10);
+            background: rgba(239, 68, 68, 0.08);
+            color: #b91c1c;
         }
 
         .iq-alert.amber {
             border-color: rgba(245, 158, 11, 0.28);
-            background: rgba(245, 158, 11, 0.10);
+            background: rgba(245, 158, 11, 0.08);
+            color: #b45309;
         }
 
         .iq-alert.green {
             border-color: rgba(72, 214, 109, 0.24);
-            background: rgba(72, 214, 109, 0.10);
+            background: rgba(72, 214, 109, 0.08);
+            color: #15803d;
         }
 
         .iq-advisor {
-            background: linear-gradient(135deg, rgba(91, 33, 182, 0.62), rgba(49, 46, 129, 0.86));
-            border: 1px solid rgba(167, 139, 250, 0.28);
-            border-radius: 8px;
-            padding: 15px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 12px !important;
+            padding: 15px !important;
+            color: var(--text) !important;
         }
 
         .iq-action-grid {
@@ -219,11 +234,12 @@ def inject_dashboard_css():
         }
 
         .iq-action {
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 8px;
             padding: 12px;
             min-height: 72px;
+            color: var(--text) !important;
         }
 
         .iq-quick {
@@ -234,12 +250,14 @@ def inject_dashboard_css():
         }
 
         .iq-quick-item {
-            background: #0d1726;
-            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 8px;
             padding: 18px 8px;
             font-weight: 650;
             font-size: 0.78rem;
+            color: var(--text) !important;
+            backdrop-filter: blur(10px);
         }
 
         .iq-dot {
@@ -251,16 +269,16 @@ def inject_dashboard_css():
         }
 
         [data-testid="stPageLink"] {
-            background: transparent;
-            border: 0;
-            padding: 0;
+            background: transparent !important;
+            border: 0 !important;
+            padding: 0 !important;
         }
 
         [data-testid="stPageLink"] a {
-            color: #9ec5ff;
-            font-size: 0.76rem;
-            padding: 0;
-            min-height: 0;
+            color: #4f46e5 !important;
+            font-size: 0.76rem !important;
+            padding: 0 !important;
+            min-height: 0 !important;
         }
 
         @media (max-width: 900px) {
@@ -271,6 +289,120 @@ def inject_dashboard_css():
             .iq-quick {
                 grid-template-columns: 1fr 1fr;
             }
+        }
+
+        /* Form Controls / Text inputs / Number inputs */
+        div[data-testid="stTextInput"] input, 
+        div[data-testid="stNumberInput"] input, 
+        div[data-testid="stSelectbox"] select, 
+        div[data-baseweb="input"],
+        div[data-baseweb="select"],
+        div[data-testid="stMultiSelect"] div[role="combobox"],
+        textarea {
+            background-color: rgba(255, 255, 255, 0.7) !important;
+            border: 1px solid rgba(0, 0, 0, 0.15) !important;
+            color: #000000 !important;
+            border-radius: 12px !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            box-shadow: 0 4px 12px rgba(31, 38, 135, 0.03) !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        /* Ensure placeholder text inside inputs is dark gray and highly readable */
+        input::placeholder, textarea::placeholder {
+            color: #4b5563 !important;
+            opacity: 0.85 !important;
+        }
+
+        div[data-testid="stTextInput"] input:focus, 
+        div[data-testid="stNumberInput"] input:focus,
+        div[data-baseweb="input"]:focus-within {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+            background-color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        /* Dropdown popover containers */
+        div[data-baseweb="popover"], 
+        div[data-baseweb="popover"] > div,
+        div[data-baseweb="menu"], 
+        [role="listbox"], 
+        [role="listbox"] ul,
+        div[class^="st-"] [role="listbox"],
+        div[class^="st-"] ul {
+            background-color: #ffffff !important;
+            border: 1px solid rgba(0, 0, 0, 0.15) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+            border-radius: 12px !important;
+        }
+
+        /* Option list items */
+        div[data-baseweb="popover"] li, 
+        div[data-baseweb="menu"] li, 
+        [role="listbox"] li, 
+        [role="option"],
+        div[data-baseweb="popover"] [role="option"] {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            transition: background-color 0.2s ease !important;
+        }
+
+        /* Text inside option list items */
+        div[data-baseweb="popover"] li *, 
+        div[data-baseweb="menu"] li *, 
+        [role="listbox"] li *, 
+        [role="option"] *,
+        [role="option"] div,
+        [role="option"] span {
+            color: #000000 !important;
+        }
+
+        /* Highlight hovered item */
+        div[data-baseweb="popover"] li:hover, 
+        div[data-baseweb="menu"] li:hover, 
+        [role="listbox"] li:hover, 
+        [role="option"]:hover,
+        [role="option"]:hover *,
+        div[data-baseweb="popover"] li[aria-selected="true"], 
+        [role="listbox"] li[aria-selected="true"],
+        [role="option"][aria-selected="true"] {
+            background-color: #f1f5f9 !important;
+            color: #000000 !important;
+        }
+
+        div[data-baseweb="popover"] li:hover *, 
+        div[data-baseweb="menu"] li:hover *, 
+        [role="listbox"] li:hover *, 
+        [role="option"]:hover * {
+            color: #000000 !important;
+        }
+
+        /* Multiselect selected option chips */
+        div[data-baseweb="tag"] {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            border-radius: 6px !important;
+        }
+        div[data-baseweb="tag"] span, div[data-baseweb="tag"] * {
+            color: #4f46e5 !important;
+        }
+
+        /* File Uploader styling to be light pastel with readable black text */
+        div[data-testid="stFileUploader"], 
+        div[data-testid="stFileUploader"] > section {
+            background-color: rgba(255, 255, 255, 0.6) !important;
+            border: 1px dashed rgba(99, 102, 241, 0.4) !important;
+            border-radius: 16px !important;
+            padding: 16px !important;
+            color: #000000 !important;
+        }
+
+        div[data-testid="stFileUploader"] *, 
+        div[data-testid="stFileUploader"] span, 
+        div[data-testid="stFileUploader"] small, 
+        div[data-testid="stFileUploader"] p {
+            color: #000000 !important;
         }
         </style>
         """,
@@ -349,11 +481,11 @@ def performance_figure(summary):
         margin=dict(l=40, r=20, t=20, b=40),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#cbd5e1", size=12),
-        legend=dict(orientation="h", y=1.02, x=0.02),
+        font=dict(color="#000000", size=12),
+        legend=dict(orientation="h", y=1.02, x=0.02, font=dict(color="#000000")),
         hovermode="x unified",
         xaxis=dict(showgrid=False, tickformat="%b %d", tickangle=-45, nticks=8),
-        yaxis=dict(gridcolor="rgba(148,163,184,0.12)", tickprefix="Rs ", separatethousands=True),
+        yaxis=dict(gridcolor="rgba(71,85,105,0.08)", tickprefix="Rs ", separatethousands=True),
     )
     return fig
 
@@ -407,11 +539,11 @@ def historical_trend_figure(view_mode="All Uploads"):
         margin=dict(l=40, r=20, t=20, b=40),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#cbd5e1", size=12),
-        legend=dict(orientation="h", y=1.02, x=0.02),
+        font=dict(color="#000000", size=12),
+        legend=dict(orientation="h", y=1.02, x=0.02, font=dict(color="#000000")),
         hovermode="x unified",
         xaxis=dict(showgrid=False, type='category'),
-        yaxis=dict(gridcolor="rgba(148,163,184,0.12)", tickprefix="Rs ", separatethousands=True),
+        yaxis=dict(gridcolor="rgba(71,85,105,0.08)", tickprefix="Rs ", separatethousands=True),
     )
     return fig
 
@@ -444,10 +576,10 @@ def allocation_figure(merged):
         margin=dict(l=8, r=8, t=18, b=12),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#cbd5e1", size=12),
+        font=dict(color="#000000", size=12),
         showlegend=True,
-        legend=dict(x=0.72, y=0.5),
-        annotations=[dict(text="Total", x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#94a3b8"))],
+        legend=dict(x=0.72, y=0.5, font=dict(color="#000000")),
+        annotations=[dict(text="Total", x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#000000"))],
     )
     return fig
 
@@ -474,11 +606,11 @@ def health_figure(score):
         height=320,
         margin=dict(l=12, r=12, t=18, b=12),
         paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#cbd5e1", size=12),
+        font=dict(color="#000000", size=12),
         polar=dict(
             bgcolor="rgba(0,0,0,0)",
-            radialaxis=dict(visible=True, range=[0, 100], showticklabels=False, gridcolor="rgba(148,163,184,0.16)"),
-            angularaxis=dict(gridcolor="rgba(148,163,184,0.16)"),
+            radialaxis=dict(visible=True, range=[0, 100], showticklabels=False, gridcolor="rgba(71,85,105,0.15)"),
+            angularaxis=dict(gridcolor="rgba(71,85,105,0.15)"),
             domain=dict(x=[0, 1], y=[0, 1]),
         ),
         showlegend=False,

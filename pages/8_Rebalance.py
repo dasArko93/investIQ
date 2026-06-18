@@ -187,8 +187,8 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
                     height=360,
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#cbd5e1"),
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                    font=dict(color="#000000"),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color="#000000"))
                 )
                 st.plotly_chart(fig_drift, use_container_width=True)
             
@@ -221,7 +221,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
                     heatmap_rows.append(row_html)
                 
                 heatmap_html = (
-                    f'<table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #cbd5e1;">'
+                    f'<table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #000000;">'
                     f'<thead>'
                     f'<tr style="border-bottom: 2px solid rgba(148, 163, 184, 0.3);">'
                     f'<th style="padding: 8px 5px; text-align: left;">Sector</th>'
@@ -270,7 +270,8 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
             height=400,
             margin=dict(t=50, l=10, r=10, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#cbd5e1")
+            font=dict(color="#000000"),
+            legend=dict(font=dict(color="#000000"))
         )
         st.plotly_chart(fig_st_tree, use_container_width=True)
         
@@ -285,7 +286,8 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
         fig_sec_pie.update_layout(
             height=360,
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#cbd5e1")
+            font=dict(color="#000000"),
+            legend=dict(font=dict(color="#000000"))
         )
         st.plotly_chart(fig_sec_pie, use_container_width=True)
 
@@ -394,7 +396,8 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
                 fig_sim.update_layout(
                     height=320,
                     paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#cbd5e1")
+                    font=dict(color="#000000"),
+                    legend=dict(font=dict(color="#000000"))
                 )
                 st.plotly_chart(fig_sim, use_container_width=True)
             else:

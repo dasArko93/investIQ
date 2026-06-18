@@ -117,7 +117,8 @@ if require_data(portfolio, "Upload holdings to generate a report."):
             fig_donut.update_layout(
                 height=360,
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#cbd5e1")
+                font=dict(color="#000000"),
+                legend=dict(font=dict(color="#000000"))
             )
             st.plotly_chart(fig_donut, use_container_width=True)
             
@@ -136,7 +137,7 @@ if require_data(portfolio, "Upload holdings to generate a report."):
                 height=360,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#cbd5e1")
+                font=dict(color="#000000")
             )
             st.plotly_chart(fig_pnl_bar, use_container_width=True)
             
@@ -192,7 +193,7 @@ if require_data(portfolio, "Upload holdings to generate a report."):
                 height=300,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#cbd5e1")
+                font=dict(color="#000000")
             )
             st.plotly_chart(fig_sec_bar, use_container_width=True)
             
@@ -250,7 +251,8 @@ if require_data(portfolio, "Upload holdings to generate a report."):
                 height=400,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#cbd5e1")
+                font=dict(color="#000000"),
+                legend=dict(font=dict(color="#000000"))
             )
             st.plotly_chart(fig_scatter, use_container_width=True)
 
