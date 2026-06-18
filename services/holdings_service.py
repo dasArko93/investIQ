@@ -47,7 +47,7 @@ class HoldingsService:
                 )
             )
 
-        # Save and prune to latest 15 snapshots
+        # Save holdings snapshot history
         HoldingsService.append_and_prune(records)
         return len(records)
 
@@ -57,16 +57,6 @@ class HoldingsService:
         try:
             db.bulk_save_objects(records)
             db.commit()
-
-            # Get distinct snapshot dates in descending order (latest first)
-            dates = db.query(distinct(Holding.snapshot_date)).order_by(Holding.snapshot_date.desc()).all()
-            date_list = [d[0] for d in dates]
-
-            if len(date_list) > 15:
-                # Keep latest 15 snapshots, delete any older than the 15th date
-                cutoff_date = date_list[14]
-                db.query(Holding).filter(Holding.snapshot_date < cutoff_date).delete()
-                db.commit()
         except Exception:
             db.rollback()
             raise
@@ -84,12 +74,14 @@ class HoldingsService:
         return holdings_to_frame(HoldingRepository.get_by_snapshot_date(snapshot_date))
 
     @staticmethod
-    def get_snapshot_summary(limit=15):
-        """Return chronological summary of the last 15 snapshots (invested and pnl)."""
+    def get_snapshot_summary(limit=None):
+        """Return chronological summary of snapshots (invested and pnl)."""
         db = SessionLocal()
         try:
             dates = db.query(distinct(Holding.snapshot_date)).order_by(Holding.snapshot_date.asc()).all()
-            date_list = [d[0] for d in dates][-limit:]
+            date_list = [d[0] for d in dates]
+            if limit is not None:
+                date_list = date_list[-limit:]
             
             summary = []
             for d in date_list:
@@ -108,6 +100,36 @@ class HoldingsService:
             db.close()
 
     @staticmethod
+    def group_snapshots_by_mode(snapshots, view_mode):
+        """
+        Groups a list of snapshot dicts by:
+        - "All Uploads": returns all snapshots (sorted by date)
+        - "Monthly View": Groups by Year and Month, picking the latest snapshot of each month.
+        - "Yearly View": Groups by Year, picking the latest snapshot of each year.
+        """
+        if not snapshots:
+            return []
+        
+        sorted_snaps = sorted(snapshots, key=lambda s: s["date"])
+        
+        if view_mode == "Monthly View":
+            grouped = {}
+            for snap in sorted_snaps:
+                key = (snap["date"].year, snap["date"].month)
+                grouped[key] = snap
+            return sorted(grouped.values(), key=lambda s: s["date"])
+            
+        elif view_mode == "Yearly View":
+            grouped = {}
+            for snap in sorted_snaps:
+                key = snap["date"].year
+                grouped[key] = snap
+            return sorted(grouped.values(), key=lambda s: s["date"])
+            
+        else:
+            return sorted_snaps
+
+    @staticmethod
     def get_snapshots():
         """Get list of distinct snapshot dates."""
         return HoldingRepository.get_snapshot_dates()
@@ -116,6 +138,7 @@ class HoldingsService:
     def get_holdings_at_date(snapshot_date):
         """Get holdings for a specific snapshot date."""
         return HoldingRepository.get_by_snapshot_date(snapshot_date)
+
 
 
 def pd_empty_df():

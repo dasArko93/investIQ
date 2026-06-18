@@ -136,9 +136,33 @@ else:
         snapshots = HoldingsService.get_snapshot_summary()
         if len(snapshots) >= 2:
             st.divider()
-            st.subheader("Historical Progress")
-            df_snap = pd.DataFrame(snapshots)
-            df_snap["Date"] = df_snap["date"].dt.strftime("%d-%b-%y")
+            
+            col_title, col_ctrl = st.columns([3, 1])
+            with col_title:
+                st.subheader("Historical Progress")
+            with col_ctrl:
+                view_mode = st.selectbox(
+                    "Trend View Mode",
+                    options=["All Uploads", "Monthly View", "Yearly View"],
+                    index=0,
+                    key="portfolio_trend_view_mode",
+                    label_visibility="collapsed"
+                )
+            
+            # Group snapshots based on view mode
+            grouped_snaps = HoldingsService.group_snapshots_by_mode(snapshots, view_mode)
+            
+            df_snap = pd.DataFrame(grouped_snaps)
+            if view_mode == "Monthly View":
+                df_snap["Date"] = df_snap["date"].dt.strftime("%b %Y")
+                x_title = "Month"
+            elif view_mode == "Yearly View":
+                df_snap["Date"] = df_snap["date"].dt.strftime("%Y")
+                x_title = "Year"
+            else:
+                df_snap["Date"] = df_snap["date"].dt.strftime("%d-%b-%y")
+                x_title = "Upload Date"
+                
             df_melted = df_snap.melt(
                 id_vars=["Date"],
                 value_vars=["current", "invested", "pnl"],
@@ -151,7 +175,7 @@ else:
                 "pnl": "Net Profit/Loss"
             })
             trend_chart = alt.Chart(df_melted).mark_bar().encode(
-                x=alt.X("Date:N", sort=None, title="Upload Date"),
+                x=alt.X("Date:N", sort=None, title=x_title),
                 y=alt.Y("Value:Q", title="Value (₹)", stack=True),
                 color=alt.Color(
                     "Metric:N",
@@ -164,7 +188,7 @@ else:
                 tooltip=["Date:N", "Metric:N", alt.Tooltip("Value:Q", format=",.2f")]
             ).properties(
                 height=350,
-                title="Historical Progress: Stacked Allocation & Performance (Last 15 Uploads)"
+                title=f"Historical Progress: Stacked Allocation & Performance ({view_mode})"
             )
             st.altair_chart(trend_chart, use_container_width=True)
             
@@ -175,7 +199,7 @@ else:
                 use_container_width=True,
                 hide_index=True,
                 column_config={
-                    "Date": "Upload Date",
+                    "Date": x_title,
                     "invested": st.column_config.NumberColumn("Net Investment (₹)", format="₹%,.2f"),
                     "current": st.column_config.NumberColumn("Current Value (₹)", format="₹%,.2f"),
                     "pnl": st.column_config.NumberColumn("Net Profit/Loss (₹)", format="₹%,.2f"),

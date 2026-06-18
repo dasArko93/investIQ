@@ -61,8 +61,15 @@ def get_database_stats():
     """Get current database statistics."""
     db = SessionLocal()
     try:
+        from sqlalchemy import func
+        latest_date = db.query(func.max(Holding.snapshot_date)).scalar()
+        unique_stocks = 0
+        if latest_date:
+            unique_stocks = db.query(Holding).filter(Holding.snapshot_date == latest_date).count()
+
         stats = {
-            'holdings': db.query(Holding).count(),
+            'holdings_total': db.query(Holding).count(),
+            'unique_stocks': unique_stocks,
             'price_history': db.query(PriceHistory).count(),
             'trend_snapshots': db.query(TrendSnapshot).count(),
             'portfolio_snapshots': db.query(PortfolioSnapshot).count(),
@@ -77,11 +84,20 @@ def get_database_stats():
 
 # Display database stats
 stats = get_database_stats()
-total_records = sum(stats.values())
+total_records = (
+    stats['holdings_total'] +
+    stats['price_history'] +
+    stats['trend_snapshots'] +
+    stats['portfolio_snapshots'] +
+    stats['watchlist'] +
+    stats['alerts'] +
+    stats['stock_master'] +
+    stats['metadata']
+)
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.markdown('<div class="stat-box"><div class="stat-number">'+str(stats['holdings'])+'</div><div class="stat-label">Holdings</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="stat-box"><div class="stat-number">'+str(stats['unique_stocks'])+'</div><div class="stat-label">Unique Stocks (Current)</div></div>', unsafe_allow_html=True)
 with col2:
     st.markdown('<div class="stat-box"><div class="stat-number">'+str(stats['price_history'])+'</div><div class="stat-label">Price Records</div></div>', unsafe_allow_html=True)
 with col3:

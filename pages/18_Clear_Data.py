@@ -32,8 +32,15 @@ st.divider()
 def get_db_stats():
     db = SessionLocal()
     try:
+        from sqlalchemy import func
+        latest_date = db.query(func.max(Holding.snapshot_date)).scalar()
+        unique_stocks = 0
+        if latest_date:
+            unique_stocks = db.query(Holding).filter(Holding.snapshot_date == latest_date).count()
+
         stats = {
-            "Holdings": db.query(Holding).count(),
+            "Holdings (Total Records)": db.query(Holding).count(),
+            "Unique Stocks (Current)": unique_stocks,
             "Trend Snapshots": db.query(TrendSnapshot).count(),
             "Portfolio Snapshots": db.query(PortfolioSnapshot).count(),
             "Stock Universe Master": db.query(StockMaster).count(),
@@ -65,7 +72,7 @@ with tab_status:
     stats = get_db_stats()
     if stats:
         cols = st.columns(4)
-        cols[0].metric("Holdings & Snapshots", f"{stats['Holdings'] + stats['Trend Snapshots'] + stats['Portfolio Snapshots']:,}")
+        cols[0].metric("Unique Stocks (Current Holdings)", f"{stats['Unique Stocks (Current)']:,}")
         cols[1].metric("Stock Universe Master", f"{stats['Stock Universe Master']:,}")
         cols[2].metric("Price History Cache", f"{stats['Price History Cache']:,}")
         cols[3].metric("Watchlists & Alerts", f"{stats['Watchlist'] + stats['Alerts']:,}")

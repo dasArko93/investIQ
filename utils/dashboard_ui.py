@@ -361,14 +361,23 @@ def performance_figure(summary):
 
 
 
-def historical_trend_figure():
+def historical_trend_figure(view_mode="All Uploads"):
     from services.holdings_service import HoldingsService
     snapshots = HoldingsService.get_snapshot_summary()
     
     if len(snapshots) < 2:
         return None
         
-    dates = [s["date"].strftime("%d-%b-%y") for s in snapshots]
+    # Group snapshots based on view mode
+    snapshots = HoldingsService.group_snapshots_by_mode(snapshots, view_mode)
+    
+    if view_mode == "Monthly View":
+        dates = [s["date"].strftime("%b %Y") for s in snapshots]
+    elif view_mode == "Yearly View":
+        dates = [s["date"].strftime("%Y") for s in snapshots]
+    else:
+        dates = [s["date"].strftime("%d-%b-%y") for s in snapshots]
+        
     invested = [s["invested"] for s in snapshots]
     pnl = [s["pnl"] for s in snapshots]
     
@@ -401,7 +410,7 @@ def historical_trend_figure():
         font=dict(color="#cbd5e1", size=12),
         legend=dict(orientation="h", y=1.02, x=0.02),
         hovermode="x unified",
-        xaxis=dict(showgrid=False),
+        xaxis=dict(showgrid=False, type='category'),
         yaxis=dict(gridcolor="rgba(148,163,184,0.12)", tickprefix="Rs ", separatethousands=True),
     )
     return fig
@@ -563,9 +572,21 @@ def render_investiq_dashboard():
         st.page_link("pages/1_Portfolio.py", label="View detailed analysis ->")
 
     # Main performance chart below the small panels: show title only, make chart interactive
-    trend_fig = historical_trend_figure()
-    if trend_fig is not None:
-        st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Historical Trend (Last 15 Uploads)</div></div>', unsafe_allow_html=True)
+    from services.holdings_service import HoldingsService
+    snapshots = HoldingsService.get_snapshot_summary()
+    if len(snapshots) >= 2:
+        col_title, col_ctrl = st.columns([3, 1])
+        with col_title:
+            st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Historical Trend</div></div>', unsafe_allow_html=True)
+        with col_ctrl:
+            view_mode = st.selectbox(
+                "Trend View Mode",
+                options=["All Uploads", "Monthly View", "Yearly View"],
+                index=0,
+                key="dashboard_trend_view_mode",
+                label_visibility="collapsed"
+            )
+        trend_fig = historical_trend_figure(view_mode=view_mode)
         st.plotly_chart(trend_fig, use_container_width=True, config={"displayModeBar": True})
     else:
         st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Performance (Simulated)</div></div>', unsafe_allow_html=True)
