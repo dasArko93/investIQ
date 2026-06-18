@@ -122,7 +122,7 @@ with tab_backup:
             "Download a backup of your database below to restore it the next time you access the app."
         )
         
-        col_back, col_rest = st.columns(2)
+        col_back, col_rest, col_email = st.columns(3)
         
         with col_back:
             st.markdown("### 📤 Download Backup")
@@ -166,6 +166,58 @@ with tab_backup:
                         st.rerun()
                     except Exception as e:
                         st.error(f"Failed to restore SQLite file: {e}")
+
+        with col_email:
+            st.markdown("### 📧 Email Backup")
+            st.write("Send a backup of your database directly to your inbox.")
+            
+            from database.repositories.metadata_repository import MetadataRepository
+            
+            smtp_server_val = MetadataRepository.get("SMTP_SERVER") or "smtp.gmail.com"
+            smtp_port_val = MetadataRepository.get("SMTP_PORT") or "587"
+            smtp_user_val = MetadataRepository.get("SMTP_USER") or ""
+            recipient_email_val = MetadataRepository.get("RECIPIENT_EMAIL") or ""
+            
+            with st.expander("⚙️ Configure SMTP Email Settings"):
+                smtp_server = st.text_input("SMTP Server", value=smtp_server_val, key="smtp_server_input")
+                smtp_port = st.text_input("SMTP Port", value=smtp_port_val, key="smtp_port_input")
+                smtp_user = st.text_input("Sender Email", value=smtp_user_val, key="smtp_user_input")
+                smtp_password = st.text_input("Sender Password / App Password", type="password", placeholder="••••••••••••", key="smtp_pwd_input")
+                recipient_email = st.text_input("Recipient Email", value=recipient_email_val, key="smtp_rec_input")
+                
+                if st.button("💾 Save Settings", use_container_width=True, key="save_smtp_settings"):
+                    MetadataRepository.set("SMTP_SERVER", smtp_server)
+                    MetadataRepository.set("SMTP_PORT", smtp_port)
+                    MetadataRepository.set("SMTP_USER", smtp_user)
+                    if smtp_password:
+                        MetadataRepository.set("SMTP_PASSWORD", smtp_password)
+                    MetadataRepository.set("RECIPIENT_EMAIL", recipient_email)
+                    st.success("SMTP settings saved!")
+                    st.rerun()
+            
+            db_path = DATA_DIR / "investiq.db"
+            smtp_pwd_stored = MetadataRepository.get("SMTP_PASSWORD")
+            btn_disabled = not (smtp_user_val and recipient_email_val and db_path.exists())
+            
+            if st.button("📨 Send Backup to Email", type="primary", use_container_width=True, disabled=btn_disabled, key="send_backup_email_btn"):
+                from services.email_service import EmailService
+                smtp_password_active = smtp_pwd_stored if not smtp_password else smtp_password
+                if not smtp_password_active:
+                    st.error("Please configure the SMTP Sender Password first.")
+                else:
+                    with st.spinner("Sending backup email..."):
+                        success, msg = EmailService.send_backup_email(
+                            smtp_server=smtp_server_val,
+                            smtp_port=smtp_port_val,
+                            smtp_user=smtp_user_val,
+                            smtp_password=smtp_password_active,
+                            recipient_email=recipient_email_val,
+                            db_path=db_path
+                        )
+                        if success:
+                            st.success(msg)
+                        else:
+                            st.error(msg)
 
 # -------------------------------------------------------------
 # TAB 3: Cloud Persistence Guide

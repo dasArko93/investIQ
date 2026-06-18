@@ -24,10 +24,20 @@ st.write(
     "Use the tabs below to explore overview, allocation, and performance analysis."
 )
 
-file = st.file_uploader("Upload Holdings", type=["csv", "xlsx"])
-if file:
-    rows = HoldingsService.upload(file)
-    st.success(f"{rows} holdings uploaded")
+files = st.file_uploader("Upload Holdings", type=["csv", "xlsx"], accept_multiple_files=True)
+if files:
+    total_uploaded = 0
+    errors = []
+    for file in files:
+        try:
+            rows = HoldingsService.upload(file)
+            total_uploaded += rows
+        except Exception as e:
+            errors.append(f"Failed to process {file.name}: {e}")
+    if total_uploaded > 0:
+        st.success(f"Successfully uploaded {total_uploaded} holdings from {len(files) - len(errors)} file(s)!")
+    for err in errors:
+        st.error(err)
 
 holdings = load_holdings()
 merged = merged_holdings()
