@@ -244,3 +244,14 @@ class Goal(Base):
     current_amount = Column(Float)
 
     target_date = Column(String)
+
+
+class MFHolding(Base):
+    __tablename__ = "mf_holdings"
+
+    id = Column(Integer, primary_key=True)
+    fund_name = Column(String, index=True)
+    sector = Column(String)
+    date = Column(String)
+    allocation = Column(Float)
+    created_at = Column(DateTime, default=datetime.utcnow)

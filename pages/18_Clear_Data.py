@@ -1,7 +1,11 @@
 # PATH_FIX: ensure root imports work when Streamlit executes page scripts from the pages folder
-import os, sys
+import io
+import os
+import sys
+import zipfile
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import pandas as pd
 import streamlit as st
 from datetime import datetime
 from pathlib import Path
@@ -14,15 +18,41 @@ from database.models import (
     Watchlist,
     Alert,
     StockMaster,
-    Metadata
+    Metadata,
+    MFHolding
 )
 from utils.page_utils import render_sidebar
+from services.mf_holding_service import MFHoldingService
 
 # Set up Streamlit Page
 st.set_page_config(page_title="InvestIQ - Database Admin", page_icon="⚙️", layout="wide", initial_sidebar_state="expanded")
 from utils.page_utils import require_auth, safe_get_secret
 require_auth()
 render_sidebar()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Helper: serialise MF holding pattern session-state → ZIP of CSVs
+# ─────────────────────────────────────────────────────────────────────────────
+def build_mf_zip() -> bytes | None:
+    """
+    Reads st.session_state['mf_holdings'] (dict of {fund_name: DataFrame})
+    and returns a ZIP file in memory containing one CSV per fund.
+    Returns None if there is no MF data loaded.
+    """
+    mf_data: dict = st.session_state.get("mf_holdings", {})
+    if not mf_data:
+        return None
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for fund_name, df in mf_data.items():
+            # Sanitise fund name to make a safe filename
+            safe_name = "".join(c if c.isalnum() or c in " _-" else "_" for c in fund_name).strip()
+            csv_bytes = df.to_csv(index=False).encode("utf-8")
+            zf.writestr(f"{safe_name}.csv", csv_bytes)
+    return buf.getvalue()
+
 
 st.title("⚙️ Database Admin & Operations")
 st.write("Monitor database records, download backups, configure cloud persistence, and perform maintenance or reset operations.")
@@ -47,7 +77,8 @@ def get_db_stats():
             "Price History Cache": db.query(PriceHistory).count(),
             "Watchlist": db.query(Watchlist).count(),
             "Alerts": db.query(Alert).count(),
-            "System Metadata": db.query(Metadata).count()
+            "System Metadata": db.query(Metadata).count(),
+            "MF Holdings (Total Records)": db.query(MFHolding).count()
         }
         return stats
     except Exception as e:
@@ -71,11 +102,12 @@ with tab_status:
     st.subheader("Current Database Summary")
     stats = get_db_stats()
     if stats:
-        cols = st.columns(4)
+        cols = st.columns(5)
         cols[0].metric("Unique Stocks (Current Holdings)", f"{stats['Unique Stocks (Current)']:,}")
         cols[1].metric("Stock Universe Master", f"{stats['Stock Universe Master']:,}")
         cols[2].metric("Price History Cache", f"{stats['Price History Cache']:,}")
         cols[3].metric("Watchlists & Alerts", f"{stats['Watchlist'] + stats['Alerts']:,}")
+        cols[4].metric("MF Holdings Records", f"{stats['MF Holdings (Total Records)']:,}")
     else:
         st.warning("Could not retrieve database status. Verify database connectivity.")
         
@@ -137,6 +169,25 @@ with tab_backup:
                         use_container_width=True
                     )
                     st.caption(f"File path: `data/investiq.db` | Size: {len(db_bytes)/1024:.2f} KB")
+
+                    # ── MF Holding Pattern ZIP download ───────────────────────
+                    mf_zip_bytes = build_mf_zip()
+                    if mf_zip_bytes:
+                        st.download_button(
+                            label="📊 Download MF Holding Pattern Backup (.zip)",
+                            data=mf_zip_bytes,
+                            file_name=f"mf_holding_pattern_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                            mime="application/zip",
+                            use_container_width=True,
+                            key="mf_download_backup",
+                        )
+                        n_funds = len(st.session_state.get("mf_holdings", {}))
+                        st.caption(f"Contains **{n_funds}** fund CSV(s) | Size: {len(mf_zip_bytes)/1024:.2f} KB")
+                    else:
+                        st.info(
+                            "📊 No MF holding pattern data loaded. "
+                            "Upload fund files in **MF Holding Pattern** to include them in the backup."
+                        )
                 except Exception as e:
                     st.error(f"Error reading SQLite file: {e}")
             else:
@@ -162,6 +213,27 @@ with tab_backup:
                         st.rerun()
                     except Exception as e:
                         st.error(f"Failed to restore SQLite file: {e}")
+
+            st.divider()
+            st.write("Or restore **Mutual Fund Holding Patterns** from a previously downloaded `.zip` backup.")
+            uploaded_mf_zip = st.file_uploader("Upload MF Backup File (.zip)", type=["zip"], key="mf_zip_uploader")
+            if uploaded_mf_zip is not None:
+                st.warning("⚠️ **Warning:** Restoring this backup will replace current mutual fund holding data. This cannot be undone.")
+                if st.button("📊 Confirm & Restore MF Holdings", type="primary", use_container_width=True, key="mf_zip_restore_btn"):
+                    try:
+                        with st.spinner("Restoring MF Holdings..."):
+                            MFHoldingService.clear_all_from_db()
+                            loaded, errors = MFHoldingService.process_zip_file(uploaded_mf_zip)
+                            if loaded:
+                                # Synchronize session state
+                                st.session_state["mf_holdings"] = MFHoldingService.load_from_db()
+                                st.success(f"✅ Successfully restored **{loaded}** fund(s) from ZIP backup!")
+                            for err in errors:
+                                st.error(err)
+                            if not errors:
+                                st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to restore MF Holdings ZIP: {e}")
 
         with col_email:
             st.markdown("### 📧 Email Backup")
@@ -201,6 +273,15 @@ with tab_backup:
                 if not smtp_password_active:
                     st.error("Please configure the SMTP Sender Password first.")
                 else:
+                    # ── Build optional MF ZIP attachment ─────────────────────
+                    extra_attachments = []
+                    mf_zip_bytes = build_mf_zip()
+                    if mf_zip_bytes:
+                        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        extra_attachments.append(
+                            (f"mf_holding_pattern_{ts}.zip", mf_zip_bytes, "zip")
+                        )
+
                     with st.spinner("Sending backup email..."):
                         success, msg = EmailService.send_backup_email(
                             smtp_server=smtp_server_val,
@@ -208,7 +289,8 @@ with tab_backup:
                             smtp_user=smtp_user_val,
                             smtp_password=smtp_password_active,
                             recipient_email=recipient_email_val,
-                            db_path=db_path
+                            db_path=db_path,
+                            extra_attachments=extra_attachments if extra_attachments else None,
                         )
                         if success:
                             st.success(msg)
@@ -279,6 +361,7 @@ with tab_maintenance:
         clear_price_cache = st.checkbox("❄️ Price History Cache", value=False, help="Delete historical price series data cached for charts and quant models.")
         clear_watchlist = st.checkbox("⭐ Watchlist & Alerts", value=False, help="Delete active watchlist items and price threshold notifications.")
         clear_metadata = st.checkbox("ℹ️ System Metadata", value=False, help="Delete upload timestamps and general app parameters.")
+        clear_mf_holdings = st.checkbox("📊 Mutual Fund Holdings Data", value=False, help="Delete all uploaded mutual fund sector holding records.")
         
         st.write("")
         
@@ -288,7 +371,7 @@ with tab_maintenance:
             key="confirm_selective"
         )
         
-        any_checked = clear_holdings or clear_universe or clear_price_cache or clear_watchlist or clear_metadata
+        any_checked = clear_holdings or clear_universe or clear_price_cache or clear_watchlist or clear_metadata or clear_mf_holdings
         btn_disabled_selective = (confirm_text_selective != "PURGE") or not any_checked
         
         if st.button("🗑️ Purge Selected Categories", type="primary", use_container_width=True, disabled=btn_disabled_selective):
@@ -317,6 +400,12 @@ with tab_maintenance:
                 if clear_metadata:
                     m_cnt = db.query(Metadata).delete()
                     deleted_log.append(f"System Metadata ({m_cnt})")
+
+                if clear_mf_holdings:
+                    mf_cnt = db.query(MFHolding).delete()
+                    if "mf_holdings" in st.session_state:
+                        st.session_state["mf_holdings"] = {}
+                    deleted_log.append(f"MF Holdings ({mf_cnt})")
                     
                 db.commit()
                 st.success("✅ Selected categories purged successfully:\n" + "\n".join([f"- {item}" for item in deleted_log]))
@@ -364,12 +453,17 @@ with tab_maintenance:
                     (Alert, "Alerts"),
                     (StockMaster, "Stock Master"),
                     (Metadata, "Metadata"),
+                    (MFHolding, "MF Holdings"),
                 ]
                 
                 summary_msgs = []
                 for model, name in tables:
                     count = db.query(model).delete()
                     summary_msgs.append(f"- Deleted {count} {name} records")
+                    
+                # Reset MF session state
+                if "mf_holdings" in st.session_state:
+                    st.session_state["mf_holdings"] = {}
                     
                 db.commit()
                 st.success("🎉 Full database reset completed successfully:\n" + "\n".join(summary_msgs))
