@@ -60,6 +60,10 @@ st.divider()
 
 # Helper function to get current counts of database records
 def get_db_stats():
+    # Guarantee that all tables exist before querying statistics
+    from database.models import Base
+    Base.metadata.create_all(bind=engine)
+    
     db = SessionLocal()
     try:
         from sqlalchemy import func
@@ -208,6 +212,10 @@ with tab_backup:
                         db_path = DATA_DIR / "investiq.db"
                         with open(db_path, "wb") as f:
                             f.write(uploaded_file.getbuffer())
+                            
+                        # Ensure all tables exist in the newly written SQLite DB file
+                        from database.models import Base
+                        Base.metadata.create_all(bind=engine)
                             
                         st.success("✅ Database restored successfully! Reloading portal...")
                         st.rerun()

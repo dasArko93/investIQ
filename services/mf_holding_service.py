@@ -10,6 +10,10 @@ class MFHoldingService:
     @staticmethod
     def load_from_db() -> dict:
         """Load all mf holdings from sqlite db and pivot them back into wide format DataFrames."""
+        from database.models import Base
+        from database.db import engine
+        Base.metadata.create_all(bind=engine)
+        
         db = SessionLocal()
         try:
             rows = db.query(MFHolding).all()
@@ -48,6 +52,10 @@ class MFHoldingService:
     @staticmethod
     def save_to_db(fund_name: str, df: pd.DataFrame):
         """Save a mutual fund holding wide DataFrame to the database in long format."""
+        from database.models import Base
+        from database.db import engine
+        Base.metadata.create_all(bind=engine)
+        
         db = SessionLocal()
         try:
             # Delete existing rows for this fund
@@ -82,6 +90,10 @@ class MFHoldingService:
     @staticmethod
     def clear_all_from_db():
         """Clear all mutual fund holding records from the database."""
+        from database.models import Base
+        from database.db import engine
+        Base.metadata.create_all(bind=engine)
+        
         db = SessionLocal()
         try:
             db.query(MFHolding).delete()

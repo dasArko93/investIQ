@@ -31,3 +31,8 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine
 )
+
+# Ensure all database tables exist on module import (critical for Streamlit subpages accessed directly)
+from database.models import Base
+Base.metadata.create_all(bind=engine)
+
