@@ -24,5 +24,5 @@ merged = merged_holdings()
 
 if require_data(merged, "Upload both holdings and stock universe to analyze sectors."):
     sector_data = SectorEngine.sector_allocation(merged).reset_index()
-    st.plotly_chart(px.bar(sector_data, x="Sub-Sector", y="Current Value Rs"), use_container_width=True)
-    st.dataframe(sector_data, use_container_width=True)
+    st.plotly_chart(px.bar(sector_data, x="Sub-Sector", y="Current Value Rs"), width='stretch')
+    st.dataframe(sector_data, width='stretch')

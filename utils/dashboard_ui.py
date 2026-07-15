@@ -10,6 +10,7 @@ import streamlit as st
 from services.dashboard_service import DashboardService
 from services.health_service import HealthService
 from services.recommendation_service import RecommendationService
+from services.price_history_service import PriceHistoryService
 from utils.page_utils import load_holdings, load_universe, merged_holdings
 
 
@@ -565,28 +566,72 @@ def historical_trend_figure(view_mode="All Uploads"):
 
 
 def allocation_figure(merged):
+    universe_df = load_universe()
+    
     if merged.empty or "Sub-Sector" not in merged:
         labels = ["Equity", "Debt", "Cash", "Gold"]
-        values = [81.2, 10.3, 6.1, 2.4]
+        port_values = [0.812, 0.103, 0.061, 0.024]
+        bench_values = [0.70, 0.15, 0.10, 0.05]
+        labels_all = labels
     else:
+        # Get top 5 sectors from portfolio
         sector = merged.groupby("Sub-Sector")["Current Value Rs"].sum().sort_values(ascending=False)
         labels = sector.index[:5].tolist()
         values = sector.iloc[:5].tolist()
+        
+        port_total_all = merged["Current Value Rs"].sum()
+        port_values = [v / port_total_all for v in values]
+        port_values.append(max(0.0, 1.0 - sum(port_values)))
+        
+        labels_all = labels + ["Others"]
+        
+        # Calculate benchmark sector weights from universe database
+        if not universe_df.empty and "Sub-Sector" in universe_df.columns and "Market Cap" in universe_df.columns:
+            univ_sectors = universe_df.groupby("Sub-Sector")["Market Cap"].sum()
+            univ_total = univ_sectors.sum()
+            
+            bench_values = []
+            for label in labels:
+                val = univ_sectors.get(label, 0.0)
+                bench_values.append(val / univ_total if univ_total > 0 else 0.0)
+            
+            bench_total_top = sum(bench_values)
+            bench_values.append(max(0.0, 1.0 - bench_total_top))
+        else:
+            # Fallback benchmark
+            bench_values = [0.25, 0.20, 0.15, 0.10, 0.10, 0.20]
 
-    fig = go.Figure(
+    # Create double donut chart for comparison
+    fig = go.Figure()
+    
+    # Outer Donut: Nifty 100 Benchmark
+    fig.add_trace(
         go.Pie(
-            labels=labels,
-            values=values,
-            hole=0.58,
-            marker=dict(colors=["#2563eb", "#20d3c2", "#8b5cf6", "#facc15", "#64748b"]),
+            labels=labels_all,
+            values=bench_values,
+            hole=0.72,
+            domain=dict(x=[0, 1], y=[0, 1]),
+            marker=dict(colors=["#2563eb", "#20d3c2", "#8b5cf6", "#facc15", "#38bdf8", "#64748b"]),
             textinfo="none",
+            name="Nifty 100",
+            hovertemplate="<b>Benchmark (Nifty 100)</b><br>%{label}: %{percent:.1%}<extra></extra>"
         )
     )
-    fig.update_traces(
-        hovertemplate="%{label}: %{percent:.1%}<br>Value: Rs %{value:,.0f}<extra></extra>",
-        pull=[0.02 if i == 0 else 0 for i in range(len(labels))],
+    
+    # Inner Donut: Portfolio
+    fig.add_trace(
+        go.Pie(
+            labels=labels_all,
+            values=port_values,
+            hole=0.46,
+            domain=dict(x=[0.18, 0.82], y=[0.18, 0.82]),
+            marker=dict(colors=["#2563eb", "#20d3c2", "#8b5cf6", "#facc15", "#38bdf8", "#64748b"]),
+            textinfo="none",
+            name="My Portfolio",
+            hovertemplate="<b>My Portfolio</b><br>%{label}: %{percent:.1%}<extra></extra>"
+        )
     )
-
+    
     fig.update_layout(
         height=320,
         margin=dict(l=8, r=8, t=18, b=12),
@@ -594,8 +639,10 @@ def allocation_figure(merged):
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#000000", size=12),
         showlegend=True,
-        legend=dict(x=0.72, y=0.5, font=dict(color="#000000")),
-        annotations=[dict(text="Total", x=0.5, y=0.5, showarrow=False, font=dict(size=14, color="#000000"))],
+        legend=dict(x=0.75, y=0.5, font=dict(color="#000000")),
+        annotations=[
+            dict(text="Inner: Port<br>Outer: Index", x=0.5, y=0.5, showarrow=False, font=dict(size=11, color="#000000"))
+        ]
     )
     return fig
 
@@ -606,7 +653,12 @@ def health_figure(score):
     if score:
         values = [min(100, score + 5), min(100, score + 8), max(0, score - 5), min(100, score + 10), score, max(0, score - 8)]
 
+    # Benchmark average health scores (highly diversified, highly liquid, moderate valuation/risk)
+    bench_values = [90, 70, 75, 95, 65, 50]
+
     fig = go.Figure()
+    
+    # Portfolio Trace
     fig.add_trace(
         go.Scatterpolar(
             r=values + [values[0]],
@@ -615,9 +667,23 @@ def health_figure(score):
             line=dict(color="#20d3c2"),
             fillcolor="rgba(32, 211, 194, 0.22)",
             hovertemplate="%{theta}: %{r}<extra></extra>",
-            name="Health",
+            name="My Portfolio",
         )
     )
+    
+    # Benchmark Trace
+    fig.add_trace(
+        go.Scatterpolar(
+            r=bench_values + [bench_values[0]],
+            theta=labels + [labels[0]],
+            fill="toself",
+            line=dict(color="#EF553B"),
+            fillcolor="rgba(239, 85, 59, 0.15)",
+            hovertemplate="%{theta}: %{r}<extra></extra>",
+            name="Nifty 100 Benchmark",
+        )
+    )
+    
     fig.update_layout(
         height=320,
         margin=dict(l=12, r=12, t=18, b=12),
@@ -629,7 +695,8 @@ def health_figure(score):
             angularaxis=dict(gridcolor="rgba(71,85,105,0.15)"),
             domain=dict(x=[0, 1], y=[0, 1]),
         ),
-        showlegend=False,
+        showlegend=True,
+        legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center", font=dict(color="#000000")),
     )
     return fig
 
@@ -787,12 +854,12 @@ def render_investiq_dashboard():
     top_middle, top_right = st.columns([1, 1])
     with top_middle:
         st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Asset Allocation</div></div>', unsafe_allow_html=True)
-        st.plotly_chart(allocation_figure(merged), use_container_width=True, config={"displayModeBar": True})
-        st.page_link("pages/1_Portfolio.py", label="View full allocation ->")
+        st.plotly_chart(allocation_figure(merged), width='stretch', config={"displayModeBar": True})
+        st.page_link("pages/1_holding.py", label="View full allocation ->")
     with top_right:
         st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Health</div></div>', unsafe_allow_html=True)
-        st.plotly_chart(health_figure(health), use_container_width=True, config={"displayModeBar": True})
-        st.page_link("pages/1_Portfolio.py", label="View detailed analysis ->")
+        st.plotly_chart(health_figure(health), width='stretch', config={"displayModeBar": True})
+        st.page_link("pages/1_holding.py", label="View detailed analysis ->")
 
     # Main performance chart below the small panels: show title only, make chart interactive
     from services.holdings_service import HoldingsService
@@ -810,10 +877,10 @@ def render_investiq_dashboard():
                 label_visibility="collapsed"
             )
         trend_fig = historical_trend_figure(view_mode=view_mode)
-        st.plotly_chart(trend_fig, use_container_width=True, config={"displayModeBar": True})
+        st.plotly_chart(trend_fig, width='stretch', config={"displayModeBar": True})
     else:
         st.markdown('<div style="margin-bottom:8px;"><div class="iq-panel-title">Portfolio Performance (Simulated)</div></div>', unsafe_allow_html=True)
-        st.plotly_chart(performance_figure(summary), use_container_width=True, config={"displayModeBar": True})
+        st.plotly_chart(performance_figure(summary), width='stretch', config={"displayModeBar": True})
 
 
     holdings_col, sector_col, opp_col = st.columns([1.1, 1.25, 1.1])

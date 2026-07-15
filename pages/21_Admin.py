@@ -130,7 +130,7 @@ with cleanup_tab1:
     st.markdown("### Clear Holdings Data")
     st.warning("⚠️ This will delete all holdings records. This action **cannot be undone**.")
     
-    if st.button("🗑️ Clear All Holdings", key="clear_holdings", use_container_width=True):
+    if st.button("🗑️ Clear All Holdings", key="clear_holdings", width='stretch'):
         confirmation = st.text_input("Type 'DELETE ALL HOLDINGS' to confirm:", key="confirm_holdings")
         if confirmation == "DELETE ALL HOLDINGS":
             db = SessionLocal()
@@ -153,7 +153,7 @@ with cleanup_tab2:
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🗑️ Clear All Database Records", key="clear_all_db", use_container_width=True):
+        if st.button("🗑️ Clear All Database Records", key="clear_all_db", width='stretch'):
             confirmation = st.text_input("Type 'DELETE ALL DATABASE' to confirm:", key="confirm_all_db")
             if confirmation == "DELETE ALL DATABASE":
                 db = SessionLocal()
@@ -235,7 +235,7 @@ with cleanup_tab3:
             st.markdown(f"- **{file_path.name}** ({size_kb:.2f} KB)")
             file_list.append(file_path)
         
-        if st.button("🗑️ Delete All Data Files", key="delete_files", use_container_width=True):
+        if st.button("🗑️ Delete All Data Files", key="delete_files", width='stretch'):
             confirmation = st.text_input("Type 'DELETE FILES' to confirm:", key="confirm_files")
             if confirmation == "DELETE FILES":
                 deleted = 0
@@ -317,12 +317,12 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("### Fetch Price History")
-    if st.button("📥 Fetch 180-Day Prices", use_container_width=True):
+    if st.button("📥 Fetch 180-Day Prices", width='stretch'):
         st.info("Run this command in terminal:\n```\npython services/price_history_service.py\n```")
 
 with col2:
     st.markdown("### Analyze Trends")
-    if st.button("📊 Run Trend Analysis", use_container_width=True):
+    if st.button("📊 Run Trend Analysis", width='stretch'):
         st.info("Run this command in terminal:\n```\npython demo_versioning.py\n```")
 
 st.divider()

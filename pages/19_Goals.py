@@ -43,4 +43,4 @@ data = [
     }
     for row in rows
 ]
-st.dataframe(pd.DataFrame(data), use_container_width=True)
+st.dataframe(pd.DataFrame(data), width='stretch')

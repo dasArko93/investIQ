@@ -170,7 +170,7 @@ with tab_backup:
                         data=db_bytes,
                         file_name=f"investiq_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db",
                         mime="application/octet-stream",
-                        use_container_width=True
+                        width='stretch'
                     )
                     st.caption(f"File path: `data/investiq.db` | Size: {len(db_bytes)/1024:.2f} KB")
 
@@ -182,7 +182,7 @@ with tab_backup:
                             data=mf_zip_bytes,
                             file_name=f"mf_holding_pattern_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
                             mime="application/zip",
-                            use_container_width=True,
+                            width='stretch',
                             key="mf_download_backup",
                         )
                         n_funds = len(st.session_state.get("mf_holdings", {}))
@@ -204,7 +204,7 @@ with tab_backup:
             uploaded_file = st.file_uploader("Upload .db Backup File", type=["db"])
             if uploaded_file is not None:
                 st.warning("⚠️ **Warning:** Restoring a backup will completely overwrite your current database. This cannot be undone.")
-                if st.button("🔥 Confirm & Overwrite Database", type="primary", use_container_width=True):
+                if st.button("🔥 Confirm & Overwrite Database", type="primary", width='stretch'):
                     try:
                         # Close any active connections before replacing the SQLite file
                         engine.dispose()
@@ -227,7 +227,7 @@ with tab_backup:
             uploaded_mf_zip = st.file_uploader("Upload MF Backup File (.zip)", type=["zip"], key="mf_zip_uploader")
             if uploaded_mf_zip is not None:
                 st.warning("⚠️ **Warning:** Restoring this backup will replace current mutual fund holding data. This cannot be undone.")
-                if st.button("📊 Confirm & Restore MF Holdings", type="primary", use_container_width=True, key="mf_zip_restore_btn"):
+                if st.button("📊 Confirm & Restore MF Holdings", type="primary", width='stretch', key="mf_zip_restore_btn"):
                     try:
                         with st.spinner("Restoring MF Holdings..."):
                             MFHoldingService.clear_all_from_db()
@@ -262,7 +262,7 @@ with tab_backup:
                 smtp_password = st.text_input("Sender Password / App Password", type="password", value=smtp_pwd_stored, key="smtp_pwd_input")
                 recipient_email = st.text_input("Recipient Email", value=recipient_email_val, key="smtp_rec_input")
                 
-                if st.button("💾 Save Settings", use_container_width=True, key="save_smtp_settings"):
+                if st.button("💾 Save Settings", width='stretch', key="save_smtp_settings"):
                     MetadataRepository.set("SMTP_SERVER", smtp_server)
                     MetadataRepository.set("SMTP_PORT", smtp_port)
                     MetadataRepository.set("SMTP_USER", smtp_user)
@@ -275,7 +275,7 @@ with tab_backup:
             db_path = DATA_DIR / "investiq.db"
             btn_disabled = not (smtp_user_val and recipient_email_val and db_path.exists())
             
-            if st.button("📨 Send Backup to Email", type="primary", use_container_width=True, disabled=btn_disabled, key="send_backup_email_btn"):
+            if st.button("📨 Send Backup to Email", type="primary", width='stretch', disabled=btn_disabled, key="send_backup_email_btn"):
                 from services.email_service import EmailService
                 smtp_password_active = smtp_pwd_stored if not smtp_password else smtp_password
                 if not smtp_password_active:
@@ -382,7 +382,7 @@ with tab_maintenance:
         any_checked = clear_holdings or clear_universe or clear_price_cache or clear_watchlist or clear_metadata or clear_mf_holdings
         btn_disabled_selective = (confirm_text_selective != "PURGE") or not any_checked
         
-        if st.button("🗑️ Purge Selected Categories", type="primary", use_container_width=True, disabled=btn_disabled_selective):
+        if st.button("🗑️ Purge Selected Categories", type="primary", width='stretch', disabled=btn_disabled_selective):
             db = SessionLocal()
             deleted_log = []
             try:
@@ -449,7 +449,7 @@ with tab_maintenance:
         
         btn_disabled_full = (confirm_text_full != "PURGE ALL")
         
-        if st.button("🔥 Full Database Reset (Delete All)", type="primary", use_container_width=True, disabled=btn_disabled_full):
+        if st.button("🔥 Full Database Reset (Delete All)", type="primary", width='stretch', disabled=btn_disabled_full):
             db = SessionLocal()
             try:
                 tables = [
@@ -515,7 +515,7 @@ with tab_maintenance:
                 key="confirm_files"
             )
             
-            if st.button("🗑️ Delete All Data Files", key="delete_files", use_container_width=True, disabled=(confirm_files_wipe != "DELETE FILES")):
+            if st.button("🗑️ Delete All Data Files", key="delete_files", width='stretch', disabled=(confirm_files_wipe != "DELETE FILES")):
                 deleted = 0
                 for file_path in file_list:
                     try:

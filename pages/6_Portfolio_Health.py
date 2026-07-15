@@ -27,4 +27,4 @@ if require_data(portfolio, "Upload holdings to evaluate portfolio health."):
     sector_count = merged["Sub-Sector"].nunique() if not merged.empty else 0
     health = HealthService.evaluate(portfolio, avg_quality, sector_count)
     st.metric("Portfolio Health", health)
-    st.dataframe(portfolio, use_container_width=True)
+    st.dataframe(portfolio, width='stretch')

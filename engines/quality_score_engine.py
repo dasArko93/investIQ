@@ -39,7 +39,10 @@ class QualityScoreEngine:
             "Alpha",
         ]:
             if column not in work:
-                work[column] = 0
+                if column == "ROCE" and "Return on Equity" in work:
+                    work["ROCE"] = work["Return on Equity"]
+                else:
+                    work[column] = 0
             work[column] = work[column].apply(number)
 
         score = pd.Series(0.0, index=work.index)

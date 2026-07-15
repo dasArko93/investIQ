@@ -39,7 +39,7 @@ class PriceHistoryService:
                 df.columns = [column[0].lower().replace(" ", "_") for column in df.columns]
             else:
                 df.columns = [str(column).lower().replace(" ", "_") for column in df.columns]
-            df = df.rename(columns={"datetime": "date"})
+            df = df.rename(columns={"index": "date", "datetime": "date"})
             df['ticker'] = ticker
             
             return df[['ticker', 'date', 'open', 'high', 'low', 'close', 'volume']]
@@ -94,7 +94,7 @@ class PriceHistoryService:
                             df_new.columns = [column[0].lower().replace(" ", "_") for column in df_new.columns]
                         else:
                             df_new.columns = [str(column).lower().replace(" ", "_") for column in df_new.columns]
-                        df_new = df_new.rename(columns={"datetime": "date"})
+                        df_new = df_new.rename(columns={"index": "date", "datetime": "date"})
                         df_new['ticker'] = ticker
                         
                         # Add new records to DB
