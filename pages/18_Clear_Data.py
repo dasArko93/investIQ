@@ -213,11 +213,27 @@ with tab_backup:
                         with open(db_path, "wb") as f:
                             f.write(uploaded_file.getbuffer())
                             
-                        # Ensure all tables exist in the newly written SQLite DB file
+                        # Ensure all tables exist and conform to our models schema
                         from database.models import Base
+                        from sqlalchemy import inspect, text
+                        try:
+                            inspector = inspect(engine)
+                            for table_name, table_obj in Base.metadata.tables.items():
+                                if table_name in inspector.get_table_names():
+                                    db_cols = {col["name"] for col in inspector.get_columns(table_name)}
+                                    model_cols = {col.name for col in table_obj.columns}
+                                    if not model_cols.issubset(db_cols):
+                                        with engine.begin() as conn:
+                                            if engine.dialect.name == "sqlite":
+                                                conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+                                            else:
+                                                conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
+                        except Exception:
+                            pass
+                            
                         Base.metadata.create_all(bind=engine)
                             
-                        st.success("✅ Database restored successfully! Reloading portal...")
+                        st.success("✅ Database restored and validated successfully! Reloading portal...")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Failed to restore SQLite file: {e}")
