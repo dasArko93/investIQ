@@ -37,14 +37,16 @@ from sqlalchemy import inspect, Table, MetaData, text
 
 try:
     inspector = inspect(engine)
-    if "stock_master" in inspector.get_table_names():
-        columns = [col["name"] for col in inspector.get_columns("stock_master")]
-        if "return_on_equity" not in columns:
-            with engine.begin() as conn:
-                if engine.dialect.name == "sqlite":
-                    conn.execute(text("DROP TABLE IF EXISTS stock_master"))
-                else:
-                    conn.execute(text("DROP TABLE IF EXISTS stock_master CASCADE"))
+    for table_name, table_obj in Base.metadata.tables.items():
+        if table_name in inspector.get_table_names():
+            db_cols = {col["name"] for col in inspector.get_columns(table_name)}
+            model_cols = {col.name for col in table_obj.columns}
+            if not model_cols.issubset(db_cols):
+                with engine.begin() as conn:
+                    if engine.dialect.name == "sqlite":
+                        conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+                    else:
+                        conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
 except Exception:
     pass
 
