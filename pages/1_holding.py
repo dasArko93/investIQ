@@ -157,11 +157,12 @@ else:
             }
         )
 
+        chart_df = merged if not merged.empty else holdings
         col_exec_charts = st.columns(2)
         with col_exec_charts[0]:
             # Donut chart for holdings value exposure
             fig_donut = px.pie(
-                merged,
+                chart_df,
                 names="Security",
                 values="Current Value Rs",
                 title="Current Portfolio Value Allocation",
@@ -179,7 +180,7 @@ else:
         with col_exec_charts[1]:
             # Gains/Losses Bar chart
             fig_pnl_bar = px.bar(
-                merged.sort_values(by="PnL Rs", ascending=True),
+                chart_df.sort_values(by="PnL Rs", ascending=True),
                 x="PnL Rs",
                 y="Security",
                 orientation="h",
