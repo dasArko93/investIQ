@@ -21,4 +21,4 @@ portfolio = load_holdings()
 
 if require_data(universe, "Upload the stock universe to generate buy-next ideas."):
     recommendations = BuyNextService.suggest(universe, portfolio, cash)
-    st.dataframe(pd.DataFrame(recommendations), use_container_width=True)
+    st.dataframe(pd.DataFrame(recommendations), width='stretch')

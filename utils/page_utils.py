@@ -340,7 +340,7 @@ def render_sidebar():
             st.page_link("app.py", label="Home", icon="🏠")
             
             # Holdings Page Link placed under Home
-            st.page_link("pages/1_Portfolio.py", label="Holdings", icon="💼")
+            st.page_link("pages/1_holding.py", label="holding", icon="💼")
             
             st.divider()
             
@@ -352,13 +352,11 @@ def render_sidebar():
             st.page_link("pages/9_Recommendations.py", label="Recommendations")
             st.caption("⚡ Actions")
             st.page_link("pages/8_Rebalance.py", label="Rebalance")
-            st.caption("📊 Reports")
-            st.page_link("pages/17_Portfolio_Report.py", label="Portfolio Report")
             st.caption("🧹 Database Operations")
             st.page_link("pages/18_Clear_Data.py", label="Database Admin", icon="⚙️")
             
             st.divider()
-            if st.button("🚪 Log Out", use_container_width=True):
+            if st.button("🚪 Log Out", width='stretch'):
                 st.session_state.authenticated = False
                 st.rerun()
 
@@ -500,7 +498,7 @@ def require_auth():
         password_input = st.text_input("Password", type="password", placeholder="••••••••••••", key="login_password_input")
         
         st.write("")
-        if st.button("Log In", type="primary", use_container_width=True):
+        if st.button("Log In", type="primary", width='stretch'):
             if email_input == allowed_email and password_input == allowed_password:
                 st.session_state.authenticated = True
                 st.success("Access Granted! Loading portal...")

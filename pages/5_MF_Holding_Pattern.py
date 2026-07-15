@@ -105,7 +105,7 @@ with st.expander("📂 Upload Mutual Fund Files", expanded=not bool(st.session_s
 
     col_upload, col_clear = st.columns([3, 1])
     with col_upload:
-        if st.button("⬆️ Parse & Load Selected Files", type="primary", use_container_width=True):
+        if st.button("⬆️ Parse & Load Selected Files", type="primary", width='stretch'):
             if not uploaded:
                 st.warning("Please select at least one file before loading.")
             else:
@@ -133,7 +133,7 @@ with st.expander("📂 Upload Mutual Fund Files", expanded=not bool(st.session_s
                 st.rerun()
 
     with col_clear:
-        if st.button("🗑️ Clear All Funds", use_container_width=True):
+        if st.button("🗑️ Clear All Funds", width='stretch'):
             st.session_state["mf_holdings"] = {}
             MFHoldingService.clear_all_from_db()
             st.rerun()
@@ -256,7 +256,7 @@ with tab_overview:
                 )
                 .properties(height=max(250, len(heatmap_data) * 22))
             )
-            st.altair_chart(heat_chart, use_container_width=True)
+            st.altair_chart(heat_chart, width='stretch')
 
     st.divider()
     st.markdown('<div class="section-hdr">Top 10 Sectors — Allocation Over Time</div>', unsafe_allow_html=True)
@@ -289,13 +289,13 @@ with tab_overview:
                 )
                 .properties(height=420, title=f"Top 10 Sector Allocation History — {fund_sel_ov}")
             )
-            st.altair_chart(line_chart, use_container_width=True)
+            st.altair_chart(line_chart, width='stretch')
 
     # Raw data expander
     with st.expander("📋 View Raw Data Table"):
         for fname, df_raw in mf_data.items():
             st.markdown(f"**{fname}**")
-            st.dataframe(df_raw, use_container_width=True, hide_index=True)
+            st.dataframe(df_raw, width='stretch', hide_index=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -344,7 +344,7 @@ with tab_trends:
             )
             .properties(height=420, title="Sector Allocation Trend")
         )
-        st.altair_chart(trend_line, use_container_width=True)
+        st.altair_chart(trend_line, width='stretch')
 
         # ── Delta Table (first → last period) ────────────────────────────────
         st.markdown('<div class="section-hdr">Period-over-Period Delta (First → Latest)</div>', unsafe_allow_html=True)
@@ -392,7 +392,7 @@ with tab_trends:
             styled = delta_df.style.map(color_delta, subset=["Δ Change (pp)"])
             st.dataframe(
                 styled,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     first_lbl: st.column_config.NumberColumn(first_lbl, format="%.2f%%"),
@@ -418,7 +418,7 @@ with tab_trends:
                 )
                 .properties(height=max(160, len(sel_sectors_t2) * 24), title="First → Latest Allocation Change")
             )
-            st.altair_chart(delta_bar, use_container_width=True)
+            st.altair_chart(delta_bar, width='stretch')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -506,7 +506,7 @@ with tab_benchmark:
                 )
                 .properties(height=max(300, len(mf_avg) * 22), title="MF Average Allocation")
             )
-            st.altair_chart(mf_bar, use_container_width=True)
+            st.altair_chart(mf_bar, width='stretch')
         else:
             st.info("No mutual fund data available to calculate average sector allocation.")
     else:
@@ -608,7 +608,7 @@ with tab_benchmark:
             styled_bench = display_bench.style.map(style_gap, subset=["Gap (pp)"])
             st.dataframe(
                 styled_bench,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     "Portfolio %": st.column_config.NumberColumn("My Portfolio %", format="%.2f%%"),
@@ -659,7 +659,7 @@ with tab_benchmark:
                 )
                 st.dataframe(
                     unmatched[["Sector", "Portfolio %"]],
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True,
                 )
 
@@ -717,7 +717,7 @@ with tab_compare:
                 )
                 .properties(height=max(300, len(cmp_df) * 28), title=f"{fund_a} vs {fund_b} — Sector Allocation")
             )
-            st.altair_chart(cmp_bar, use_container_width=True)
+            st.altair_chart(cmp_bar, width='stretch')
 
             st.divider()
 
@@ -746,7 +746,7 @@ with tab_compare:
                 )
                 .properties(height=max(300, len(cmp_df) * 22), title=f"Gap: {fund_a} minus {fund_b}")
             )
-            st.altair_chart(gap_bar, use_container_width=True)
+            st.altair_chart(gap_bar, width='stretch')
 
             # ── Correlation (if ≥ 2 funds and multiple dates) ──────────────────
             st.divider()
@@ -798,6 +798,6 @@ with tab_compare:
                             ),
                         )
                     )
-                    st.altair_chart(corr_heatmap + corr_text, use_container_width=False)
+                    st.altair_chart(corr_heatmap + corr_text, width='content')
                 else:
                     st.info("Load at least 2 funds to view the correlation matrix.")

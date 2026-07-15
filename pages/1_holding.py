@@ -5,23 +5,25 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import altair as alt
 import pandas as pd
 import streamlit as st
+import plotly.express as px
 
 from services.health_service import HealthService
 from services.holdings_service import HoldingsService
+from services.recommendation_service import RecommendationService
+from services.report_service import ReportService
 from utils.page_utils import load_holdings, load_universe, merged_holdings, require_data, render_sidebar
 
 
-st.set_page_config(page_title="InvestIQ", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="InvestIQ - holdings", layout="wide", initial_sidebar_state="expanded")
 
 from utils.page_utils import require_auth
 require_auth()
 
 render_sidebar()
 
-st.title("Holdings & Portfolio Analysis")
+st.title("holding")
 st.write(
-    "A unified portfolio view that combines holdings details, allocation insights, and health metrics. "
-    "Use the tabs below to explore overview, allocation, and performance analysis."
+    "A unified portfolio view that combines holdings details, allocation insights, health metrics, and executive summary report generation."
 )
 
 files = st.file_uploader("Upload Holdings", type=["csv", "xlsx"], accept_multiple_files=True)
@@ -40,6 +42,7 @@ if files:
         st.error(err)
 
 holdings = load_holdings()
+universe = load_universe()
 merged = merged_holdings()
 
 if holdings.empty:
@@ -65,37 +68,76 @@ else:
     holdings["Broker Sector"] = holdings["Broker Sector"].astype(str)
     holdings["Asset Class"] = holdings["Asset Class"].astype(str)
 
-    total_invested = holdings["Invested Value Rs"].sum()
-    total_current = holdings["Current Value Rs"].sum()
-    total_pnl = holdings["PnL Rs"].sum()
+    total_invested = float(holdings["Invested Value Rs"].sum())
+    total_current = float(holdings["Current Value Rs"].sum())
+    total_pnl = total_current - total_invested
+    pnl_pct = (total_pnl / total_invested * 100.0) if total_invested > 0 else 0.0
     total_day_pnl = holdings["Day PnL"].sum()
     avg_day_pnl_pct = holdings["Day PnL %"].mean()
     
-    return_pct = ((total_current - total_invested) / total_invested * 100) if total_invested else 0
     avg_weight = holdings["Portfolio Weight %"].mean()
+    
+    avg_quality = merged["QUALITY_SCORE"].fillna(0).mean() if not merged.empty else 0.0
+    sector_count = merged["Sub-Sector"].nunique() if not merged.empty else 0
+    health = HealthService.evaluate(holdings, avg_quality, sector_count)
+    
     if not merged.empty and "Sub-Sector" in merged.columns:
         mode_values = merged["Sub-Sector"].dropna().mode()
         top_sector_exposure = mode_values.iloc[0] if not mode_values.empty else "N/A"
     else:
         top_sector_exposure = "N/A"
 
-    tab_overview, tab_allocation, tab_health = st.tabs(
-        ["Overview", "Allocation", "Health"]
-    )
+    # Calculate concentration warnings
+    warnings = []
+    if not merged.empty:
+        merged["Weight %"] = (merged["Current Value Rs"] / total_current) * 100.0
+        
+        # Max stock weight
+        max_stock_w = merged["Weight %"].max()
+        max_stock_rows = merged.loc[merged["Weight %"] == max_stock_w]
+        if not max_stock_rows.empty:
+            max_stock_row = max_stock_rows.iloc[0]
+            if max_stock_w > 20:
+                warnings.append(f"Stock Concentration is HIGH. '{max_stock_row['Security']}' represents {max_stock_w:.1f}% of your portfolio.")
+            elif max_stock_w >= 10:
+                warnings.append(f"Stock Concentration is MODERATE. '{max_stock_row['Security']}' represents {max_stock_w:.1f}% of your portfolio.")
+            
+        # Max sector weight
+        sec_allocs = merged.groupby("Sub-Sector")["Current Value Rs"].sum()
+        if not sec_allocs.empty:
+            sec_pcts = (sec_allocs / total_current) * 100.0
+            max_sec_w = sec_pcts.max()
+            max_sec_name = sec_pcts.idxmax()
+            if max_sec_w > 40:
+                warnings.append(f"Sector Concentration is HIGH. '{max_sec_name}' represents {max_sec_w:.1f}% of your portfolio.")
+            elif max_sec_w >= 25:
+                warnings.append(f"Sector Concentration is MODERATE. '{max_sec_name}' represents {max_sec_w:.1f}% of your portfolio.")
 
+    # 2. Render KPI Summary Cards
+    metric_col1, metric_col2, metric_col3, metric_col4, metric_col5, metric_col6 = st.columns(6)
+    metric_col1.metric("Invested Value", f"₹{total_invested:,.2f}")
+    metric_col2.metric("Current Value", f"₹{total_current:,.2f}")
+    metric_col3.metric("Total P&L", f"₹{total_pnl:,.2f}", delta=f"{pnl_pct:+.2f}%")
+    metric_col4.metric("Day's P&L", f"₹{total_day_pnl:,.2f}", delta=f"{avg_day_pnl_pct:+.2f}%")
+    metric_col5.metric("Health Score", f"{health:.1f}/100")
+    metric_col6.metric("Avg Stock Quality", f"{avg_quality:.1f}/100")
+
+    st.divider()
+
+    # 3. Interactive Report Tabs
+    tab_overview, tab_allocation, tab_health, tab_export = st.tabs([
+        "📈 Overview",
+        "⚖️ Allocation & Risk",
+        "🔍 Fundamentals Audit & Health",
+        "📥 Export PDF Report"
+    ])
+
+    # --- Tab 1: Overview ---
     with tab_overview:
-        metric_col1, metric_col2, metric_col3, metric_col4, metric_col5 = st.columns(5)
-        metric_col1.metric("Invested Value", f"₹{total_invested:,.0f}")
-        metric_col2.metric("Current Value", f"₹{total_current:,.0f}")
-        metric_col3.metric("Total P&L", f"₹{total_pnl:,.0f}")
-        metric_col4.metric("Portfolio Return", f"{return_pct:.2f}%")
-        metric_col5.metric("Day's P&L", f"₹{total_day_pnl:,.0f}", delta=f"{avg_day_pnl_pct:+.2f}%")
-
-        st.divider()
         st.subheader("Current holding")
         st.dataframe(
             holdings,
-            use_container_width=True,
+            width='stretch',
             hide_index=True,
             column_config={
                 "Security": st.column_config.TextColumn("Security"),
@@ -114,6 +156,44 @@ else:
                 "Asset Class": st.column_config.TextColumn("Asset Class"),
             }
         )
+
+        col_exec_charts = st.columns(2)
+        with col_exec_charts[0]:
+            # Donut chart for holdings value exposure
+            fig_donut = px.pie(
+                merged,
+                names="Security",
+                values="Current Value Rs",
+                title="Current Portfolio Value Allocation",
+                hole=0.4,
+                color_discrete_sequence=px.colors.qualitative.Pastel
+            )
+            fig_donut.update_layout(
+                height=360,
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#000000"),
+                legend=dict(font=dict(color="#000000"))
+            )
+            st.plotly_chart(fig_donut, width='stretch')
+
+        with col_exec_charts[1]:
+            # Gains/Losses Bar chart
+            fig_pnl_bar = px.bar(
+                merged.sort_values(by="PnL Rs", ascending=True),
+                x="PnL Rs",
+                y="Security",
+                orientation="h",
+                title="Absolute Holding-Level Gain/Loss (INR)",
+                color="PnL Rs",
+                color_continuous_scale="RdYlGn"
+            )
+            fig_pnl_bar.update_layout(
+                height=360,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#000000")
+            )
+            st.plotly_chart(fig_pnl_bar, width='stretch')
 
         # Day's Performance Bar Chart
         if (holdings["Day PnL"] != 0).any():
@@ -135,8 +215,9 @@ else:
                 height=300,
                 title="Last Performance Breakdown (Holding-Level Day's P&L)"
             )
-            st.altair_chart(day_pnl_chart, use_container_width=True)
+            st.altair_chart(day_pnl_chart, width='stretch')
 
+        st.divider()
         summary_col1, summary_col2, summary_col3 = st.columns(3)
         summary_col1.metric("Holdings Count", len(holdings))
         summary_col2.metric("Average Weight", f"{avg_weight:.2f}%")
@@ -200,13 +281,13 @@ else:
                 height=350,
                 title=f"Historical Progress: Stacked Allocation & Performance ({view_mode})"
             )
-            st.altair_chart(trend_chart, use_container_width=True)
+            st.altair_chart(trend_chart, width='stretch')
             
             st.markdown("### Historical Snapshot Data Summary")
             display_df_snap = df_snap.copy().sort_values(by="date", ascending=False)
             st.dataframe(
                 display_df_snap,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     "Date": x_title,
@@ -217,9 +298,16 @@ else:
                 }
             )
 
+    # --- Tab 2: Allocation & Risk ---
     with tab_allocation:
-        st.subheader("Allocation Insights")
-        
+        st.subheader("Concentration Check & Diversification Gaps")
+        if warnings:
+            for w in warnings:
+                st.warning(w)
+        else:
+            st.success("✅ Concentration Risk: All stocks represent <20% and all sectors represent <40% of the portfolio. Good diversification!")
+
+        st.subheader("Asset & Sector Group Allocations")
         alloc_mode = st.radio(
             "Group Allocation By:", 
             ["Asset Class", "Broker Sector", "Universe Sector (Requires Stock Screener Data)"], 
@@ -246,11 +334,11 @@ else:
                 ]
             ).properties(height=240, title="Allocation by Asset Class")
             
-            st.altair_chart(asset_chart, use_container_width=True)
+            st.altair_chart(asset_chart, width='stretch')
             st.markdown("### Allocation Details")
             st.dataframe(
                 asset_alloc.rename(columns={"Current Value Rs": "Current Value", "Allocation %": "Allocation %"}),
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     "Current Value": st.column_config.NumberColumn("Current Value (₹)", format="₹%,.2f"),
@@ -278,11 +366,11 @@ else:
                 ]
             ).properties(height=350, title="Allocation by Broker Sector")
             
-            st.altair_chart(broker_chart, use_container_width=True)
+            st.altair_chart(broker_chart, width='stretch')
             st.markdown("### Allocation Details")
             st.dataframe(
                 broker_alloc.rename(columns={"Current Value Rs": "Current Value", "Allocation %": "Allocation %"}),
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     "Current Value": st.column_config.NumberColumn("Current Value (₹)", format="₹%,.2f"),
@@ -311,17 +399,17 @@ else:
                         alt.Tooltip("Allocation %", format=".2f"),
                         alt.Tooltip("Current Value Rs", format=",.0f"),
                     ],
-                ).properties(height=420, title="Sector Allocation (Universe)")
+                ).properties(height=350, title="Sector Allocation (Universe)")
 
                 allocation_table = allocation.rename(
                     columns={"Current Value Rs": "Current Value", "Allocation %": "Allocation %"}
                 )
 
-                st.altair_chart(allocation_chart, use_container_width=True)
+                st.altair_chart(allocation_chart, width='stretch')
                 st.markdown("### Allocation Details")
                 st.dataframe(
                     allocation_table, 
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True,
                     column_config={
                         "Current Value": st.column_config.NumberColumn("Current Value (₹)", format="₹%,.2f"),
@@ -387,127 +475,128 @@ else:
         ).properties(height=360, title="Top Contributors to P&L")
 
         st.markdown("### Top P&L Contributors")
-        st.altair_chart(contribution_chart, use_container_width=True)
+        st.altair_chart(contribution_chart, width='stretch')
 
+    # --- Tab 3: Fundamentals Audit & Health ---
     with tab_health:
-        st.subheader("Portfolio Health & Quality")
+        st.subheader("Holdings Financial Health & Quality Audit")
 
-        if require_data(merged, "Upload universe data in Stock Screener to enable health analytics."):
+        health_col1, health_col2, health_col3 = st.columns(3)
+        health_col1.metric("Health Score", f"{health:.1f}/100")
+        health_col2.metric("Avg Stock Quality", f"{avg_quality:.1f}/100")
+        health_col3.metric("Sector Diversity", sector_count)
+        
+        with health_col1:
+            with st.popover("❓ How is this calculated?"):
+                st.markdown("""
+                ### 📊 Portfolio Health Calculation
+                The health score is computed out of **100 points** based on the following rules:
+                
+                1. **Diversification (Max 25 pts):**
+                   - `min(number_of_holdings * 2, 25)`
+                2. **Concentration Control (Max 25 pts):**
+                   - **25 points** if no single stock exceeds `25%` weight.
+                   - **10 points** if any stock exceeds `25%` weight (concentration penalty).
+                3. **Sector Diversity (Max 20 pts):**
+                   - `min(unique_sectors * 2, 20)`
+                4. **Average Quality (Max 20 pts):**
+                   - `(average_portfolio_quality / 100) * 20`
+                5. **Cash Buffer (Fixed 10 pts):**
+                   - Fixed 10 points for liquidity buffer.
+                """)
+
+        st.write("")
+        
+        if require_data(merged, "Upload Stock Universe metadata in Stock Screener to review holdings fundamentals."):
             merged["Sector"] = merged["Sub-Sector"].fillna("Unknown")
             merged["QUALITY_SCORE"] = merged["QUALITY_SCORE"].fillna(0).astype(float)
-
-            avg_quality = merged["QUALITY_SCORE"].mean()
-            sector_count = merged["Sector"].nunique()
-            health_score = HealthService.evaluate(holdings, avg_quality, sector_count)
-
-            health_col1, health_col2, health_col3 = st.columns(3)
-            with health_col1:
-                st.metric("Health Score", f"{health_score:.1f}")
-                with st.popover("❓ How is this calculated?"):
-                    st.markdown("""
-                    ### 📊 Portfolio Health Calculation
-                    The health score is computed out of **100 points** based on the following rules:
-                    
-                    1. **Diversification (Max 25 pts):**
-                       - `min(number_of_holdings * 2, 25)`
-                    2. **Concentration Control (Max 25 pts):**
-                       - **25 points** if no single stock exceeds `25%` weight.
-                       - **10 points** if any stock exceeds `25%` weight (concentration penalty).
-                    3. **Sector Diversity (Max 20 pts):**
-                       - `min(unique_sectors * 2, 20)`
-                    4. **Average Quality (Max 20 pts):**
-                       - `(average_portfolio_quality / 100) * 20`
-                    5. **Cash Buffer (Fixed 10 pts):**
-                       - Fixed 10 points for liquidity buffer.
-                    
-                    ---
-                    ### 🎯 Score Ranges
-                    
-                    | Score | Rating |
-                    |---|---|
-                    | **80 – 100** | 🟢 Excellent |
-                    | **60 – 79** | 🟡 Good |
-                    | **40 – 59** | 🟠 Fair |
-                    | **0 – 39** | 🔴 Poor |
-                    
-                    ---
-                    ### 🚀 How to Improve Your Score
-                    
-                    1. **Hold 13+ stocks** — each stock adds 2 pts (max 25).
-                    2. **Keep top holding ≤ 25% weight** — exceeding this loses 15 pts.
-                    3. **Spread across 10+ sectors** — each sector adds 2 pts (max 20).
-                    4. **Pick higher quality stocks** — replace low-quality holdings with fundamentally strong ones.
-                    
-                    ---
-                    ### 💡 Concrete Examples
-                    
-                    #### Example 1: Well-Diversified Portfolio
-                    - **Holdings:** 8 stocks (largest weight is 18%)
-                    - **Sectors:** 5 unique sub-sectors
-                    - **Avg Quality:** 75.0 / 100
-                    - **Calculation:**
-                      - *Diversification:* 8 × 2 = 16 pts
-                      - *Concentration:* 25 pts (no stock exceeds 25%)
-                      - *Sector Diversity:* 5 × 2 = 10 pts
-                      - *Quality Score:* (75 / 100) × 20 = 15 pts
-                      - *Cash Buffer:* 10 pts (fixed)
-                      - **Total Health Score:** 16 + 25 + 10 + 15 + 10 = **76.00** 🟡
-                    
-                    #### Example 2: Concentrated Portfolio
-                    - **Holdings:** 3 stocks (largest weight is 45%)
-                    - **Sectors:** 2 unique sub-sectors
-                    - **Avg Quality:** 85.0 / 100
-                    - **Calculation:**
-                      - *Diversification:* 3 × 2 = 6 pts
-                      - *Concentration:* 10 pts (penalty applied as weight is 45% > 25%)
-                      - *Sector Diversity:* 2 × 2 = 4 pts
-                      - *Quality Score:* (85 / 100) × 20 = 17 pts
-                      - *Cash Buffer:* 10 pts (fixed)
-                      - **Total Health Score:** 6 + 10 + 4 + 17 + 10 = **47.00** 🟠
-                    
-                    #### Example 3: Ideal Portfolio
-                    - **Holdings:** 15 stocks (largest weight is 12%)
-                    - **Sectors:** 10 unique sub-sectors
-                    - **Avg Quality:** 80.0 / 100
-                    - **Calculation:**
-                      - *Diversification:* 15 × 2 = 30 → capped at 25 pts
-                      - *Concentration:* 25 pts (no stock exceeds 25%)
-                      - *Sector Diversity:* 10 × 2 = 20 pts
-                      - *Quality Score:* (80 / 100) × 20 = 16 pts
-                      - *Cash Buffer:* 10 pts (fixed)
-                      - **Total Health Score:** 25 + 25 + 20 + 16 + 10 = **96.00** 🟢
-                    """)
-            health_col2.metric("Avg Quality Score", f"{avg_quality:.2f}")
-            health_col3.metric("Sector Diversity", sector_count)
-
-            quality_by_sector = (
-                merged.groupby("Sector", dropna=False)["QUALITY_SCORE"]
-                .mean()
-                .reset_index()
-                .sort_values("QUALITY_SCORE", ascending=False)
+            available_cols = [c for c in ["Security", "QUALITY_SCORE", "ROCE", "Return on Equity", "Debt to Equity", "5Y CAGR", "PE Ratio", "Fundamental Score"] if c in merged.columns]
+            audit_df = merged[available_cols].copy()
+            st.dataframe(
+                audit_df,
+                width='stretch',
+                hide_index=True,
+                column_config={
+                    "Security": "Ticker Symbol",
+                    "QUALITY_SCORE": st.column_config.NumberColumn("Quality Rating", format="%.0f/100"),
+                    "ROCE": st.column_config.NumberColumn("ROCE (%)", format="%.1f%%"),
+                    "Return on Equity": st.column_config.NumberColumn("Return on Equity (%)", format="%.1f%%"),
+                    "Debt to Equity": st.column_config.NumberColumn("D/E Ratio", format="%.2f"),
+                    "5Y CAGR": st.column_config.NumberColumn("5Y CAGR (%)", format="%.1f%%"),
+                    "PE Ratio": st.column_config.NumberColumn("PE Ratio", format="%.2f"),
+                    "Fundamental Score": st.column_config.NumberColumn("Fundamental Score", format="%.1f")
+                }
             )
-            quality_chart = alt.Chart(quality_by_sector).mark_circle(size=120).encode(
-                x=alt.X("QUALITY_SCORE:Q", title="Avg Quality Score"),
-                y=alt.Y("Sector:N", sort="-x"),
-                color=alt.Color("QUALITY_SCORE:Q", scale=alt.Scale(scheme="tealblues"), legend=alt.Legend(title="Quality Score", labelColor="#000000", titleColor="#000000")),
-                tooltip=["Sector", alt.Tooltip("QUALITY_SCORE", format=".2f")],
-            ).properties(height=420, title="Quality Score by Sector")
 
-            performance = merged.copy()
-            performance["PnL %"] = (
-                (performance["Current Value Rs"] - performance["Invested Value Rs"]) /
-                performance["Invested Value Rs"].replace({0: pd.NA}) * 100
-            ).fillna(0)
-            performance_category = performance.groupby("Sector", dropna=False)["PnL %"].mean().reset_index()
-            performance_chart = alt.Chart(performance_category).mark_bar().encode(
-                x=alt.X("PnL %:Q", title="Avg PnL %"),
-                y=alt.Y("Sector:N", sort="-x"),
-                color=alt.condition(alt.datum["PnL %"] > 0, alt.value("#2ca02c"), alt.value("#d62728")),
-                tooltip=["Sector", alt.Tooltip("PnL %", format=".2f")],
-            ).properties(height=420, title="Average Sector P&L %")
+            # Scatter plot: PE Ratio vs. Quality Score
+            fig_scatter = px.scatter(
+                merged,
+                x="QUALITY_SCORE",
+                y="PE Ratio",
+                text="Security",
+                size="Current Value Rs",
+                color="Sub-Sector" if "Sub-Sector" in merged.columns else None,
+                title="Holdings Value: Valuation (P/E) vs. Quality Score (Size of bubble represents holding value)",
+                hover_data=[c for c in ["Security", "ROCE", "Return on Equity", "Debt to Equity"] if c in merged.columns]
+            )
+            fig_scatter.update_layout(
+                height=400,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#000000"),
+                legend=dict(font=dict(color="#000000"))
+            )
+            st.plotly_chart(fig_scatter, width='stretch')
 
-            st.altair_chart(quality_chart, use_container_width=True)
-            st.altair_chart(performance_chart, use_container_width=True)
+            st.subheader("Sector Quality and P&L Breakdown")
+            
+            col_quality_charts = st.columns(2)
+            with col_quality_charts[0]:
+                quality_by_sector = (
+                    merged.groupby("Sector", dropna=False)["QUALITY_SCORE"]
+                    .mean()
+                    .reset_index()
+                    .sort_values("QUALITY_SCORE", ascending=False)
+                )
+                fig_qual_sec = px.scatter(
+                    quality_by_sector,
+                    x="QUALITY_SCORE",
+                    y="Sector",
+                    color="QUALITY_SCORE",
+                    title="Average Quality Score by Sector",
+                    color_continuous_scale="Viridis"
+                )
+                fig_qual_sec.update_layout(
+                    height=360,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#000000")
+                )
+                st.plotly_chart(fig_qual_sec, width='stretch')
+
+            with col_quality_charts[1]:
+                performance = merged.copy()
+                performance["PnL %"] = (
+                    (performance["Current Value Rs"] - performance["Invested Value Rs"]) /
+                    performance["Invested Value Rs"].replace({0: pd.NA}) * 100
+                ).fillna(0)
+                performance_category = performance.groupby("Sector", dropna=False)["PnL %"].mean().reset_index()
+                fig_perf_sec = px.bar(
+                    performance_category,
+                    x="PnL %",
+                    y="Sector",
+                    orientation="h",
+                    title="Average Sector P&L %",
+                    color="PnL %",
+                    color_continuous_scale="RdYlGn"
+                )
+                fig_perf_sec.update_layout(
+                    height=360,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#000000")
+                )
+                st.plotly_chart(fig_perf_sec, width='stretch')
 
             st.markdown(
                 "### Health Analysis Notes"
@@ -517,3 +606,39 @@ else:
             )
         else:
             st.info("Portfolio health metrics require universe metadata uploaded in Stock Screener.")
+
+    # --- Tab 4: Export PDF Report ---
+    with tab_export:
+        st.subheader("📥 Export Executive Report (PDF)")
+        st.write("Generate a formal, publication-ready PDF report summary of your portfolio for presentation or archives.")
+        
+        # Recommendations df is needed by summary dictionary
+        recommendations_df = RecommendationService.generate(universe) if not universe.empty else pd.DataFrame()
+        summary = ReportService.generate(holdings, health, recommendations_df)
+        summary["concentration_warnings"] = warnings
+        
+        col_preview = st.columns([1, 2])
+        with col_preview[0]:
+            st.info("📄 **Report Structure Preview:**\n- **Page 1:** Executive Summary, P&L Metrics, and Top Holdings Breakdown Table.\n- **Page 2:** Risk Concentration warnings, Market Cap alignment checklist, and top investment recommendations from the universe.")
+            
+            if "pdf_ready" not in st.session_state:
+                st.session_state.pdf_ready = False
+                
+            if not st.session_state.pdf_ready:
+                if st.button("Generate PDF Report", width='stretch', key="gen_pdf_btn_holdings_page"):
+                    st.session_state.pdf_ready = True
+                    st.rerun()
+            else:
+                pdf_data = ReportService.generate_pdf(summary)
+                st.download_button(
+                    label="📥 Download Executive Portfolio PDF Report",
+                    data=pdf_data,
+                    file_name="investiq_portfolio_report.pdf",
+                    mime="application/pdf",
+                    width='stretch',
+                    key="download_pdf_btn_holdings_page"
+                )
+                st.write("")
+                if st.button("Clear / Regenerate", width='stretch', key="clear_pdf_btn_holdings_page"):
+                    st.session_state.pdf_ready = False
+                    st.rerun()

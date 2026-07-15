@@ -136,6 +136,19 @@ UNIVERSE_COLUMNS = [
     "Sharpe Ratio",
     "Alpha",
     "QUALITY_SCORE",
+    "Return on Equity",
+    "5Y Avg Return on Equity",
+    "1Y Forward Revenue Growth",
+    "5Y Historical EPS Growth",
+    "1Y Forward EPS Growth",
+    "5Y Hist Op. Cash Flow Growth",
+    "1Y Fwd Op. Cash Flow Growth",
+    "5Y Avg Net Profit Margin",
+    "Earnings Quality Rank",
+    "Price to Intrinsic Value Rank",
+    "Fundamental Score",
+    "PEG Ratio (Historical)",
+    "PEG Ratio (Forward)",
 ]
 
 
@@ -250,6 +263,19 @@ def stocks_to_frame(records):
             "Sharpe Ratio": item.sharpe_ratio,
             "Alpha": item.alpha,
             "QUALITY_SCORE": item.quality_score,
+            "Return on Equity": getattr(item, "return_on_equity", 0.0),
+            "5Y Avg Return on Equity": getattr(item, "return_on_equity_5y_avg", 0.0),
+            "1Y Forward Revenue Growth": getattr(item, "revenue_growth_1y_fwd", 0.0),
+            "5Y Historical EPS Growth": getattr(item, "eps_growth_5y_hist", 0.0),
+            "1Y Forward EPS Growth": getattr(item, "eps_growth_1y_fwd", 0.0),
+            "5Y Hist Op. Cash Flow Growth": getattr(item, "op_cash_flow_growth_5y_hist", 0.0),
+            "1Y Fwd Op. Cash Flow Growth": getattr(item, "op_cash_flow_growth_1y_fwd", 0.0),
+            "5Y Avg Net Profit Margin": getattr(item, "net_profit_margin_5y_avg", 0.0),
+            "Earnings Quality Rank": getattr(item, "earnings_quality_rank", 0.0),
+            "Price to Intrinsic Value Rank": getattr(item, "price_to_intrinsic_value_rank", 0.0),
+            "Fundamental Score": getattr(item, "fundamental_score", 0.0),
+            "PEG Ratio (Historical)": getattr(item, "peg_historical", 0.0),
+            "PEG Ratio (Forward)": getattr(item, "peg_forward", 0.0),
         }
         for item in records
     ]

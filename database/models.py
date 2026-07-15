@@ -141,6 +141,32 @@ class StockMaster(Base):
 
     quality_score = Column(Float)
 
+    return_on_equity = Column(Float)
+
+    return_on_equity_5y_avg = Column(Float)
+
+    revenue_growth_1y_fwd = Column(Float)
+
+    eps_growth_5y_hist = Column(Float)
+
+    eps_growth_1y_fwd = Column(Float)
+
+    op_cash_flow_growth_5y_hist = Column(Float)
+
+    op_cash_flow_growth_1y_fwd = Column(Float)
+
+    net_profit_margin_5y_avg = Column(Float)
+
+    earnings_quality_rank = Column(Float)
+
+    price_to_intrinsic_value_rank = Column(Float)
+
+    fundamental_score = Column(Float)
+
+    peg_historical = Column(Float)
+
+    peg_forward = Column(Float)
+
 
 class Metadata(Base):
 

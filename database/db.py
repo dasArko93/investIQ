@@ -34,5 +34,18 @@ SessionLocal = sessionmaker(
 
 # Ensure all database tables exist on module import (critical for Streamlit subpages accessed directly)
 from database.models import Base
+from sqlalchemy import inspect, Table, MetaData
+
+try:
+    inspector = inspect(engine)
+    if "stock_master" in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns("stock_master")]
+        if "return_on_equity" not in columns:
+            meta = MetaData()
+            table = Table("stock_master", meta, autoload_with=engine)
+            table.drop(bind=engine)
+except Exception:
+    pass
+
 Base.metadata.create_all(bind=engine)
 

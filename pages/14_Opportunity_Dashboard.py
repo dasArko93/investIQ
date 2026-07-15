@@ -21,4 +21,4 @@ if require_data(universe, "Upload the stock universe to view opportunities."):
     owned = set(portfolio["Security"]) if not portfolio.empty else set()
     opportunities = RankingService.rank(universe)
     opportunities = opportunities[~opportunities["Ticker"].isin(owned)]
-    st.dataframe(opportunities.head(20), use_container_width=True)
+    st.dataframe(opportunities.head(20), width='stretch')

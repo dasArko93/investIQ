@@ -41,7 +41,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
         
     edited_sector_df = st.data_editor(
         st.session_state["target_sector_df"],
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         key="target_sector_editor"
     )
@@ -190,7 +190,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
                     font=dict(color="#000000"),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color="#000000"))
                 )
-                st.plotly_chart(fig_drift, use_container_width=True)
+                st.plotly_chart(fig_drift, width='stretch')
             
             with drift_cols[1]:
                 st.markdown("**Sector Drift Heatmap**")
@@ -245,7 +245,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
             "Weight Before %": list(res["beforeMetrics"]["stockAllocations"].values()),
             "Weight After %": list(res["afterMetrics"]["stockAllocations"].values())
         })
-        st.dataframe(metrics_df, use_container_width=True, hide_index=True)
+        st.dataframe(metrics_df, width='stretch', hide_index=True)
         
     # --- TAB 2: ALLOCATION VISUALS (TREEMAPS) ---
     with t_alloc:
@@ -273,7 +273,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
             font=dict(color="#000000"),
             legend=dict(font=dict(color="#000000"))
         )
-        st.plotly_chart(fig_st_tree, use_container_width=True)
+        st.plotly_chart(fig_st_tree, width='stretch')
         
         # 2. Sector Allocation Pie
         fig_sec_pie = px.pie(
@@ -289,7 +289,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
             font=dict(color="#000000"),
             legend=dict(font=dict(color="#000000"))
         )
-        st.plotly_chart(fig_sec_pie, use_container_width=True)
+        st.plotly_chart(fig_sec_pie, width='stretch')
 
     # --- TAB 3: ACTION PLAN RECOMMENDATIONS ---
     with t_recs:
@@ -313,7 +313,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
                 
             st.dataframe(
                 rec_stocks[["ticker", "Type", "currentWeight", "targetWeight", "drift", "action", "priority", "impactScore"]],
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     "ticker": "Stock Ticker",
@@ -335,7 +335,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
         if not rec_sec.empty:
             st.dataframe(
                 rec_sec[["sector", "currentWeight", "targetWeight", "drift", "action"]],
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 column_config={
                     "sector": "Sector Name",
@@ -375,7 +375,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
                     
                 st.dataframe(
                     sim_df[["ticker", "Type", "allocatedAmount", "reason"]],
-                    use_container_width=True,
+                    width='stretch',
                     hide_index=True,
                     column_config={
                         "ticker": "Stock Ticker",
@@ -399,7 +399,7 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
                     font=dict(color="#000000"),
                     legend=dict(font=dict(color="#000000"))
                 )
-                st.plotly_chart(fig_sim, use_container_width=True)
+                st.plotly_chart(fig_sim, width='stretch')
             else:
                 st.info("No capital deployments required.")
         else:
@@ -419,6 +419,6 @@ if require_data(portfolio, "Upload both holdings and stock universe to generate 
             data=json.dumps(res, indent=2),
             file_name="investiq_rebalancing_report.json",
             mime="application/json",
-            use_container_width=True,
+            width='stretch',
             key="dl_json_rebalance"
         )

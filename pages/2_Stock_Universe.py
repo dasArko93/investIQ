@@ -66,9 +66,9 @@ else:
 
     # 🔍 Quick Filter Options
     st.markdown("### 🔍 Quick Filter Options")
-    filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
     
-    with filter_col1:
+    col1, col2, col3 = st.columns(3)
+    with col1:
         search_query = st.text_input(
             "Search Name / Ticker",
             placeholder="Search by stock name or ticker...",
@@ -76,7 +76,7 @@ else:
             key=f"universe_search_input_{st.session_state.reset_counter}"
         )
         
-    with filter_col2:
+    with col2:
         sub_sectors = sorted(universe["Sub-Sector"].dropna().astype(str).unique().tolist())
         selected_sectors = st.multiselect(
             "Filter by Sub-Sector",
@@ -85,19 +85,7 @@ else:
             key=f"universe_sector_select_{st.session_state.reset_counter}"
         )
         
-    with filter_col3:
-        if "QUALITY_SCORE" in universe.columns and not universe["QUALITY_SCORE"].isna().all():
-            quality_range = st.slider(
-                "Filter by Quality Score",
-                min_value=min_score,
-                max_value=max_score,
-                value=(min_score, max_score),
-                key=f"universe_quality_slider_{st.session_state.reset_counter}"
-            )
-        else:
-            quality_range = None
-
-    with filter_col4:
+    with col3:
         if "Market Cap" in universe.columns and not universe["Market Cap"].isna().all():
             prev_cat_key = f"prev_mcap_category_{st.session_state.reset_counter}"
             slider_key = f"universe_mcap_slider_{st.session_state.reset_counter}"
@@ -122,7 +110,22 @@ else:
                     st.session_state[slider_key] = (mid_large_boundary, max_mcap)
                 else:
                     st.session_state[slider_key] = (min_mcap, max_mcap)
-            
+
+    col4, col5, col6 = st.columns(3)
+    with col4:
+        if "QUALITY_SCORE" in universe.columns and not universe["QUALITY_SCORE"].isna().all():
+            quality_range = st.slider(
+                "Filter by Quality Score",
+                min_value=min_score,
+                max_value=max_score,
+                value=(min_score, max_score),
+                key=f"universe_quality_slider_{st.session_state.reset_counter}"
+            )
+        else:
+            quality_range = None
+
+    with col5:
+        if "Market Cap" in universe.columns and not universe["Market Cap"].isna().all():
             mcap_range = st.slider(
                 "Filter by Market Cap (₹ Cr)",
                 min_value=min_mcap,
@@ -133,10 +136,9 @@ else:
         else:
             mcap_range = None
 
-    # Reset Filters Button
-    col_reset, _ = st.columns([1.5, 4.5])
-    with col_reset:
-        if st.button("Reset Filters", key="reset_filters_btn", use_container_width=True):
+    with col6:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+        if st.button("Reset Filters", key="reset_filters_btn", width='stretch'):
             st.session_state["reset_counter"] += 1
             st.rerun()
 
@@ -171,7 +173,7 @@ else:
     if filtered_df.empty:
         st.warning("No stocks match the selected filter criteria.")
     else:
-        st.dataframe(filtered_df, use_container_width=True, hide_index=True)
+        st.dataframe(filtered_df, width='stretch', hide_index=True)
     
         if "QUALITY_SCORE" in filtered_df.columns:
             score_chart = alt.Chart(filtered_df).mark_bar().encode(
@@ -179,7 +181,7 @@ else:
                 y=alt.Y("count():Q", title="Stocks"),
                 tooltip=[alt.Tooltip("count():Q", title="Count")],
             ).properties(title="Quality Score Distribution (Filtered)", height=320)
-            st.altair_chart(score_chart, use_container_width=True)
+            st.altair_chart(score_chart, width='stretch')
     
         if "Sub-Sector" in filtered_df.columns:
             sector_dist = (
@@ -194,7 +196,7 @@ else:
                 y=alt.Y("Sub-Sector:N", sort="-x", title="Sub-Sector"),
                 tooltip=["Sub-Sector", "Count"],
             ).properties(title="Sub-Sector Coverage (Filtered)", height=420)
-            st.altair_chart(sector_chart, use_container_width=True)
+            st.altair_chart(sector_chart, width='stretch')
     
         if "PE Ratio" in filtered_df.columns and "ROCE" in filtered_df.columns:
             scatter = alt.Chart(filtered_df).mark_circle(size=80, opacity=0.7).encode(
@@ -203,5 +205,5 @@ else:
                 color=alt.Color("QUALITY_SCORE:Q", scale=alt.Scale(scheme="tealblues"), legend=alt.Legend(title="Quality Score", labelColor="#000000", titleColor="#000000")),
                 tooltip=["Name", "Ticker", "PE Ratio", "ROCE", "QUALITY_SCORE"],
             ).properties(title="ROCE vs PE Ratio (Filtered)", height=420)
-            st.altair_chart(scatter, use_container_width=True)
+            st.altair_chart(scatter, width='stretch')
 

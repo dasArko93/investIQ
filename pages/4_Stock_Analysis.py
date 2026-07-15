@@ -15,91 +15,101 @@ ANALYSIS_STYLES = {
     "Growth Investing": {
         "goal": "Find companies that can grow earnings rapidly for many years.",
         "metrics": [
-            ("Revenue Growth", ">15% CAGR", ["Revenue Growth", "5Y Historical Revenue Growth"]),
-            ("EPS Growth", ">15-20% CAGR", ["EPS Growth", "5Y CAGR"]),
-            ("ROE", ">15%", ["ROE"]),
-            ("ROCE", ">18%", ["ROCE"]),
-            ("Debt/Equity", "<0.5", ["Debt/Equity", "Debt to Equity"]),
-            ("Operating Margin", "Stable or improving", ["Operating Margin"]),
-            ("PEG Ratio", "<1.5", ["PEG Ratio", "PEG"]),
+            ("5Y Hist Revenue Growth", ">15%", ["5Y Historical Revenue Growth"]),
+            ("1Y Fwd Revenue Growth", ">15%", ["1Y Forward Revenue Growth"]),
+            ("5Y Hist EPS Growth", ">15%", ["5Y Historical EPS Growth"]),
+            ("1Y Fwd EPS Growth", ">15%", ["1Y Forward EPS Growth"]),
+            ("Return on Equity", ">15%", ["Return on Equity"]),
+            ("5Y Avg Return on Equity", ">15%", ["5Y Avg Return on Equity"]),
+            ("Debt to Equity", "<0.5", ["Debt to Equity"]),
+            ("PEG Ratio (Historical)", "<1.5", ["PEG Ratio (Historical)"]),
+            ("PEG Ratio (Forward)", "<1.5", ["PEG Ratio (Forward)"]),
         ],
         "look_for": [
-            "Large market opportunity",
-            "Strong management execution",
-            "New products/services",
-            "Market share gains",
+            "Consistent past and future revenue growth",
+            "Accelerating EPS growth",
+            "High Return on Equity",
+            "Low debt levels",
         ],
-        "examples": ["Indian IT during early 2000s", "Specialty chemicals", "Premium consumer brands"],
+        "examples": ["High growth consumer companies", "Scaling technology leaders"],
     },
     "Value Investing": {
         "goal": "Buy businesses below intrinsic value.",
         "metrics": [
-            ("P/E", "Below industry average", ["P/E", "PE Ratio"]),
-            ("P/B", "<3", ["P/B", "PB Ratio", "Price to Book"]),
-            ("EV/EBITDA", "Lower than peers", ["EV/EBITDA"]),
-            ("Debt/Equity", "<1", ["Debt/Equity", "Debt to Equity"]),
-            ("Free Cash Flow", "Positive", ["Free Cash Flow", "FCF"]),
-            ("Current Ratio", ">1.5", ["Current Ratio"]),
+            ("PE Ratio", "<20", ["PE Ratio"]),
+            ("Forward PE Ratio", "<18", ["Forward PE Ratio"]),
+            ("Price to Intrinsic Value Rank", "<30", ["Price to Intrinsic Value Rank"]),
+            ("Debt to Equity", "<1", ["Debt to Equity"]),
+            ("Free Cash Flow", "Positive", ["Free Cash Flow"]),
         ],
         "look_for": [
-            "Temporary market pessimism",
-            "Cyclical downturns",
-            "Asset-rich companies",
-            "Turnaround opportunities",
-            "Improving profits",
-            "Improving cash flow",
-            "Management credibility",
+            "Low absolute and forward valuation multiples",
+            "Under-valued compared to intrinsic value (low rank)",
+            "Generates positive free cash flows",
+            "Manageable debt levels",
         ],
-        "warning": "Cheap stocks often deserve to be cheap.",
+        "warning": "Cheap stocks often deserve to be cheap. Verify margin of safety.",
     },
     "Quality Compounders": {
         "goal": "Hold for 10-20 years.",
         "metrics": [
-            ("ROCE", ">20%", ["ROCE"]),
-            ("ROE", ">18%", ["ROE"]),
-            ("Debt/Equity", "Near zero", ["Debt/Equity", "Debt to Equity"]),
-            ("FCF Conversion", ">80%", ["FCF Conversion"]),
-            ("Gross Margin", "Stable", ["Gross Margin"]),
-            ("Promoter Holding", "Stable/Increasing", ["Promoter Holding"]),
+            ("Return on Equity", ">18%", ["Return on Equity"]),
+            ("5Y Avg Return on Equity", ">18%", ["5Y Avg Return on Equity"]),
+            ("5Y Avg Net Profit Margin", ">12%", ["5Y Avg Net Profit Margin"]),
+            ("Earnings Quality Rank", "<30", ["Earnings Quality Rank"]),
+            ("Debt to Equity", "<0.3", ["Debt to Equity"]),
         ],
-        "look_for": ["Strong brands", "Pricing power", "Competitive moat", "Consistent growth"],
-        "examples": ["Consumer staples", "Leading financial services", "Niche monopolies"],
+        "look_for": [
+            "Durable high return on equity",
+            "Consistent net profit margins",
+            "High earnings quality (low rank / high quality)",
+            "Clean balance sheet with minimal debt",
+        ],
+        "examples": ["Consumer staples", "Niche monopolies"],
     },
     "GARP": {
         "goal": "Mix of Growth + Value",
         "metrics": [
-            ("Revenue Growth", ">15%", ["Revenue Growth", "5Y Historical Revenue Growth"]),
-            ("EPS Growth", ">15%", ["EPS Growth", "5Y CAGR"]),
-            ("PEG Ratio", "<1", ["PEG Ratio", "PEG"]),
-            ("ROCE", ">20%", ["ROCE"]),
-            ("Debt/Equity", "<0.5", ["Debt/Equity", "Debt to Equity"]),
+            ("1Y Forward Revenue Growth", ">12%", ["1Y Forward Revenue Growth"]),
+            ("1Y Forward EPS Growth", ">12%", ["1Y Forward EPS Growth"]),
+            ("Forward PE Ratio", "<22", ["Forward PE Ratio"]),
+            ("Return on Equity", ">18%", ["Return on Equity"]),
+            ("Fundamental Score", ">75", ["Fundamental Score"]),
+            ("Debt to Equity", "<0.5", ["Debt to Equity"]),
+            ("PEG Ratio (Historical)", "<1.2", ["PEG Ratio (Historical)"]),
+            ("PEG Ratio (Forward)", "<1.2", ["PEG Ratio (Forward)"]),
         ],
         "look_for": [
-            "Peter Lynch's favorite style.",
-            "Find businesses growing fast but not trading at absurd valuations.",
+            "Solid growth projections at reasonable forward valuations",
+            "High fundamental strength",
+            "Excellent returns on equity",
         ],
     },
-    "Dividend Investing": {
-        "goal": "Income generation.",
+    "Cash Flow & Income": {
+        "goal": "Income and cash generation.",
         "metrics": [
-            ("Dividend Yield", ">3%", ["Dividend Yield"]),
-            ("Payout Ratio", "30-70%", ["Payout Ratio"]),
-            ("FCF", "Positive", ["Free Cash Flow", "FCF"]),
-            ("Debt/Equity", "Low", ["Debt/Equity", "Debt to Equity"]),
-            ("Interest Coverage", ">5", ["Interest Coverage"]),
+            ("Free Cash Flow", "Positive", ["Free Cash Flow"]),
+            ("5Y Hist Op. Cash Flow Growth", ">8%", ["5Y Hist Op. Cash Flow Growth"]),
+            ("1Y Fwd Op. Cash Flow Growth", ">8%", ["1Y Fwd Op. Cash Flow Growth"]),
+            ("5Y Avg Net Profit Margin", ">10%", ["5Y Avg Net Profit Margin"]),
+            ("Debt to Equity", "<0.5", ["Debt to Equity"]),
         ],
-        "avoid": ["Very high yields (>8-10%)", "Falling earnings", "Borrowed dividends"],
+        "avoid": ["Negative free cash flow", "Falling operational cash flow growth", "High debt"],
     },
-    "Turnaround Investing": {
-        "goal": "Catch recovery before the market does.",
+    "Quality Momentum": {
+        "goal": "Catch high quality momentum.",
         "metrics": [
-            ("Debt", "Falling", ["Debt", "Debt to Equity"]),
-            ("EBITDA Margin", "Improving", ["EBITDA Margin"]),
-            ("Cash Flow", "Turning Positive", ["Cash Flow", "Free Cash Flow"]),
-            ("Promoter Holding", "Increasing", ["Promoter Holding"]),
+            ("Alpha", ">5%", ["Alpha"]),
+            ("Sharpe Ratio", ">1.2", ["Sharpe Ratio"]),
+            ("Fundamental Score", ">70", ["Fundamental Score"]),
+            ("Earnings Quality Rank", "<40", ["Earnings Quality Rank"]),
         ],
-        "look_for": ["New management", "Debt reduction", "Margin improvement", "Industry recovery"],
-        "warning": "Risky but potentially rewarding.",
+        "look_for": [
+            "Positive alpha relative to indices",
+            "High risk-adjusted return (Sharpe Ratio)",
+            "Strong earnings quality",
+        ],
+        "warning": "Momentum can reverse quickly.",
     },
 }
 
@@ -201,60 +211,47 @@ def apply_style_filter(df, style_name, cutoffs=None):
         })
 
     if style_name == "Growth Investing":
-        add_rule("Revenue Growth", ["Revenue Growth", "5Y Historical Revenue Growth"], ">15% CAGR", lambda s: s > 15)
-        add_rule("EPS Growth", ["EPS Growth", "5Y CAGR"], ">15%", lambda s: s > 15)
-        add_rule("ROE", ["ROE"], ">15%", lambda s: s > 15)
-        add_rule("ROCE", ["ROCE"], ">18%", lambda s: s > 18)
-        add_rule("Debt/Equity", ["Debt/Equity", "Debt to Equity"], "<0.5", lambda s: s < 0.5)
-        add_rule("PEG Ratio", ["PEG Ratio", "PEG"], "<1.5", lambda s: s < 1.5)
+        add_rule("5Y Hist Revenue Growth", ["5Y Historical Revenue Growth"], ">15%", lambda s: s > 15)
+        add_rule("1Y Fwd Revenue Growth", ["1Y Forward Revenue Growth"], ">15%", lambda s: s > 15)
+        add_rule("5Y Hist EPS Growth", ["5Y Historical EPS Growth"], ">15%", lambda s: s > 15)
+        add_rule("1Y Fwd EPS Growth", ["1Y Forward EPS Growth"], ">15%", lambda s: s > 15)
+        add_rule("Return on Equity", ["Return on Equity"], ">15%", lambda s: s > 15)
+        add_rule("5Y Avg Return on Equity", ["5Y Avg Return on Equity"], ">15%", lambda s: s > 15)
+        add_rule("Debt to Equity", ["Debt to Equity"], "<0.5", lambda s: s < 0.5)
+        add_rule("PEG Ratio (Historical)", ["PEG Ratio (Historical)"], "<1.5", lambda s: s < 1.5)
+        add_rule("PEG Ratio (Forward)", ["PEG Ratio (Forward)"], "<1.5", lambda s: s < 1.5)
     elif style_name == "Value Investing":
-        pe, pe_column = numeric_series(df, ["P/E", "PE Ratio"])
-        sector_pe, sector_column = numeric_series(df, ["Industry PE", "Sector PE"])
-        pe_cutoff = str(cutoffs.get("P/E", "Below industry average")).strip() or "Below industry average"
-        if pe is not None and sector_pe is not None:
-            rule_mask = evaluate_cutoff(pe, pe_cutoff, lambda s: s < sector_pe).fillna(False)
-            mask &= rule_mask
-            rules.append({
-                "Metric": "P/E",
-                "Default Cutoff": "Below industry average",
-                "User Cutoff": pe_cutoff,
-                "Column": f"{pe_column} vs {sector_column}",
-                "Status": f"{int(rule_mask.sum())} pass",
-            })
-        else:
-            rules.append({
-                "Metric": "P/E",
-                "Default Cutoff": "Below industry average",
-                "User Cutoff": pe_cutoff,
-                "Column": "-",
-                "Status": "Skipped",
-            })
-        add_rule("P/B", ["P/B", "PB Ratio", "Price to Book"], "<3", lambda s: s < 3)
-        add_rule("Debt/Equity", ["Debt/Equity", "Debt to Equity"], "<1", lambda s: s < 1)
-        add_rule("Free Cash Flow", ["Free Cash Flow", "FCF"], "Positive", lambda s: s > 0)
-        add_rule("Current Ratio", ["Current Ratio"], ">1.5", lambda s: s > 1.5)
+        add_rule("PE Ratio", ["PE Ratio"], "<20", lambda s: s < 20)
+        add_rule("Forward PE Ratio", ["Forward PE Ratio"], "<18", lambda s: s < 18)
+        add_rule("Price to Intrinsic Value Rank", ["Price to Intrinsic Value Rank"], "<30", lambda s: s < 30)
+        add_rule("Debt to Equity", ["Debt to Equity"], "<1", lambda s: s < 1)
+        add_rule("Free Cash Flow", ["Free Cash Flow"], "Positive", lambda s: s > 0)
     elif style_name == "Quality Compounders":
-        add_rule("ROCE", ["ROCE"], ">20%", lambda s: s > 20)
-        add_rule("ROE", ["ROE"], ">18%", lambda s: s > 18)
-        add_rule("Debt/Equity", ["Debt/Equity", "Debt to Equity"], "Near zero", lambda s: s < 0.25)
-        add_rule("FCF Conversion", ["FCF Conversion"], ">80%", lambda s: s > 80)
+        add_rule("Return on Equity", ["Return on Equity"], ">18%", lambda s: s > 18)
+        add_rule("5Y Avg Return on Equity", ["5Y Avg Return on Equity"], ">18%", lambda s: s > 18)
+        add_rule("5Y Avg Net Profit Margin", ["5Y Avg Net Profit Margin"], ">12%", lambda s: s > 12)
+        add_rule("Earnings Quality Rank", ["Earnings Quality Rank"], "<30", lambda s: s < 30)
+        add_rule("Debt to Equity", ["Debt to Equity"], "<0.3", lambda s: s < 0.3)
     elif style_name == "GARP":
-        add_rule("Revenue Growth", ["Revenue Growth", "5Y Historical Revenue Growth"], ">15%", lambda s: s > 15)
-        add_rule("EPS Growth", ["EPS Growth", "5Y CAGR"], ">15%", lambda s: s > 15)
-        add_rule("PEG Ratio", ["PEG Ratio", "PEG"], "<1", lambda s: s < 1)
-        add_rule("ROCE", ["ROCE"], ">20%", lambda s: s > 20)
-        add_rule("Debt/Equity", ["Debt/Equity", "Debt to Equity"], "<0.5", lambda s: s < 0.5)
-    elif style_name == "Dividend Investing":
-        add_rule("Dividend Yield", ["Dividend Yield"], ">3%", lambda s: s > 3)
-        add_rule("Payout Ratio", ["Payout Ratio"], "30-70%", lambda s: (s >= 30) & (s <= 70))
-        add_rule("FCF", ["Free Cash Flow", "FCF"], "Positive", lambda s: s > 0)
-        add_rule("Debt/Equity", ["Debt/Equity", "Debt to Equity"], "Low", lambda s: s < 0.5)
-        add_rule("Interest Coverage", ["Interest Coverage"], ">5", lambda s: s > 5)
-    elif style_name == "Turnaround Investing":
-        add_rule("Debt", ["Debt", "Debt to Equity"], "Falling / low", lambda s: s < 1)
-        add_rule("EBITDA Margin", ["EBITDA Margin"], "Improving / positive", lambda s: s > 0)
-        add_rule("Cash Flow", ["Cash Flow", "Free Cash Flow"], "Turning positive", lambda s: s > 0)
-        add_rule("Promoter Holding", ["Promoter Holding"], "Increasing / >50%", lambda s: s > 50)
+        add_rule("1Y Forward Revenue Growth", ["1Y Forward Revenue Growth"], ">12%", lambda s: s > 12)
+        add_rule("1Y Forward EPS Growth", ["1Y Forward EPS Growth"], ">12%", lambda s: s > 12)
+        add_rule("Forward PE Ratio", ["Forward PE Ratio"], "<22", lambda s: s < 22)
+        add_rule("Return on Equity", ["Return on Equity"], ">18%", lambda s: s > 18)
+        add_rule("Fundamental Score", ["Fundamental Score"], ">75", lambda s: s > 75)
+        add_rule("Debt to Equity", ["Debt to Equity"], "<0.5", lambda s: s < 0.5)
+        add_rule("PEG Ratio (Historical)", ["PEG Ratio (Historical)"], "<1.2", lambda s: s < 1.2)
+        add_rule("PEG Ratio (Forward)", ["PEG Ratio (Forward)"], "<1.2", lambda s: s < 1.2)
+    elif style_name == "Cash Flow & Income":
+        add_rule("Free Cash Flow", ["Free Cash Flow"], "Positive", lambda s: s > 0)
+        add_rule("5Y Hist Op. Cash Flow Growth", ["5Y Hist Op. Cash Flow Growth"], ">8%", lambda s: s > 8)
+        add_rule("1Y Fwd Op. Cash Flow Growth", ["1Y Fwd Op. Cash Flow Growth"], ">8%", lambda s: s > 8)
+        add_rule("5Y Avg Net Profit Margin", ["5Y Avg Net Profit Margin"], ">10%", lambda s: s > 10)
+        add_rule("Debt to Equity", ["Debt to Equity"], "<0.5", lambda s: s < 0.5)
+    elif style_name == "Quality Momentum":
+        add_rule("Alpha", ["Alpha"], ">5%", lambda s: s > 5)
+        add_rule("Sharpe Ratio", ["Sharpe Ratio"], ">1.2", lambda s: s > 1.2)
+        add_rule("Fundamental Score", ["Fundamental Score"], ">70", lambda s: s > 70)
+        add_rule("Earnings Quality Rank", ["Earnings Quality Rank"], "<40", lambda s: s < 40)
 
     return df[mask].copy(), pd.DataFrame(rules)
 
@@ -863,7 +860,7 @@ def render_price_history_expander(selected):
         )
 
         tickers = selected["Ticker"].astype(str).tolist()
-        if st.button("Download & Run Quant Analytics Engine", use_container_width=True, key=f"run_quant_365_{'_'.join(tickers)}"):
+        if st.button("Download & Run Quant Analytics Engine", width='stretch', key=f"run_quant_365_{'_'.join(tickers)}"):
             st.session_state["price_history_365"] = {}
             with st.spinner("Downloading stock and index data from Yahoo Finance..."):
                 # Fetch stock histories
@@ -971,7 +968,7 @@ def render_price_history_expander(selected):
                 plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="#000000")
             )
-            st.plotly_chart(fig_corr, use_container_width=True)
+            st.plotly_chart(fig_corr, width='stretch')
             st.divider()
 
         # Display tabs for individual stock analysis
@@ -987,7 +984,7 @@ def render_price_history_expander(selected):
                     data=history.to_csv(index=False),
                     file_name=f"{ticker}_365_day_ohlcv.csv",
                     mime="text/csv",
-                    use_container_width=True,
+                    width='stretch',
                     key=f"dl_csv_{ticker}"
                 )
 
@@ -1050,7 +1047,7 @@ def render_price_history_expander(selected):
                 # Show 7-Day Forecast Dataframe
                 st.markdown("### 7-Day Trend Forecast Grid")
                 f_df = pd.DataFrame(res["module_7"]["forecast"])
-                st.dataframe(f_df, use_container_width=True)
+                st.dataframe(f_df, width='stretch')
 
                 # Tabs for detailed analysis
                 t_risk, t_forecast, t_charts = st.tabs(["Risk & Backtest Details", "Support & Resistance Zones", "Charts & DMAs"])
@@ -1058,7 +1055,7 @@ def render_price_history_expander(selected):
                 with t_risk:
                     st.markdown("### Model Comparison & Backtest Accuracy")
                     st.write("Backtest trained on first 335 days and validated on last 30 days:")
-                    st.dataframe(pd.DataFrame([res["module_8"]]), use_container_width=True, hide_index=True)
+                    st.dataframe(pd.DataFrame([res["module_8"]]), width='stretch', hide_index=True)
 
                 with t_forecast:
                     sr_cols = st.columns(2)
@@ -1090,7 +1087,7 @@ def render_price_history_expander(selected):
                         color=alt.Color("Series:N", legend=alt.Legend(title="Series", labelColor="#000000", titleColor="#000000")),
                         tooltip=["date:T", "Series:N", alt.Tooltip("Price:Q", format=",.2f")],
                     ).properties(height=360, title=f"{ticker} Close Price and Moving Averages")
-                    st.altair_chart(price_chart, use_container_width=True)
+                    st.altair_chart(price_chart, width='stretch')
 
                     # Forecast Band chart
                     if res["module_7"]["forecast"]:
@@ -1106,7 +1103,7 @@ def render_price_history_expander(selected):
                             y=alt.Y("predictedPrice:Q", title="Predicted Price"),
                             tooltip=["date:T", alt.Tooltip("predictedPrice:Q", format=",.2f"), alt.Tooltip("lower:Q", format=",.2f"), alt.Tooltip("upper:Q", format=",.2f")],
                         )
-                        st.altair_chart((forecast_band + forecast_line).properties(height=300, title="7-Day Ensemble Forecast (Prophet + XGBoost + LSTM + LR)"), use_container_width=True)
+                        st.altair_chart((forecast_band + forecast_line).properties(height=300, title="7-Day Ensemble Forecast (Prophet + XGBoost + LSTM + LR)"), width='stretch')
 
 
 def support_resistance_rows_dummy():
@@ -1128,7 +1125,7 @@ def deep_dive(selected, style, sector_base, deep_sector):
                 ]
                 sector_summary = sector_scope[metric_columns].apply(pd.to_numeric, errors="coerce").mean().reset_index()
                 sector_summary.columns = ["Metric", "Sector Average"]
-                st.dataframe(sector_summary, use_container_width=True)
+                st.dataframe(sector_summary, width='stretch')
 
                 sector_chart_data = sector_scope[["Ticker"] + metric_columns].copy()
                 for column in metric_columns:
@@ -1142,7 +1139,7 @@ def deep_dive(selected, style, sector_base, deep_sector):
                         column=alt.Column("Metric:N", title=None),
                         tooltip=["Ticker", "Metric", alt.Tooltip("Value:Q", format=".2f")],
                     ).properties(height=220)
-                    st.altair_chart(sector_chart, use_container_width=True)
+                    st.altair_chart(sector_chart, width='stretch')
             elif len(unique_sectors) > 1:
                 st.markdown("#### Sector Comparison View (Averages)")
                 metric_columns = [
@@ -1153,26 +1150,38 @@ def deep_dive(selected, style, sector_base, deep_sector):
                 for col in metric_columns:
                     temp_df[col] = pd.to_numeric(temp_df[col], errors="coerce")
                 sector_summary = temp_df.groupby("Sub-Sector")[metric_columns].mean().round(2).reset_index()
-                st.dataframe(sector_summary, use_container_width=True)
+                st.dataframe(sector_summary, width='stretch')
 
         if selected.empty:
             st.info("No selected stocks are available for deep dive.")
             if not sector_scope.empty:
                 st.caption(f"{len(sector_scope)} stocks are available from the filtered universe.")
-                st.dataframe(sector_scope[display_columns(sector_scope)], use_container_width=True)
+                st.dataframe(sector_scope[display_columns(sector_scope)], width='stretch')
             return
 
-        st.dataframe(selected, use_container_width=True)
+        st.dataframe(selected, width='stretch')
 
         metrics = [
-            "ROCE",
-            "ROE",
-            "5Y CAGR",
+            "Return on Equity",
+            "5Y Avg Return on Equity",
             "5Y Historical Revenue Growth",
+            "1Y Forward Revenue Growth",
+            "5Y Historical EPS Growth",
+            "1Y Forward EPS Growth",
+            "5Y Hist Op. Cash Flow Growth",
+            "1Y Fwd Op. Cash Flow Growth",
+            "5Y Avg Net Profit Margin",
             "Debt to Equity",
             "PE Ratio",
-            "Sector PE",
+            "Forward PE Ratio",
+            "Earnings Quality Rank",
+            "Price to Intrinsic Value Rank",
+            "Fundamental Score",
+            "PEG Ratio (Historical)",
+            "PEG Ratio (Forward)",
             "Free Cash Flow",
+            "Alpha",
+            "Sharpe Ratio",
             "QUALITY_SCORE",
             "Market Cap",
             "Close Price",
@@ -1185,7 +1194,10 @@ def deep_dive(selected, style, sector_base, deep_sector):
         if len(selected) == 1:
             stock = selected.iloc[[0]]
             st.markdown(f"#### {stock['Ticker'].iloc[0]} Individual Analysis")
-            st.dataframe(metric_table(stock, style), use_container_width=True)
+            if style:
+                st.dataframe(metric_table(stock, style), width='stretch')
+            else:
+                st.info("Select an Investing Style to see style-specific benchmark metrics.")
 
         if available_metrics:
             long_metrics = numeric.melt("Ticker", var_name="Metric", value_name="Value").dropna()
@@ -1223,7 +1235,7 @@ def deep_dive(selected, style, sector_base, deep_sector):
                     )
                     st.altair_chart(
                         (bars + labels).properties(height=320, title=metric),
-                        use_container_width=True,
+                        width='stretch',
                     )
 
         if {"PE Ratio", "ROCE"}.issubset(selected.columns):
@@ -1240,7 +1252,7 @@ def deep_dive(selected, style, sector_base, deep_sector):
                 color=alt.Color("Sub-Sector:N", legend=alt.Legend(title="Sub-Sector", labelColor="#000000", titleColor="#000000")) if "Sub-Sector" in scatter.columns else alt.value("#2563eb"),
                 tooltip=[column for column in ["Name", "Ticker", "Sub-Sector", "Market Cap", "Close Price", "PE Ratio", "ROCE"] if column in scatter.columns],
             ).properties(height=380, title="Valuation vs Return Quality")
-            st.altair_chart(valuation_chart, use_container_width=True)
+            st.altair_chart(valuation_chart, width='stretch')
 
         if len(selected) > 1 and "Sub-Sector" in selected.columns:
             sector_data = selected["Sub-Sector"].fillna("Unknown").value_counts().reset_index()
@@ -1250,7 +1262,7 @@ def deep_dive(selected, style, sector_base, deep_sector):
                 y=alt.Y("Sub-Sector:N", sort="-x", title="Sub-Sector"),
                 tooltip=["Sub-Sector", "Stocks"],
             ).properties(height=260, title="Selected Stock Mix")
-            st.altair_chart(sector_chart, use_container_width=True)
+            st.altair_chart(sector_chart, width='stretch')
 
     render_price_history_expander(selected)
 
@@ -1296,7 +1308,7 @@ with st.expander("📖 Fundamental Analysis & Stock Selection Guide", expanded=F
         {"Metric Group": "Solvency", "Key Metric": "Debt to Equity", "Ideal Benchmark": "< 0.5", "Why it Matters": "Measures leverage. Low debt protects during downturns."},
         {"Metric Group": "Growth", "Key Metric": "Revenue Growth", "Ideal Benchmark": "> 15% CAGR", "Why it Matters": "Top-line revenue expansion. Drives future earnings."},
         {"Metric Group": "Cash Flow", "Key Metric": "Free Cash Flow", "Ideal Benchmark": "Positive", "Why it Matters": "Actual cash left after capital expenditures."}
-    ]), use_container_width=True, hide_index=True)
+    ]), width='stretch', hide_index=True)
     
     st.markdown("""
     ---
@@ -1402,86 +1414,108 @@ if require_data(universe, "Upload a stock universe to perform fundamental analys
     else:
         universe_scope = universe_mcap[universe_mcap["Sub-Sector"].astype(str).isin(selected_sectors)].copy()
 
-    # 3. Choose Style of Investment
-    style_name = st.selectbox("Investing Style", list(ANALYSIS_STYLES.keys()))
-    style = ANALYSIS_STYLES[style_name]
-
-    st.subheader(style_name)
-    st.write(f"Goal: {style['goal']}")
-
-    st.subheader("Data Filtration")
-    _, default_rules = apply_style_filter(universe_scope, style_name)
-    editable_rules = default_rules[["Metric", "Default Cutoff", "User Cutoff", "Column"]].copy()
-    edited_rules = st.data_editor(
-        editable_rules,
-        use_container_width=True,
-        hide_index=True,
-        disabled=["Metric", "Default Cutoff", "Column"],
-        column_config={
-            "User Cutoff": st.column_config.TextColumn(
-                "User Define Cutoff",
-                help="Examples: >20, <0.5, 30-70, positive, low, near zero",
-            )
-        },
+    # 3. Select Stocks of Interest directly (Optional)
+    selected_direct_tickers = st.multiselect(
+        "Select Stocks of Interest directly (Optional)",
+        options=sorted(universe_scope["Ticker"].dropna().astype(str).unique()),
+        help="If you already have specific stocks of interest, select them here to bypass the investing style filter."
     )
 
-    button_col1, button_col2 = st.columns([1, 1])
-    with button_col1:
-        filter_clicked = st.button("Filter Stock", type="primary", use_container_width=True)
-    with button_col2:
-        clear_clicked = st.button("Clear Filter", use_container_width=True)
+    # 4. Choose Style of Investment
+    style_name = st.selectbox(
+        "Investing Style (Optional)" if selected_direct_tickers else "Investing Style",
+        options=["None"] + list(ANALYSIS_STYLES.keys()),
+        index=0 if selected_direct_tickers else 1
+    )
+    style = ANALYSIS_STYLES[style_name] if style_name != "None" else None
 
-    # Construct unique state key based on filter selections
-    mc_key = "-".join(sorted(selected_mcaps)) if selected_mcaps else "all"
-    sec_key = "-".join(sorted(selected_sectors)) if selected_sectors else "all"
-    state_key = f"fundamental_filter_{style_name}_{mc_key}_{sec_key}"
+    if style:
+        st.subheader(style_name)
+        st.write(f"Goal: {style['goal']}")
 
-    if clear_clicked:
-        st.session_state.pop(state_key, None)
-    if filter_clicked:
-        cutoff_map = dict(zip(edited_rules["Metric"], edited_rules["User Cutoff"]))
-        filtered, applied_rules = apply_style_filter(universe_scope, style_name, cutoff_map)
-        st.session_state[state_key] = {
-            "tickers": filtered["Ticker"].astype(str).tolist() if "Ticker" in filtered.columns else [],
-            "rules": applied_rules.to_dict("records"),
-        }
+        st.subheader("Data Filtration")
+        _, default_rules = apply_style_filter(universe_scope, style_name)
+        editable_rules = default_rules[["Metric", "Default Cutoff", "User Cutoff", "Column"]].copy()
+        edited_rules = st.data_editor(
+            editable_rules,
+            width='stretch',
+            hide_index=True,
+            disabled=["Metric", "Default Cutoff", "Column"],
+            column_config={
+                "User Cutoff": st.column_config.TextColumn(
+                    "User Define Cutoff",
+                    help="Examples: >20, <0.5, 30-70, positive, low, near zero",
+                )
+            },
+        )
 
-    saved_filter = st.session_state.get(state_key)
-    if saved_filter:
-        filtered = universe_scope[universe_scope["Ticker"].astype(str).isin(saved_filter["tickers"])].copy()
-        applied_rules = pd.DataFrame(saved_filter["rules"])
-        st.dataframe(applied_rules, use_container_width=True)
+        button_col1, button_col2 = st.columns([1, 1])
+        with button_col1:
+            filter_clicked = st.button("Filter Stock", type="primary", width='stretch')
+        with button_col2:
+            clear_clicked = st.button("Clear Filter", width='stretch')
 
-        if filtered.empty:
-            st.warning("No stocks match the selected cutoffs for this investing style.")
-        else:
-            st.caption(f"{len(filtered)} stocks match the selected filters.")
-            st.dataframe(filtered[display_columns(filtered)], use_container_width=True)
+        # Construct unique state key based on filter selections
+        mc_key = "-".join(sorted(selected_mcaps)) if selected_mcaps else "all"
+        sec_key = "-".join(sorted(selected_sectors)) if selected_sectors else "all"
+        state_key = f"fundamental_filter_{style_name}_{mc_key}_{sec_key}"
 
-            # 4. Deep Dive Stock Selection
-            ticker_labels = [
-                f"{row.get('Ticker')} - {row.get('Name', '')} ({row.get('Sub-Sector', '')})"
-                for _, row in filtered.sort_values("Ticker").iterrows()
-            ]
-            label_to_ticker = {label: label.split(" - ", 1)[0] for label in ticker_labels}
-            selected_labels = st.multiselect("Select stocks for deep dive", ticker_labels)
-            selected_tickers = [label_to_ticker[label] for label in selected_labels]
+        if clear_clicked:
+            st.session_state.pop(state_key, None)
+        if filter_clicked:
+            cutoff_map = dict(zip(edited_rules["Metric"], edited_rules["User Cutoff"]))
+            filtered, applied_rules = apply_style_filter(universe_scope, style_name, cutoff_map)
+            st.session_state[state_key] = {
+                "tickers": filtered["Ticker"].astype(str).tolist() if "Ticker" in filtered.columns else [],
+                "rules": applied_rules.to_dict("records"),
+            }
 
-            if selected_tickers:
-                selected = filtered[filtered["Ticker"].astype(str).isin(selected_tickers)].copy()
-                deep_dive(selected, style, filtered, "All")
+        saved_filter = st.session_state.get(state_key)
+        if saved_filter:
+            filtered = universe_scope[universe_scope["Ticker"].astype(str).isin(saved_filter["tickers"])].copy()
+            applied_rules = pd.DataFrame(saved_filter["rules"])
+            st.dataframe(applied_rules, width='stretch')
 
-st.subheader("What To Study")
-if style.get("look_for"):
-    st.markdown("\n".join([f"- {item}" for item in style["look_for"]]))
+            if filtered.empty:
+                st.warning("No stocks match the selected cutoffs for this investing style.")
+            else:
+                st.caption(f"{len(filtered)} stocks match the selected filters.")
+                st.dataframe(filtered[display_columns(filtered)], width='stretch')
 
-if style.get("examples"):
-    st.subheader("Examples")
-    st.markdown("\n".join([f"- {item}" for item in style["examples"]]))
+                # 4. Deep Dive Stock Selection
+                ticker_labels = [
+                    f"{row.get('Ticker')} - {row.get('Name', '')} ({row.get('Sub-Sector', '')})"
+                    for _, row in filtered.sort_values("Ticker").iterrows()
+                ]
+                label_to_ticker = {label: label.split(" - ", 1)[0] for label in ticker_labels}
+                selected_labels = st.multiselect("Select stocks for deep dive", ticker_labels)
+                selected_tickers = [label_to_ticker[label] for label in selected_labels]
 
-if style.get("avoid"):
-    st.subheader("Avoid")
-    st.markdown("\n".join([f"- {item}" for item in style["avoid"]]))
+                if selected_tickers:
+                    selected = filtered[filtered["Ticker"].astype(str).isin(selected_tickers)].copy()
+                    deep_dive(selected, style, filtered, "All")
 
-if style.get("warning"):
-    st.warning(style["warning"])
+    if selected_direct_tickers:
+        st.subheader("Analysis for Selected Stocks")
+        selected = universe_scope[universe_scope["Ticker"].astype(str).isin(selected_direct_tickers)].copy()
+        deep_dive(selected, style, universe_scope, "All")
+
+    if not selected_direct_tickers and not style:
+        st.info("Please select specific stocks of interest or select an Investing Style to filter the universe.")
+
+if style:
+    st.subheader("What To Study")
+    if style.get("look_for"):
+        st.markdown("\n".join([f"- {item}" for item in style["look_for"]]))
+
+    if style.get("examples"):
+        st.subheader("Examples")
+        st.markdown("\n".join([f"- {item}" for item in style["examples"]]))
+
+    if style.get("avoid"):
+        st.subheader("Avoid")
+        st.markdown("\n".join([f"- {item}" for item in style["avoid"]]))
+
+    if style.get("warning"):
+        st.warning(style["warning"])
+
