@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 from services.recommendation_service import RecommendationService
 from services.price_history_service import PriceHistoryService
@@ -303,13 +304,14 @@ if require_data(universe, "Upload the stock universe to generate recommendations
         # Interactive Filter Widgets
         p_col1, p_col2, p_col3 = st.columns([1, 1, 1])
         with p_col1:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             only_nifty100 = st.checkbox("Show Only Nifty 100 Constituents", value=False, help="Filter to active Nifty 100 symbols fetched from NSE")
         with p_col2:
             mcap_choices = ["Large Cap", "Mid Cap", "Small Cap"]
-            selected_mcaps = st.multiselect("Market Cap Categories", options=mcap_choices, default=mcap_choices)
+            selected_mcaps = st.multiselect("Market Cap Categories", options=mcap_choices, default=[], placeholder="All Market Caps (Default)")
         with p_col3:
             all_sectors = sorted(list(universe["Sub-Sector"].dropna().unique())) if "Sub-Sector" in universe.columns else []
-            selected_sectors = st.multiselect("Sectors", options=all_sectors, default=all_sectors)
+            selected_sectors = st.multiselect("Sectors", options=all_sectors, default=[], placeholder="All Sectors (Default)")
             
         # Apply filters to preview_df
         preview_df = universe.copy()
@@ -319,7 +321,8 @@ if require_data(universe, "Upload the stock universe to generate recommendations
             nifty_tickers = {t.upper().replace(".NS", "").strip() for t in nifty100_universe["Ticker"].unique()}
             preview_df = preview_df[preview_df["Ticker"].astype(str).str.upper().str.replace(".NS", "").str.strip().isin(nifty_tickers)]
             
-        preview_df = preview_df[preview_df["Market Cap Category"].isin(selected_mcaps)]
+        if selected_mcaps:
+            preview_df = preview_df[preview_df["Market Cap Category"].isin(selected_mcaps)]
         if selected_sectors:
             preview_df = preview_df[preview_df["Sub-Sector"].fillna("Unknown").isin(selected_sectors)]
             
@@ -341,95 +344,112 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                 
         if cols_to_show:
             preview_display = preview_df[cols_to_show].rename(columns=rename_map)
-            st.dataframe(
-                preview_display,
-                width='stretch',
-                hide_index=True
-            )
+            st.dataframe(preview_display, width='stretch', hide_index=True)
         else:
             st.dataframe(preview_df, width='stretch')
             
-        st.write("")
-        st.markdown("#### 📊 Live Stock Universe Dashboard")
-        
-        # Calculate summary statistics for the filtered preview stocks
-        pe_vals = pd.to_numeric(preview_df["PE Ratio"], errors="coerce").dropna()
-        pe_avg = pe_vals.mean() if not pe_vals.empty else 0.0
-        
-        quality_vals = pd.to_numeric(preview_df["QUALITY_SCORE"], errors="coerce").dropna()
-        quality_avg = quality_vals.mean() if not quality_vals.empty else 0.0
-        
-        sharpe_vals = pd.to_numeric(preview_df["Sharpe Ratio"], errors="coerce").dropna()
-        sharpe_avg = sharpe_vals.mean() if not sharpe_vals.empty else 0.0
-        
-        sector_count = preview_df["Sub-Sector"].nunique() if "Sub-Sector" in preview_df.columns else 0
-        
-        # 1. Summary Metric Cards
-        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-        m_col1.metric("Universe Average P/E", f"{pe_avg:.2f}")
-        m_col2.metric("Universe Average Quality", f"{quality_avg:.1f}/100")
-        m_col3.metric("Universe Average Sharpe", f"{sharpe_avg:.2f}")
-        m_col4.metric("Unique Sectors", f"{sector_count}")
-        
-        st.write("")
-        
-        # 2. visual charts layout
-        ch_col1, ch_col2 = st.columns(2)
-        
-        with ch_col1:
-            # Sector distribution
-            if "Sub-Sector" in preview_df.columns:
-                sector_counts = preview_df["Sub-Sector"].value_counts().reset_index()
-                sector_counts.columns = ["Sector", "Count"]
-                fig_sector = px.bar(
-                    sector_counts,
-                    x="Sector",
-                    y="Count",
-                    title="Sector Distribution",
-                    color="Count",
-                    color_continuous_scale="Viridis",
-                    labels={"Sector": "Sector / Industry", "Count": "Number of Stocks"}
+    st.write("")
+    st.markdown("#### 📊 Live Stock Universe Dashboard")
+    
+    # Calculate summary statistics for the filtered preview stocks
+    pe_vals = pd.to_numeric(preview_df["PE Ratio"], errors="coerce").dropna()
+    pe_avg = pe_vals.mean() if not pe_vals.empty else 0.0
+    
+    quality_vals = pd.to_numeric(preview_df["QUALITY_SCORE"], errors="coerce").dropna()
+    quality_avg = quality_vals.mean() if not quality_vals.empty else 0.0
+    
+    sharpe_vals = pd.to_numeric(preview_df["Sharpe Ratio"], errors="coerce").dropna()
+    sharpe_avg = sharpe_vals.mean() if not sharpe_vals.empty else 0.0
+    
+    sector_count = preview_df["Sub-Sector"].nunique() if "Sub-Sector" in preview_df.columns else 0
+    
+    # 1. Summary Metric Cards
+    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+    m_col1.metric("Universe Average P/E", f"{pe_avg:.2f}")
+    m_col2.metric("Universe Average Quality", f"{quality_avg:.1f}/100")
+    m_col3.metric("Universe Average Sharpe", f"{sharpe_avg:.2f}")
+    m_col4.metric("Unique Sectors", f"{sector_count}")
+    
+    st.write("")
+    
+    # 2. visual charts layout
+    ch_col1, ch_col2 = st.columns(2)
+    
+    with ch_col1:
+        # Sector distribution
+        if "Sub-Sector" in preview_df.columns:
+            sector_counts = preview_df["Sub-Sector"].value_counts().reset_index()
+            sector_counts.columns = ["Sector", "Count"]
+            fig_sector = go.Figure(data=[
+                go.Bar(
+                    x=sector_counts["Sector"],
+                    y=sector_counts["Count"],
+                    marker=dict(
+                        color=sector_counts["Count"],
+                        colorscale="Viridis",
+                        showscale=False
+                    ),
+                    hovertemplate="Sector: %{x}<br>Number of Stocks: %{y}<extra></extra>"
                 )
-                fig_sector.update_layout(
+            ])
+            fig_sector.update_layout(
+                title="Sector Distribution",
+                autosize=True,
+                height=350,
+                margin=dict(l=20, r=20, t=40, b=20),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#000000"),
+                xaxis=dict(showgrid=False, title="Sector / Industry"),
+                yaxis=dict(gridcolor="rgba(0,0,0,0.05)", title="Number of Stocks")
+            )
+            st.plotly_chart(fig_sector, width='stretch', config={"displayModeBar": True, "responsive": True})
+            
+    with ch_col2:
+        # P/E vs Quality Scatter Plot
+        if "PE Ratio" in preview_df.columns and "QUALITY_SCORE" in preview_df.columns:
+            scatter_data = preview_df[
+                (preview_df["PE Ratio"] > 0) & 
+                (preview_df["PE Ratio"] < 150) & 
+                (preview_df["QUALITY_SCORE"] > 0)
+            ].copy()
+            if not scatter_data.empty:
+                colors = scatter_data["Sharpe Ratio"] if "Sharpe Ratio" in scatter_data.columns else "#20d3c2"
+                hover_texts = []
+                for _, row in scatter_data.iterrows():
+                    t = f"Ticker: {row['Ticker']}<br>Name: {row.get('Name', '')}<br>P/E Ratio: {row['PE Ratio']:.2f}<br>Quality Score: {row['QUALITY_SCORE']:.1f}"
+                    if "Sharpe Ratio" in scatter_data.columns:
+                        t += f"<br>Sharpe Ratio: {row['Sharpe Ratio']:.2f}"
+                    hover_texts.append(t)
+                    
+                fig_scatter = go.Figure(data=[
+                    go.Scatter(
+                        x=scatter_data["PE Ratio"],
+                        y=scatter_data["QUALITY_SCORE"],
+                        mode="markers",
+                        marker=dict(
+                            size=10,
+                            color=colors,
+                            colorscale="RdYlGn",
+                            showscale=True,
+                            colorbar=dict(title="Sharpe" if "Sharpe Ratio" in scatter_data.columns else "")
+                        ),
+                        text=hover_texts,
+                        hovertemplate="%{text}<extra></extra>"
+                    )
+                ])
+                fig_scatter.update_layout(
+                    title="Quality Score vs P/E Ratio (Scatter Plot)",
                     autosize=True,
+                    height=350,
                     margin=dict(l=20, r=20, t=40, b=20),
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
                     font=dict(color="#000000"),
-                    xaxis=dict(showgrid=False),
-                    yaxis=dict(gridcolor="rgba(0,0,0,0.05)")
+                    xaxis=dict(gridcolor="rgba(0,0,0,0.05)", title="P/E Ratio"),
+                    yaxis=dict(gridcolor="rgba(0,0,0,0.05)", title="Quality Score (0-100)")
                 )
-                st.plotly_chart(fig_sector, width='stretch', config={"displayModeBar": True, "responsive": True})
-                
-        with ch_col2:
-            # P/E vs Quality Scatter Plot
-            if "PE Ratio" in preview_df.columns and "QUALITY_SCORE" in preview_df.columns:
-                scatter_data = preview_df[
-                    (preview_df["PE Ratio"] > 0) & 
-                    (preview_df["PE Ratio"] < 150) & 
-                    (preview_df["QUALITY_SCORE"] > 0)
-                ].copy()
-                if not scatter_data.empty:
-                    fig_scatter = px.scatter(
-                        scatter_data,
-                        x="PE Ratio",
-                        y="QUALITY_SCORE",
-                        title="Quality Score vs P/E Ratio (Scatter Plot)",
-                        color="Sharpe Ratio" if "Sharpe Ratio" in scatter_data.columns else None,
-                        color_continuous_scale="RdYlGn",
-                        hover_data=["Ticker", "Name"] if "Name" in scatter_data.columns else ["Ticker"],
-                        labels={"PE Ratio": "P/E Ratio", "QUALITY_SCORE": "Quality Score (0-100)"}
-                    )
-                    fig_scatter.update_layout(
-                        autosize=True,
-                        margin=dict(l=20, r=20, t=40, b=20),
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        font=dict(color="#000000"),
-                        xaxis=dict(gridcolor="rgba(0,0,0,0.05)"),
-                        yaxis=dict(gridcolor="rgba(0,0,0,0.05)")
-                    )
-                    st.plotly_chart(fig_scatter, width='stretch', config={"displayModeBar": True, "responsive": True})
+                st.plotly_chart(fig_scatter, width='stretch', config={"displayModeBar": True, "responsive": True})
 
     tab_screening, tab_benchmarking = st.tabs([
         "🔍 Stock Screening Recommendations",

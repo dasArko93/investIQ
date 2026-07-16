@@ -26,6 +26,13 @@ def inject_global_css():
             background: transparent !important;
         }
 
+        /* Fullscreen frame z-index fix to ensure it overlays sidebar */
+        div[data-testid="stFullScreenFrame"], 
+        div[class*="stFullScreenFrame"] {
+            z-index: 9999999 !important;
+            background: linear-gradient(135deg, #d3e5ff 0%, #ffdced 35%, #e1d8ff 70%, #d5f7ec 100%) !important;
+        }
+
         /* Sidebar Container Glassmorphism */
         [data-testid="stSidebar"] {
             background: rgba(255, 255, 255, 0.4) !important;
