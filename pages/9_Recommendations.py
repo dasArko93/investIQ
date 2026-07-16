@@ -65,6 +65,33 @@ def tune_filters_callback(port_vol, bench_vol, port_pe, bench_pe, port_qual, ben
     st.session_state.balance_tuned = True
 
 
+def reset_rules_callback():
+    st.session_state.scr_rev_enabled = True
+    st.session_state.scr_rev_val = 15.0
+    st.session_state.scr_eps_enabled = True
+    st.session_state.scr_eps_val = 15.0
+    st.session_state.scr_roce_enabled = True
+    st.session_state.scr_roce_val = 20.0
+    st.session_state.scr_roe_enabled = True
+    st.session_state.scr_roe_val = 18.0
+    st.session_state.scr_de_enabled = True
+    st.session_state.scr_de_val = 0.5
+    st.session_state.scr_peg_enabled = True
+    st.session_state.scr_peg_val = 1.5
+    st.session_state.scr_fcf_enabled = True
+    st.session_state.scr_fcf_val = True
+    st.session_state.scr_prom_enabled = True
+    st.session_state.scr_prom_val = 50.0
+    
+    st.session_state.scr_pe_enabled = False
+    st.session_state.scr_pe_val = 22.0
+    st.session_state.scr_quality_enabled = False
+    st.session_state.scr_quality_val = 70.0
+    st.session_state.scr_sharpe_enabled = False
+    st.session_state.scr_sharpe_val = 1.2
+    st.session_state.rules_reset_toast = True
+
+
 # Initialize session state for screening rule values and checks
 if "scr_rev_enabled" not in st.session_state:
     st.session_state.scr_rev_enabled = True
@@ -124,6 +151,9 @@ if "scr_sharpe_val" not in st.session_state:
 
 if "balance_tuned" not in st.session_state:
     st.session_state.balance_tuned = False
+
+if "rules_reset_toast" not in st.session_state:
+    st.session_state.rules_reset_toast = False
 
 
 def classify_mcap(val):
@@ -226,6 +256,10 @@ if st.session_state.get("balance_tuned"):
     st.success("Success! Screening filters have been tuned to balance your portfolio deficits. Switch to the first tab ('Stock Screening Recommendations') to review.")
     st.session_state.balance_tuned = False
 
+if st.session_state.get("rules_reset_toast"):
+    st.success("Screening rules reset to default cut-offs successfully!")
+    st.session_state.rules_reset_toast = False
+
 with st.popover("📖 Quick Start User Guide & Help Docs", width='stretch'):
     st.markdown("""
     ### 📖 How to Use the Recommendations Workspace
@@ -244,8 +278,9 @@ with st.popover("📖 Quick Start User Guide & Help Docs", width='stretch'):
     """)
 
 universe = load_universe()
+nifty100_universe = universe.copy()
 
-# Dynamically filter universe to contain only fresh Nifty 100 tickers loaded from NSE
+# Dynamically identify fresh Nifty 100 tickers loaded from NSE
 try:
     fresh_symbols = fetch_nifty100_tickers()
     if fresh_symbols:
@@ -254,19 +289,41 @@ try:
             if pd.isna(val):
                 return False
             return str(val).upper().replace(".NS", "").strip() in clean_fresh
-        universe = universe[universe["Ticker"].apply(is_nifty100_ticker)].copy()
+        nifty100_universe = universe[universe["Ticker"].apply(is_nifty100_ticker)].copy()
         st.toast("Loaded fresh Nifty 100 constituent list from NSE!")
 except Exception:
     pass
 
 if require_data(universe, "Upload the stock universe to generate recommendations."):
     
-    # Preview Nifty 100 stocks fetched fresh from NSE
-    with st.expander("📋 Live Nifty 100 Stocks & Core Ratios Preview", expanded=False):
-        st.write("Below is the list of active Nifty 100 constituent stocks currently loaded in your database universe:")
+    # Preview stocks fetched fresh from NSE
+    with st.expander("📋 Live Stock Universe & Core Ratios Preview", expanded=False):
+        st.write("Below is the list of constituent stocks currently loaded in your database universe:")
         
-        # Prepare clean display dataframe
+        # Interactive Filter Widgets
+        p_col1, p_col2, p_col3 = st.columns([1, 1, 1])
+        with p_col1:
+            only_nifty100 = st.checkbox("Show Only Nifty 100 Constituents", value=False, help="Filter to active Nifty 100 symbols fetched from NSE")
+        with p_col2:
+            mcap_choices = ["Large Cap", "Mid Cap", "Small Cap"]
+            selected_mcaps = st.multiselect("Market Cap Categories", options=mcap_choices, default=mcap_choices)
+        with p_col3:
+            all_sectors = sorted(list(universe["Sub-Sector"].dropna().unique())) if "Sub-Sector" in universe.columns else []
+            selected_sectors = st.multiselect("Sectors", options=all_sectors, default=all_sectors)
+            
+        # Apply filters to preview_df
         preview_df = universe.copy()
+        preview_df["Market Cap Category"] = preview_df["Market Cap"].apply(classify_mcap)
+        
+        if only_nifty100 and not nifty100_universe.empty:
+            nifty_tickers = {t.upper().replace(".NS", "").strip() for t in nifty100_universe["Ticker"].unique()}
+            preview_df = preview_df[preview_df["Ticker"].astype(str).str.upper().str.replace(".NS", "").str.strip().isin(nifty_tickers)]
+            
+        preview_df = preview_df[preview_df["Market Cap Category"].isin(selected_mcaps)]
+        if selected_sectors:
+            preview_df = preview_df[preview_df["Sub-Sector"].fillna("Unknown").isin(selected_sectors)]
+            
+        # Prepare clean display dataframe
         cols_to_show = []
         rename_map = {}
         for col, display in [
@@ -293,9 +350,9 @@ if require_data(universe, "Upload the stock universe to generate recommendations
             st.dataframe(preview_df, width='stretch')
             
         st.write("")
-        st.markdown("#### 📊 Nifty 100 Index Universe Dashboard")
+        st.markdown("#### 📊 Live Stock Universe Dashboard")
         
-        # Calculate summary statistics for the Nifty 100 index stocks
+        # Calculate summary statistics for the filtered preview stocks
         pe_vals = pd.to_numeric(preview_df["PE Ratio"], errors="coerce").dropna()
         pe_avg = pe_vals.mean() if not pe_vals.empty else 0.0
         
@@ -309,9 +366,9 @@ if require_data(universe, "Upload the stock universe to generate recommendations
         
         # 1. Summary Metric Cards
         m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-        m_col1.metric("Index Average P/E", f"{pe_avg:.2f}")
-        m_col2.metric("Index Average Quality", f"{quality_avg:.1f}/100")
-        m_col3.metric("Index Average Sharpe", f"{sharpe_avg:.2f}")
+        m_col1.metric("Universe Average P/E", f"{pe_avg:.2f}")
+        m_col2.metric("Universe Average Quality", f"{quality_avg:.1f}/100")
+        m_col3.metric("Universe Average Sharpe", f"{sharpe_avg:.2f}")
         m_col4.metric("Unique Sectors", f"{sector_count}")
         
         st.write("")
@@ -328,13 +385,13 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                     sector_counts,
                     x="Sector",
                     y="Count",
-                    title="Nifty 100 Sector Distribution",
+                    title="Sector Distribution",
                     color="Count",
                     color_continuous_scale="Viridis",
                     labels={"Sector": "Sector / Industry", "Count": "Number of Stocks"}
                 )
                 fig_sector.update_layout(
-                    height=300,
+                    autosize=True,
                     margin=dict(l=20, r=20, t=40, b=20),
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
@@ -364,7 +421,7 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                         labels={"PE Ratio": "P/E Ratio", "QUALITY_SCORE": "Quality Score (0-100)"}
                     )
                     fig_scatter.update_layout(
-                        height=300,
+                        autosize=True,
                         margin=dict(l=20, r=20, t=40, b=20),
                         paper_bgcolor="rgba(0,0,0,0)",
                         plot_bgcolor="rgba(0,0,0,0)",
@@ -419,6 +476,16 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                 
                 st.checkbox("Promoter Holding > Min", key="scr_prom_enabled")
                 st.number_input("Promoter Holding Min %", min_value=0.0, max_value=100.0, step=1.0, key="scr_prom_val")
+            
+            st.write("")
+            col_reset, _ = st.columns([1.2, 3])
+            with col_reset:
+                st.button(
+                    "🔄 Reset to Default Rules",
+                    key="reset_rules_btn",
+                    on_click=reset_rules_callback,
+                    width='stretch'
+                )
 
         with st.expander("⚖️ Advanced Balancing Filters (PE, Quality, Sharpe)"):
             col_adv1, col_adv2, col_adv3 = st.columns(3)
@@ -660,9 +727,9 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                     port_metrics = calculate_portfolio_metrics(current_weights, universe)
                 
                 # Benchmark values
-                bench_pe = float(universe["PE Ratio"].dropna().median()) if "PE Ratio" in universe.columns else 22.0
-                bench_quality = float(universe["QUALITY_SCORE"].dropna().mean()) if "QUALITY_SCORE" in universe.columns else 60.0
-                bench_fundamental = float(universe["Fundamental Score"].dropna().mean()) if "Fundamental Score" in universe.columns else 50.0
+                bench_pe = float(nifty100_universe["PE Ratio"].dropna().median()) if "PE Ratio" in nifty100_universe.columns and not nifty100_universe.empty else 22.0
+                bench_quality = float(nifty100_universe["QUALITY_SCORE"].dropna().mean()) if "QUALITY_SCORE" in nifty100_universe.columns and not nifty100_universe.empty else 60.0
+                bench_fundamental = float(nifty100_universe["Fundamental Score"].dropna().mean()) if "Fundamental Score" in nifty100_universe.columns and not nifty100_universe.empty else 50.0
                 
                 # Nifty Sharpe Ratio proxy: fetch nifty returns and compute it
                 nifty_df = PriceHistoryService.fetch_365_days("^NSEI", auto_map_nse=False)
@@ -1063,7 +1130,7 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                         title="P/E Ratio Comparison",
                         color_discrete_sequence=["#636EFA", "#EF553B", "#00CC96"]
                     )
-                    fig_pe.update_layout(height=300, showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    fig_pe.update_layout(autosize=True, showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                     st.plotly_chart(fig_pe, width='stretch', config={"displayModeBar": True, "responsive": True})
                 
                 with col_chart2:
@@ -1075,5 +1142,5 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                         title="Annualized Volatility (%) Comparison",
                         color_discrete_sequence=["#636EFA", "#EF553B", "#00CC96"]
                     )
-                    fig_vol.update_layout(height=300, showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                    fig_vol.update_layout(autosize=True, showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                     st.plotly_chart(fig_vol, width='stretch', config={"displayModeBar": True, "responsive": True})
