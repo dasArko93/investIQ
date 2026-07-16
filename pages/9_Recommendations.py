@@ -37,6 +37,34 @@ def fetch_nifty100_tickers():
     return []
 
 
+def tune_filters_callback(port_vol, bench_vol, port_pe, bench_pe, port_qual, bench_qual):
+    st.session_state.scr_rev_enabled = True
+    st.session_state.scr_eps_enabled = True
+    st.session_state.scr_roce_enabled = True
+    st.session_state.scr_roe_enabled = True
+    st.session_state.scr_de_enabled = True
+    st.session_state.scr_fcf_enabled = True
+    st.session_state.scr_prom_enabled = True
+    st.session_state.scr_peg_enabled = True
+    
+    # 1. High Volatility Check
+    if port_vol > bench_vol:
+        st.session_state.scr_sharpe_enabled = True
+        st.session_state.scr_sharpe_val = 1.2
+        
+    # 2. Valuation Check
+    if port_pe > bench_pe:
+        st.session_state.scr_pe_enabled = True
+        st.session_state.scr_pe_val = float(round(bench_pe, 1)) if bench_pe > 0 else 25.0
+        
+    # 3. Quality Check
+    if port_qual < bench_qual:
+        st.session_state.scr_quality_enabled = True
+        st.session_state.scr_quality_val = float(round(bench_qual, 1)) if bench_qual > 0 else 70.0
+        
+    st.session_state.balance_tuned = True
+
+
 # Initialize session state for screening rule values and checks
 if "scr_rev_enabled" not in st.session_state:
     st.session_state.scr_rev_enabled = True
@@ -93,6 +121,9 @@ if "scr_sharpe_enabled" not in st.session_state:
     st.session_state.scr_sharpe_enabled = False
 if "scr_sharpe_val" not in st.session_state:
     st.session_state.scr_sharpe_val = 1.2
+
+if "balance_tuned" not in st.session_state:
+    st.session_state.balance_tuned = False
 
 
 def classify_mcap(val):
@@ -190,6 +221,10 @@ def calculate_portfolio_metrics(ticker_weights, universe_df):
 
 
 st.title("Recommendations")
+
+if st.session_state.get("balance_tuned"):
+    st.success("Success! Screening filters have been tuned to balance your portfolio deficits. Switch to the first tab ('Stock Screening Recommendations') to review.")
+    st.session_state.balance_tuned = False
 
 with st.popover("📖 Quick Start User Guide & Help Docs", width='stretch'):
     st.markdown("""
@@ -307,7 +342,7 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                     xaxis=dict(showgrid=False),
                     yaxis=dict(gridcolor="rgba(0,0,0,0.05)")
                 )
-                st.plotly_chart(fig_sector, width='stretch')
+                st.plotly_chart(fig_sector, width='stretch', config={"displayModeBar": True, "responsive": True})
                 
         with ch_col2:
             # P/E vs Quality Scatter Plot
@@ -337,7 +372,7 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                         xaxis=dict(gridcolor="rgba(0,0,0,0.05)"),
                         yaxis=dict(gridcolor="rgba(0,0,0,0.05)")
                     )
-                    st.plotly_chart(fig_scatter, width='stretch')
+                    st.plotly_chart(fig_scatter, width='stretch', config={"displayModeBar": True, "responsive": True})
 
     tab_screening, tab_benchmarking = st.tabs([
         "🔍 Stock Screening Recommendations",
@@ -691,34 +726,13 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                 st.subheader("⚖️ Dynamic Risk Balancing")
                 st.write("Apply balancing rules directly to the screening filters to isolate stocks that neutralize your deficits:")
                 
-                if st.button("🔧 Tune Screening Filters for Balanced Risk/Reward", key="apply_balance_btn"):
-                    # Reset default standard filters
-                    st.session_state.scr_rev_enabled = True
-                    st.session_state.scr_eps_enabled = True
-                    st.session_state.scr_roce_enabled = True
-                    st.session_state.scr_roe_enabled = True
-                    st.session_state.scr_de_enabled = True
-                    st.session_state.scr_fcf_enabled = True
-                    st.session_state.scr_prom_enabled = True
-                    st.session_state.scr_peg_enabled = True
-                    
-                    # 1. High Volatility Check
-                    if port_metrics["volatility"] > bench_vol:
-                        st.session_state.scr_sharpe_enabled = True
-                        st.session_state.scr_sharpe_val = 1.2
-                        
-                    # 2. Valuation Check
-                    if port_metrics["pe"] > bench_pe:
-                        st.session_state.scr_pe_enabled = True
-                        st.session_state.scr_pe_val = float(round(bench_pe, 1))
-                        
-                    # 3. Quality Check
-                    if port_metrics["quality"] < bench_quality:
-                        st.session_state.scr_quality_enabled = True
-                        st.session_state.scr_quality_val = 70.0
-                        
-                    st.success("Success! Balancing rules have been applied. Switch to the first tab ('Stock Screening Recommendations') to see the adjusted list.")
-                    st.rerun()
+                st.button(
+                    "🔧 Tune Screening Filters for Balanced Risk/Reward", 
+                    key="apply_balance_btn", 
+                    on_click=tune_filters_callback,
+                    args=(port_metrics["volatility"], bench_vol, port_metrics["pe"], bench_pe, port_metrics["quality"], bench_quality),
+                    width='stretch'
+                )
 
                 # Summary checklist
                 st.write("")
@@ -907,17 +921,18 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                     other_tickers = [t for t in sorted(universe["Ticker"].tolist()) if t not in rec_tickers]
                     options_list = rec_tickers + other_tickers
                     
-                    sim_ticker = st.selectbox(
-                        "Choose Stock to Simulate",
+                    sim_tickers = st.multiselect(
+                        "Choose Stocks to Simulate",
                         options=options_list,
-                        help="Select a stock to run addition simulation"
+                        default=[options_list[0]] if options_list else [],
+                        help="Select one or more stocks to run addition simulation"
                     )
                 
                 with sim_col2:
                     sim_mode = st.selectbox(
                         "Simulation Mode",
                         options=["Allocate from Cash", "Replace Existing Stock"],
-                        help="Choose whether to add this stock as new cash or replace a current holding"
+                        help="Choose whether to add these stocks using new cash or replace a current holding"
                     )
                     
                 with sim_col3:
@@ -925,35 +940,53 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                         replace_ticker = st.selectbox(
                             "Stock to Sell/Replace",
                             options=sorted(list(current_weights.keys())),
-                            help="Select which holding is sold to buy the simulated stock"
+                            help="Select which holding is sold to buy the simulated stocks"
                         )
                         sim_weight_pct = 0.0
                     else:
                         sim_weight_pct = st.slider(
-                            "Simulated Allocation Weight (%)",
+                            "Simulated Allocation Weight per Stock (%)",
                             min_value=1.0,
                             max_value=30.0,
-                            value=10.0,
-                            step=1.0
+                            value=5.0,
+                            step=1.0,
+                            help="Weight allocated to each of the selected simulated stocks"
                         )
                         replace_ticker = None
                         
+                if not sim_tickers:
+                    st.info("💡 Please select at least one stock to simulate.")
+                    st.stop()
+                    
                 # Perform simulation logic
                 sim_weights = {}
+                n_sim = len(sim_tickers)
+                
                 if sim_mode == "Allocate from Cash":
-                    sim_w = sim_weight_pct / 100.0
-                    remaining_scale = 1.0 - sim_w
+                    sim_w_per_stock = sim_weight_pct / 100.0
+                    total_sim_w = n_sim * sim_w_per_stock
+                    
+                    if total_sim_w >= 1.0:
+                        total_sim_w = 0.9
+                        sim_w_per_stock = total_sim_w / n_sim
+                        st.warning(f"⚠️ Total simulated weight capped at 90% ({sim_w_per_stock*100:.1f}% per stock) to preserve portfolio structure.")
+                        
+                    remaining_scale = 1.0 - total_sim_w
                     for t, w in current_weights.items():
                         sim_weights[t] = w * remaining_scale
-                    sim_weights[sim_ticker] = sim_weights.get(sim_ticker, 0.0) + sim_w
+                    for ticker in sim_tickers:
+                        sim_weights[ticker] = sim_weights.get(ticker, 0.0) + sim_w_per_stock
                 else:
                     replace_w = current_weights.get(replace_ticker, 0.0)
+                    sim_w_per_stock = replace_w / n_sim if n_sim > 0 else 0.0
+                    
                     for t, w in current_weights.items():
                         if t == replace_ticker:
                             sim_weights[t] = 0.0
                         else:
                             sim_weights[t] = w
-                    sim_weights[sim_ticker] = sim_weights.get(sim_ticker, 0.0) + replace_w
+                    for ticker in sim_tickers:
+                        sim_weights[ticker] = sim_weights.get(ticker, 0.0) + sim_w_per_stock
                     
                 # Calculate simulated metrics
                 with st.spinner("Simulating portfolio changes..."):
@@ -1031,7 +1064,7 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                         color_discrete_sequence=["#636EFA", "#EF553B", "#00CC96"]
                     )
                     fig_pe.update_layout(height=300, showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-                    st.plotly_chart(fig_pe, width='stretch')
+                    st.plotly_chart(fig_pe, width='stretch', config={"displayModeBar": True, "responsive": True})
                 
                 with col_chart2:
                     fig_vol = px.bar(
@@ -1043,4 +1076,4 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                         color_discrete_sequence=["#636EFA", "#EF553B", "#00CC96"]
                     )
                     fig_vol.update_layout(height=300, showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-                    st.plotly_chart(fig_vol, width='stretch')
+                    st.plotly_chart(fig_vol, width='stretch', config={"displayModeBar": True, "responsive": True})

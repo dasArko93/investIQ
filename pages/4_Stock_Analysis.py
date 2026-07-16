@@ -479,11 +479,11 @@ def run_quant_analysis(ticker, history, nifty_history, stock_row):
             "ticker": ticker
         }
 
-    close_series = df_align["close_stock"].astype(float)
-    high_series = df_align["high"].astype(float)
-    low_series = df_align["low"].astype(float)
-    open_series = df_align["open"].astype(float)
-    volume_series = df_align["volume"].astype(float)
+    close_series = df_align["close_stock"].astype(float).ffill().bfill()
+    high_series = df_align["high"].astype(float).ffill().bfill()
+    low_series = df_align["low"].astype(float).ffill().bfill()
+    open_series = df_align["open"].astype(float).ffill().bfill()
+    volume_series = df_align["volume"].astype(float).ffill().bfill()
 
     # -------------------------------------------------------------------------
     # MODULE 1: Trend Analysis
@@ -492,6 +492,13 @@ def run_quant_analysis(ticker, history, nifty_history, stock_row):
     ma50 = close_series.rolling(50).mean().iloc[-1]
     ma100 = close_series.rolling(100).mean().iloc[-1]
     ma200 = close_series.rolling(200).mean().iloc[-1] if len(close_series) >= 200 else close_series.rolling(len(close_series)).mean().iloc[-1]
+    
+    # Fallback to last close if rolling results in NaN or non-positive values (e.g. data gaps)
+    last_close = float(close_series.iloc[-1]) if not close_series.empty else 1.0
+    if pd.isna(ma20) or ma20 <= 0: ma20 = last_close
+    if pd.isna(ma50) or ma50 <= 0: ma50 = last_close
+    if pd.isna(ma100) or ma100 <= 0: ma100 = last_close
+    if pd.isna(ma200) or ma200 <= 0: ma200 = last_close
     
     if ma20 > ma50 > ma100 > ma200:
         trend_direction = "Strong Uptrend"
@@ -504,7 +511,7 @@ def run_quant_analysis(ticker, history, nifty_history, stock_row):
     else:
         trend_direction = "Sideways"
 
-    # Compute trend confidence
+    # Compute trend confidence safely
     if trend_direction == "Strong Uptrend":
         trend_conf = int(np.clip(75 + (ma20 - ma200) / ma200 * 100, 75, 95))
     elif trend_direction == "Uptrend":
