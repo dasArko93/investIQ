@@ -22,19 +22,27 @@ render_sidebar()
 def fetch_nifty100_tickers():
     import requests
     import io
-    url = "https://archives.nseindia.com/content/indices/ind_nifty100list.csv"
+    urls = [
+        "https://archives.nseindia.com/content/indices/ind_nifty100list.csv",
+        "https://niftyindices.com/IndexAutomationData/StockTo%20Attribute/ind_nifty100list.csv"
+    ]
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*'
     }
-    try:
-        response = requests.get(url, headers=headers, timeout=5)
-        if response.status_code == 200:
-            df = pd.read_csv(io.StringIO(response.text))
-            if "Symbol" in df.columns:
-                symbols = df["Symbol"].dropna().unique().tolist()
-                return [str(s).upper().strip() for s in symbols]
-    except Exception:
-        pass
+    for url in urls:
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            if response.status_code == 200 and len(response.text) > 100:
+                df = pd.read_csv(io.StringIO(response.text))
+                for col in ["Symbol", "symbol", "Ticker", "ticker"]:
+                    if col in df.columns:
+                        symbols = df[col].dropna().unique().tolist()
+                        clean_syms = [str(s).upper().strip() for s in symbols if str(s).strip()]
+                        if len(clean_syms) >= 50:
+                            return clean_syms
+        except Exception:
+            continue
     return []
 
 
@@ -279,21 +287,26 @@ with st.popover("📖 Quick Start User Guide & Help Docs", width='stretch'):
     """)
 
 universe = load_universe()
-nifty100_universe = universe.copy()
 
-# Dynamically identify fresh Nifty 100 tickers loaded from NSE
-try:
-    fresh_symbols = fetch_nifty100_tickers()
-    if fresh_symbols:
-        clean_fresh = {s.upper().replace(".NS", "").strip() for s in fresh_symbols}
-        def is_nifty100_ticker(val):
-            if pd.isna(val):
-                return False
-            return str(val).upper().replace(".NS", "").strip() in clean_fresh
-        nifty100_universe = universe[universe["Ticker"].apply(is_nifty100_ticker)].copy()
-        st.toast("Loaded fresh Nifty 100 constituent list from NSE!")
-except Exception:
-    pass
+# Dynamically identify fresh Nifty 100 tickers loaded from NSE (with Market Cap fallback)
+fresh_symbols = fetch_nifty100_tickers()
+if fresh_symbols:
+    clean_fresh = {s.upper().replace(".NS", "").strip() for s in fresh_symbols}
+    def is_nifty100_ticker(val):
+        if pd.isna(val):
+            return False
+        return str(val).upper().replace(".NS", "").strip() in clean_fresh
+    nifty100_universe = universe[universe["Ticker"].apply(is_nifty100_ticker)].copy()
+    st.toast("Loaded fresh Nifty 100 constituent list from NSE!")
+else:
+    # Fallback: Define Nifty 100 as the top 100 constituent stocks sorted by Market Cap
+    if not universe.empty:
+        if "Market Cap" in universe.columns:
+            nifty100_universe = universe.sort_values(by="Market Cap", ascending=False).head(100).copy()
+        else:
+            nifty100_universe = universe.head(100).copy()
+    else:
+        nifty100_universe = pd.DataFrame()
 
 if require_data(universe, "Upload the stock universe to generate recommendations."):
     
@@ -353,7 +366,8 @@ if require_data(universe, "Upload the stock universe to generate recommendations
     
     # Calculate summary statistics for the filtered preview stocks
     pe_vals = pd.to_numeric(preview_df["PE Ratio"], errors="coerce").dropna()
-    pe_avg = pe_vals.mean() if not pe_vals.empty else 0.0
+    valid_pe_vals = pe_vals[(pe_vals > 0) & (pe_vals <= 300)]
+    pe_avg = valid_pe_vals.mean() if not valid_pe_vals.empty else (pe_vals.median() if not pe_vals.empty else 0.0)
     
     quality_vals = pd.to_numeric(preview_df["QUALITY_SCORE"], errors="coerce").dropna()
     quality_avg = quality_vals.mean() if not quality_vals.empty else 0.0
