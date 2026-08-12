@@ -198,10 +198,9 @@ else:
     # --- BENCHMARK METRICS SECTION (AS REQUESTED) ---
     st.write("")
     
-    # Calculate portfolio weighted PE and volatility
+    # Calculate portfolio weighted PE and volatility (Financial standard: Weighted Harmonic Mean for P/E, Weighted Average Volatility for Volatility)
     port_pe = 0.0
     port_vol = 0.0
-    valid_pe_weight = 0.0
     
     if not merged.empty:
         port_weights = {}
@@ -211,39 +210,35 @@ else:
             if total_current > 0:
                 port_weights[ticker] = val / total_current
                 
-        # PE Calculation
-        weighted_pe_sum = 0.0
+        # 1. PE Calculation (Weighted Harmonic Mean)
+        inverse_pe_sum = 0.0
+        valid_pe_weight = 0.0
         for ticker, weight in port_weights.items():
             clean_tick = ticker.upper().replace(".NS", "")
             match = universe[universe["Ticker"].astype(str).str.upper().str.replace(".NS", "") == clean_tick]
             if not match.empty:
                 pe = match.iloc[0].get("PE Ratio", 0.0)
                 if pe and pe > 0:
-                    weighted_pe_sum += pe * weight
+                    inverse_pe_sum += (weight / pe)
                     valid_pe_weight += weight
-        port_pe = weighted_pe_sum / valid_pe_weight if valid_pe_weight > 0 else 0.0
-        
-        # Volatility Calculation
-        price_dfs = []
-        for ticker in port_weights.keys():
+        if inverse_pe_sum > 0:
+            port_pe = valid_pe_weight / inverse_pe_sum
+            
+        # 2. Volatility Calculation (Weighted Average of Individual Volatilities)
+        weighted_vol_sum = 0.0
+        valid_vol_weight = 0.0
+        for ticker, weight in port_weights.items():
             df_prices = PriceHistoryService.fetch_365_days(ticker, auto_map_nse=True)
             if not df_prices.empty:
-                df_prices = df_prices.sort_values("date").copy()
+                df_prices = df_prices.sort_values("date")
                 df_prices["daily_return"] = df_prices["close"].pct_change()
-                df_prices = df_prices[["date", "daily_return"]].rename(columns={"daily_return": ticker})
-                price_dfs.append(df_prices)
-        if price_dfs:
-            merged_returns = price_dfs[0]
-            for df in price_dfs[1:]:
-                merged_returns = pd.merge(merged_returns, df, on="date", how="outer")
-            merged_returns = merged_returns.sort_values("date").fillna(0)
-            
-            portfolio_daily_returns = pd.Series(0.0, index=merged_returns.index)
-            for ticker, weight in port_weights.items():
-                if ticker in merged_returns.columns:
-                    portfolio_daily_returns += merged_returns[ticker] * weight
-            daily_std = portfolio_daily_returns.std()
-            port_vol = daily_std * (252 ** 0.5) * 100.0 if not pd.isna(daily_std) else 0.0
+                daily_std = df_prices["daily_return"].std()
+                if not pd.isna(daily_std):
+                    stock_vol = daily_std * (252 ** 0.5) * 100.0
+                    weighted_vol_sum += stock_vol * weight
+                    valid_vol_weight += weight
+        if valid_vol_weight > 0:
+            port_vol = weighted_vol_sum / valid_vol_weight
 
     # Layout for Benchmarking Header and Dropdown
     bm_hdr_col1, bm_hdr_col2 = st.columns([3, 1])

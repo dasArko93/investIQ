@@ -192,8 +192,8 @@ def get_index_volatility():
 
 
 def calculate_portfolio_metrics(ticker_weights, universe_df):
-    # 1. P/E, Quality, and Fundamental
-    weighted_pe_sum = 0.0
+    # 1. P/E (Weighted Harmonic Mean), Quality, and Fundamental
+    inverse_pe_sum = 0.0
     weighted_quality_sum = 0.0
     weighted_fundamental_sum = 0.0
     valid_pe_weight = 0.0
@@ -205,9 +205,10 @@ def calculate_portfolio_metrics(ticker_weights, universe_df):
         match = universe_df[universe_df["Ticker"].astype(str).str.upper().str.replace(".NS", "") == clean_tick]
         if not match.empty:
             row = match.iloc[0]
+            
             pe = row.get("PE Ratio", 0.0)
             if pe and pe > 0:
-                weighted_pe_sum += pe * weight
+                inverse_pe_sum += (weight / pe)
                 valid_pe_weight += weight
             
             qs = row.get("QUALITY_SCORE", 0.0)
@@ -220,42 +221,31 @@ def calculate_portfolio_metrics(ticker_weights, universe_df):
                 weighted_fundamental_sum += fs * weight
                 valid_fundamental_weight += weight
                 
-    pe_avg = weighted_pe_sum / valid_pe_weight if valid_pe_weight > 0 else 0.0
+    pe_avg = valid_pe_weight / inverse_pe_sum if inverse_pe_sum > 0 else 0.0
     quality_avg = weighted_quality_sum / valid_quality_weight if valid_quality_weight > 0 else 0.0
     fundamental_avg = weighted_fundamental_sum / valid_fundamental_weight if valid_fundamental_weight > 0 else 0.0
     
-    # 2. Volatility
-    price_dfs = []
-    for ticker in ticker_weights.keys():
+    # 2. Volatility (Weighted Average of Individual Volatilities)
+    weighted_vol_sum = 0.0
+    valid_vol_weight = 0.0
+    for ticker, weight in ticker_weights.items():
         df = PriceHistoryService.fetch_365_days(ticker, auto_map_nse=True)
         if not df.empty:
-            df = df.sort_values("date").copy()
+            df = df.sort_values("date")
             df["daily_return"] = df["close"].pct_change()
-            df = df[["date", "daily_return"]].rename(columns={"daily_return": ticker})
-            price_dfs.append(df)
-            
-    vol = 0.0
-    portfolio_daily_returns = pd.Series()
-    if price_dfs:
-        merged_returns = price_dfs[0]
-        for df in price_dfs[1:]:
-            merged_returns = pd.merge(merged_returns, df, on="date", how="outer")
-        merged_returns = merged_returns.sort_values("date").fillna(0)
-        
-        portfolio_daily_returns = pd.Series(0.0, index=merged_returns.index)
-        for ticker, weight in ticker_weights.items():
-            if ticker in merged_returns.columns:
-                portfolio_daily_returns += merged_returns[ticker] * weight
+            daily_std = df["daily_return"].std()
+            if not pd.isna(daily_std):
+                stock_vol = daily_std * (252 ** 0.5) * 100.0
+                weighted_vol_sum += stock_vol * weight
+                valid_vol_weight += weight
                 
-        daily_std = portfolio_daily_returns.std()
-        vol = daily_std * (252 ** 0.5) * 100.0 if not pd.isna(daily_std) else 0.0
+    vol = weighted_vol_sum / valid_vol_weight if valid_vol_weight > 0 else 0.0
         
     return {
         "pe": pe_avg,
         "quality": quality_avg,
         "fundamental": fundamental_avg,
-        "volatility": vol,
-        "returns": portfolio_daily_returns
+        "volatility": vol
     }
 
 
