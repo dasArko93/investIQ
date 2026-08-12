@@ -253,6 +253,22 @@ else:
             unsafe_allow_html=True
         )
         st.caption("Compare your portfolio & stock metrics against various benchmarks")
+        with st.popover("❓ How are these calculated?"):
+            st.markdown("""
+            ### 📊 Metrics Calculation Methodology
+            
+            - **Portfolio PE Ratio (Weighted P/E):** 
+              Calculated as the weighted average of the individual P/E ratios of active holdings in your portfolio. The weights are determined by the current holding value of each stock relative to the total portfolio current value. Stocks with zero, negative, or missing P/E ratios are excluded from the weight calculation.
+              
+            - **Portfolio Volatility:** 
+              Calculated as the annualized standard deviation of the daily returns of your portfolio over the last 365 calendar days. It accounts for both individual asset volatilities and asset correlations, using daily price history fetched from Yahoo Finance.
+              
+            - **Benchmark PE Ratio:** 
+              For the selected benchmark, this is the median P/E ratio of the constituent stocks currently loaded in your database universe.
+              
+            - **Benchmark Volatility:** 
+              Computed as the annualized standard deviation of the selected index's daily price history (e.g., `^CNX100` for Nifty 100, `^NSEI` for Nifty 50, or `14.2%` fallback for BSE 100) over the last 365 calendar days.
+            """)
     with bm_hdr_col2:
         selected_benchmark = st.selectbox(
             "Select Benchmark",
@@ -287,70 +303,78 @@ else:
     bm_col1, bm_col2 = st.columns(2)
     
     with bm_col1:
-        st.markdown(
-            f"""
-            <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 18px; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h5 style="margin-top: 0; font-weight: bold; color: #1f2937;">PE Ratio</h5>
-                    <p style="font-size: 0.9rem; color: #374151; line-height: 1.4;">{pe_desc}</p>
-                </div>
-                <div style="display: flex; gap: 20px; align-items: flex-end; height: 120px; padding-bottom: 10px;">
-                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
-                        <span style="font-size: 0.9rem; font-weight: bold; color: {pe_color}; margin-bottom: 4px;">{port_pe:.1f}</span>
-                        <div style="width: 36px; height: {int(min(port_pe / max(port_pe, bench_pe, 1.0) * 80, 80))}px; background-color: {pe_color}; border-radius: 4px;"></div>
-                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Portfolio</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
-                        <span style="font-size: 0.9rem; font-weight: bold; color: #6b7280; margin-bottom: 4px;">{bench_pe:.1f}</span>
-                        <div style="width: 36px; height: {int(min(bench_pe / max(port_pe, bench_pe, 1.0) * 80, 80))}px; background-color: #9ca3af; border-radius: 4px;"></div>
-                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Benchmark</span>
-                    </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.write("")
-        if "show_sector_premiums" not in st.session_state:
-            st.session_state.show_sector_premiums = False
+        with st.container(border=True):
+            st.markdown("<h5 style='margin-top: 0; font-weight: bold; color: #1f2937; margin-bottom: 8px;'>PE Ratio</h5>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 0.9rem; color: #374151; line-height: 1.4; min-height: 110px;'>{pe_desc}</div>", unsafe_allow_html=True)
             
-        if st.button("View Sector Premiums", key="view_sector_premiums_btn"):
-            st.session_state.show_sector_premiums = not st.session_state.show_sector_premiums
-            st.session_state.show_sector_multiples = False
-            st.rerun()
+            sub_col1, sub_col2 = st.columns([1.5, 1])
+            with sub_col1:
+                st.write("")
+                st.write("")
+                if "show_sector_premiums" not in st.session_state:
+                    st.session_state.show_sector_premiums = False
+                    
+                if st.button("View Sector Premiums", key="view_sector_premiums_btn", use_container_width=True):
+                    st.session_state.show_sector_premiums = not st.session_state.show_sector_premiums
+                    st.session_state.show_sector_multiples = False
+                    st.rerun()
+            with sub_col2:
+                port_h = int(min(port_pe / max(port_pe, bench_pe, 1.0) * 80, 80))
+                bench_h = int(min(bench_pe / max(port_pe, bench_pe, 1.0) * 80, 80))
+                st.markdown(
+                    f"""
+                    <div style="display: flex; gap: 12px; align-items: flex-end; justify-content: center; height: 110px; padding-bottom: 5px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 45px;">
+                            <span style="font-size: 0.85rem; font-weight: bold; color: {pe_color}; margin-bottom: 2px;">{port_pe:.1f}</span>
+                            <div style="width: 24px; height: {port_h}px; background-color: {pe_color}; border-radius: 4px;"></div>
+                            <span style="font-size: 0.7rem; color: #4b5563; margin-top: 4px;">Portfolio</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 45px;">
+                            <span style="font-size: 0.85rem; font-weight: bold; color: #6b7280; margin-bottom: 2px;">{bench_pe:.1f}</span>
+                            <div style="width: 24px; height: {bench_h}px; background-color: #9ca3af; border-radius: 4px;"></div>
+                            <span style="font-size: 0.7rem; color: #4b5563; margin-top: 4px;">Benchmark</span>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
     with bm_col2:
-        st.markdown(
-            f"""
-            <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 18px; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h5 style="margin-top: 0; font-weight: bold; color: #1f2937;">Volatility</h5>
-                    <p style="font-size: 0.9rem; color: #374151; line-height: 1.4;">{vol_desc}</p>
-                </div>
-                <div style="display: flex; gap: 20px; align-items: flex-end; height: 120px; padding-bottom: 10px;">
-                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
-                        <span style="font-size: 0.9rem; font-weight: bold; color: {vol_color}; margin-bottom: 4px;">{vol_ratio:.1f}x</span>
-                        <div style="width: 36px; height: {int(min(port_vol / max(port_vol, bench_vol, 1.0) * 80, 80))}px; background-color: {vol_color}; border-radius: 4px;"></div>
-                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Portfolio</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
-                        <span style="font-size: 0.9rem; font-weight: bold; color: #6b7280; margin-bottom: 4px;">1.0x</span>
-                        <div style="width: 36px; height: {int(min(bench_vol / max(port_vol, bench_vol, 1.0) * 80, 80))}px; background-color: #9ca3af; border-radius: 4px;"></div>
-                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Benchmark</span>
-                    </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        st.write("")
-        if "show_sector_multiples" not in st.session_state:
-            st.session_state.show_sector_multiples = False
+        with st.container(border=True):
+            st.markdown("<h5 style='margin-top: 0; font-weight: bold; color: #1f2937; margin-bottom: 8px;'>Volatility</h5>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 0.9rem; color: #374151; line-height: 1.4; min-height: 110px;'>{vol_desc}</div>", unsafe_allow_html=True)
             
-        if st.button("View Sector Multiples", key="view_sector_multiples_btn"):
-            st.session_state.show_sector_multiples = not st.session_state.show_sector_multiples
-            st.session_state.show_sector_premiums = False
-            st.rerun()
+            sub_col1, sub_col2 = st.columns([1.5, 1])
+            with sub_col1:
+                st.write("")
+                st.write("")
+                if "show_sector_multiples" not in st.session_state:
+                    st.session_state.show_sector_multiples = False
+                    
+                if st.button("View Sector Multiples", key="view_sector_multiples_btn", use_container_width=True):
+                    st.session_state.show_sector_multiples = not st.session_state.show_sector_multiples
+                    st.session_state.show_sector_premiums = False
+                    st.rerun()
+            with sub_col2:
+                port_h = int(min(port_vol / max(port_vol, bench_vol, 1.0) * 80, 80))
+                bench_h = int(min(bench_vol / max(port_vol, bench_vol, 1.0) * 80, 80))
+                st.markdown(
+                    f"""
+                    <div style="display: flex; gap: 12px; align-items: flex-end; justify-content: center; height: 110px; padding-bottom: 5px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 45px;">
+                            <span style="font-size: 0.85rem; font-weight: bold; color: {vol_color}; margin-bottom: 2px;">{vol_ratio:.1f}x</span>
+                            <div style="width: 24px; height: {port_h}px; background-color: {vol_color}; border-radius: 4px;"></div>
+                            <span style="font-size: 0.7rem; color: #4b5563; margin-top: 4px;">Portfolio</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; width: 45px;">
+                            <span style="font-size: 0.85rem; font-weight: bold; color: #6b7280; margin-bottom: 2px;">1.0x</span>
+                            <div style="width: 24px; height: {bench_h}px; background-color: #9ca3af; border-radius: 4px;"></div>
+                            <span style="font-size: 0.7rem; color: #4b5563; margin-top: 4px;">Benchmark</span>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
     # Dynamic rendering of dynamic tables
     if st.session_state.show_sector_premiums:
