@@ -11,6 +11,7 @@ from services.health_service import HealthService
 from services.holdings_service import HoldingsService
 from services.recommendation_service import RecommendationService
 from services.report_service import ReportService
+from services.price_history_service import PriceHistoryService
 from utils.page_utils import load_holdings, load_universe, merged_holdings, require_data, render_sidebar
 
 
@@ -20,6 +21,78 @@ from utils.page_utils import require_auth
 require_auth()
 
 render_sidebar()
+
+
+def get_nifty100_tickers_local():
+    import requests
+    import io
+    urls = [
+        "https://archives.nseindia.com/content/indices/ind_nifty100list.csv",
+        "https://niftyindices.com/IndexAutomationData/StockTo%20Attribute/ind_nifty100list.csv"
+    ]
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*'
+    }
+    for url in urls:
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            if response.status_code == 200 and len(response.text) > 100:
+                df = pd.read_csv(io.StringIO(response.text))
+                for col in ["Symbol", "symbol", "Ticker", "ticker"]:
+                    if col in df.columns:
+                        symbols = df[col].dropna().unique().tolist()
+                        return [str(s).upper().strip() for s in symbols if str(s).strip()]
+        except Exception:
+            continue
+    return []
+
+
+def get_benchmark_metrics(benchmark_name, universe_df):
+    stats = {"pe": 24.2, "volatility": 14.2}
+    
+    if benchmark_name == "BSE 100":
+        stats["pe"] = 24.2
+        stats["volatility"] = 14.2
+    elif benchmark_name == "Nifty 100":
+        stats["pe"] = 23.8
+        stats["volatility"] = 14.5
+        try:
+            symbols = get_nifty100_tickers_local()
+            if symbols and not universe_df.empty:
+                nifty100_df = universe_df[universe_df["Ticker"].astype(str).str.upper().str.replace(".NS", "").str.strip().isin(symbols)]
+                if not nifty100_df.empty:
+                    stats["pe"] = float(nifty100_df["PE Ratio"].dropna().median())
+            
+            df_hist = PriceHistoryService.fetch_365_days("^CNX100", auto_map_nse=False)
+            if not df_hist.empty:
+                df_hist = df_hist.sort_values("date")
+                df_hist["daily_return"] = df_hist["close"].pct_change()
+                daily_std = df_hist["daily_return"].std()
+                if not pd.isna(daily_std):
+                    stats["volatility"] = daily_std * (252 ** 0.5) * 100.0
+        except Exception:
+            pass
+    elif benchmark_name == "Nifty 50":
+        stats["pe"] = 22.8
+        stats["volatility"] = 13.5
+        try:
+            if not universe_df.empty:
+                n50_df = universe_df.sort_values(by="Market Cap", ascending=False).head(50)
+                stats["pe"] = float(n50_df["PE Ratio"].dropna().median())
+            
+            df_hist = PriceHistoryService.fetch_365_days("^NSEI", auto_map_nse=False)
+            if not df_hist.empty:
+                df_hist = df_hist.sort_values("date")
+                df_hist["daily_return"] = df_hist["close"].pct_change()
+                daily_std = df_hist["daily_return"].std()
+                if not pd.isna(daily_std):
+                    stats["volatility"] = daily_std * (252 ** 0.5) * 100.0
+        except Exception:
+            pass
+            
+    return stats
+
 
 st.title("holding")
 st.write(
@@ -122,6 +195,272 @@ else:
     metric_col5.metric("Health Score", f"{health:.1f}/100")
     metric_col6.metric("Avg Stock Quality", f"{avg_quality:.1f}/100")
 
+    # --- BENCHMARK METRICS SECTION (AS REQUESTED) ---
+    st.write("")
+    
+    # Calculate portfolio weighted PE and volatility
+    port_pe = 0.0
+    port_vol = 0.0
+    valid_pe_weight = 0.0
+    
+    if not merged.empty:
+        port_weights = {}
+        for _, row in merged.iterrows():
+            ticker = str(row["Security"])
+            val = float(row["Current Value Rs"])
+            if total_current > 0:
+                port_weights[ticker] = val / total_current
+                
+        # PE Calculation
+        weighted_pe_sum = 0.0
+        for ticker, weight in port_weights.items():
+            clean_tick = ticker.upper().replace(".NS", "")
+            match = universe[universe["Ticker"].astype(str).str.upper().str.replace(".NS", "") == clean_tick]
+            if not match.empty:
+                pe = match.iloc[0].get("PE Ratio", 0.0)
+                if pe and pe > 0:
+                    weighted_pe_sum += pe * weight
+                    valid_pe_weight += weight
+        port_pe = weighted_pe_sum / valid_pe_weight if valid_pe_weight > 0 else 0.0
+        
+        # Volatility Calculation
+        price_dfs = []
+        for ticker in port_weights.keys():
+            df_prices = PriceHistoryService.fetch_365_days(ticker, auto_map_nse=True)
+            if not df_prices.empty:
+                df_prices = df_prices.sort_values("date").copy()
+                df_prices["daily_return"] = df_prices["close"].pct_change()
+                df_prices = df_prices[["date", "daily_return"]].rename(columns={"daily_return": ticker})
+                price_dfs.append(df_prices)
+        if price_dfs:
+            merged_returns = price_dfs[0]
+            for df in price_dfs[1:]:
+                merged_returns = pd.merge(merged_returns, df, on="date", how="outer")
+            merged_returns = merged_returns.sort_values("date").fillna(0)
+            
+            portfolio_daily_returns = pd.Series(0.0, index=merged_returns.index)
+            for ticker, weight in port_weights.items():
+                if ticker in merged_returns.columns:
+                    portfolio_daily_returns += merged_returns[ticker] * weight
+            daily_std = portfolio_daily_returns.std()
+            port_vol = daily_std * (252 ** 0.5) * 100.0 if not pd.isna(daily_std) else 0.0
+
+    # Layout for Benchmarking Header and Dropdown
+    bm_hdr_col1, bm_hdr_col2 = st.columns([3, 1])
+    with bm_hdr_col1:
+        st.markdown(
+            "#### Metrics <span style='cursor: help; color: #6b7280; font-size: 0.9rem;' title='Compare your portfolio & stock metrics against various benchmarks'>ⓘ</span>",
+            unsafe_allow_html=True
+        )
+        st.caption("Compare your portfolio & stock metrics against various benchmarks")
+    with bm_hdr_col2:
+        selected_benchmark = st.selectbox(
+            "Select Benchmark",
+            options=["BSE 100", "Nifty 100", "Nifty 50"],
+            index=0,
+            label_visibility="collapsed",
+            key="benchmark_selector_holdings"
+        )
+        
+    # Get Benchmark Metrics
+    bm_stats = get_benchmark_metrics(selected_benchmark, universe)
+    bench_pe = bm_stats["pe"]
+    bench_vol = bm_stats["volatility"]
+    
+    # Generate Descriptions
+    if port_pe < bench_pe:
+        pe_desc = f"Your portfolio's PE is at <b>{port_pe:.1f}</b>, which is lower than the PE of {selected_benchmark} at <b>{bench_pe:.1f}</b>. This means your portfolio is <b>undervalued</b> as compared to the {selected_benchmark}."
+        pe_color = "#0080ff"  # Portfolio is undervalued (blue)
+    else:
+        pe_desc = f"Your portfolio's PE is at <b>{port_pe:.1f}</b>, which is higher than the PE of {selected_benchmark} at <b>{bench_pe:.1f}</b>. This means your portfolio is <b>premium-valued</b> as compared to the {selected_benchmark}."
+        pe_color = "#ef4444"  # Portfolio is premium-valued (red)
+        
+    vol_ratio = (port_vol / bench_vol) if bench_vol > 0 else 1.0
+    if port_vol > bench_vol:
+        vol_desc = f"Your portfolio's weighted average volatility is at <b>{port_vol:.1f}%</b>, which is higher than the volatility of {selected_benchmark} at <b>{bench_vol:.1f}%</b>. This means your portfolio is <b>{vol_ratio:.1f}x</b> times as volatile as the {selected_benchmark}."
+        vol_color = "#ef4444"  # Portfolio is more volatile (red)
+    else:
+        vol_desc = f"Your portfolio's weighted average volatility is at <b>{port_vol:.1f}%</b>, which is lower than the volatility of {selected_benchmark} at <b>{bench_vol:.1f}%</b>. This means your portfolio is <b>{vol_ratio:.1f}x</b> times as volatile as the {selected_benchmark} (more stable)."
+        vol_color = "#10b981"  # Portfolio is less volatile (green/stable)
+
+    # Render Side-by-Side Cards
+    bm_col1, bm_col2 = st.columns(2)
+    
+    with bm_col1:
+        st.markdown(
+            f"""
+            <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 18px; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h5 style="margin-top: 0; font-weight: bold; color: #1f2937;">PE Ratio</h5>
+                    <p style="font-size: 0.9rem; color: #374151; line-height: 1.4;">{pe_desc}</p>
+                </div>
+                <div style="display: flex; gap: 20px; align-items: flex-end; height: 120px; padding-bottom: 10px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
+                        <span style="font-size: 0.9rem; font-weight: bold; color: {pe_color}; margin-bottom: 4px;">{port_pe:.1f}</span>
+                        <div style="width: 36px; height: {int(min(port_pe / max(port_pe, bench_pe, 1.0) * 80, 80))}px; background-color: {pe_color}; border-radius: 4px;"></div>
+                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Portfolio</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
+                        <span style="font-size: 0.9rem; font-weight: bold; color: #6b7280; margin-bottom: 4px;">{bench_pe:.1f}</span>
+                        <div style="width: 36px; height: {int(min(bench_pe / max(port_pe, bench_pe, 1.0) * 80, 80))}px; background-color: #9ca3af; border-radius: 4px;"></div>
+                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Benchmark</span>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.write("")
+        if "show_sector_premiums" not in st.session_state:
+            st.session_state.show_sector_premiums = False
+            
+        if st.button("View Sector Premiums", key="view_sector_premiums_btn"):
+            st.session_state.show_sector_premiums = not st.session_state.show_sector_premiums
+            st.session_state.show_sector_multiples = False
+            st.rerun()
+
+    with bm_col2:
+        st.markdown(
+            f"""
+            <div style="background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 8px; padding: 18px; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h5 style="margin-top: 0; font-weight: bold; color: #1f2937;">Volatility</h5>
+                    <p style="font-size: 0.9rem; color: #374151; line-height: 1.4;">{vol_desc}</p>
+                </div>
+                <div style="display: flex; gap: 20px; align-items: flex-end; height: 120px; padding-bottom: 10px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
+                        <span style="font-size: 0.9rem; font-weight: bold; color: {vol_color}; margin-bottom: 4px;">{vol_ratio:.1f}x</span>
+                        <div style="width: 36px; height: {int(min(port_vol / max(port_vol, bench_vol, 1.0) * 80, 80))}px; background-color: {vol_color}; border-radius: 4px;"></div>
+                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Portfolio</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
+                        <span style="font-size: 0.9rem; font-weight: bold; color: #6b7280; margin-bottom: 4px;">1.0x</span>
+                        <div style="width: 36px; height: {int(min(bench_vol / max(port_vol, bench_vol, 1.0) * 80, 80))}px; background-color: #9ca3af; border-radius: 4px;"></div>
+                        <span style="font-size: 0.75rem; color: #4b5563; margin-top: 4px;">Benchmark</span>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.write("")
+        if "show_sector_multiples" not in st.session_state:
+            st.session_state.show_sector_multiples = False
+            
+        if st.button("View Sector Multiples", key="view_sector_multiples_btn"):
+            st.session_state.show_sector_multiples = not st.session_state.show_sector_multiples
+            st.session_state.show_sector_premiums = False
+            st.rerun()
+
+    # Dynamic rendering of dynamic tables
+    if st.session_state.show_sector_premiums:
+        st.markdown("#### Sector Premiums Breakdown")
+        st.write("Compare the weighted average P/E of your sector holdings vs the benchmark sector medians:")
+        if not merged.empty and "Sub-Sector" in merged.columns:
+            merged["Valuation_Weight"] = merged["Current Value Rs"] / total_current
+            port_sec_pe = {}
+            for sec, group in merged.groupby("Sub-Sector"):
+                w_pe = 0.0
+                w_sum = 0.0
+                for _, r in group.iterrows():
+                    pe = r.get("PE Ratio", 0.0)
+                    wt = r.get("Valuation_Weight", 0.0)
+                    if pe and pe > 0:
+                        w_pe += pe * wt
+                        w_sum += wt
+                if w_sum > 0:
+                    port_sec_pe[sec] = w_pe / w_sum
+                    
+            bench_sec_pe = {}
+            for sec, group in universe.groupby("Sub-Sector"):
+                med_pe = group["PE Ratio"].dropna().median()
+                if pd.notna(med_pe):
+                    bench_sec_pe[sec] = med_pe
+                    
+            comparison_data = []
+            for sec in sorted(list(set(port_sec_pe.keys()).union(set(bench_sec_pe.keys())))):
+                p_pe_val = port_sec_pe.get(sec, 0.0)
+                b_pe_val = bench_sec_pe.get(sec, 0.0)
+                if p_pe_val > 0 or b_pe_val > 0:
+                    prem_disc = p_pe_val - b_pe_val if (p_pe_val > 0 and b_pe_val > 0) else 0.0
+                    comparison_data.append({
+                        "Sector": sec,
+                        "Portfolio Sector P/E": float(f"{p_pe_val:.1f}") if p_pe_val > 0 else None,
+                        "Benchmark Sector P/E": float(f"{b_pe_val:.1f}") if b_pe_val > 0 else None,
+                        "Premium / Discount": prem_disc
+                    })
+            if comparison_data:
+                comp_df = pd.DataFrame(comparison_data)
+                st.dataframe(
+                    comp_df,
+                    width='stretch',
+                    hide_index=True,
+                    column_config={
+                        "Sector": "Sub-Sector / Industry",
+                        "Portfolio Sector P/E": st.column_config.NumberColumn("Portfolio Sector P/E", format="%.1f"),
+                        "Benchmark Sector P/E": st.column_config.NumberColumn("Benchmark Sector P/E", format="%.1f"),
+                        "Premium / Discount": st.column_config.NumberColumn("Premium / Discount", format="%+.1f")
+                    }
+                )
+            else:
+                st.info("No matching sector valuation metrics available.")
+        else:
+            st.info("Valuation metrics comparison requires sector details from the stock universe database.")
+            
+    if st.session_state.show_sector_multiples:
+        st.markdown("#### Sector Multiples & Quality Gap")
+        st.write("Compare the average quality scores of your sector holdings vs benchmark sector averages:")
+        if not merged.empty and "Sub-Sector" in merged.columns:
+            port_sec_q = {}
+            for sec, group in merged.groupby("Sub-Sector"):
+                w_q = 0.0
+                w_sum = 0.0
+                for _, r in group.iterrows():
+                    qs = r.get("QUALITY_SCORE", 0.0)
+                    wt = r.get("Current Value Rs", 0.0) / total_current
+                    if qs > 0:
+                        w_q += qs * wt
+                        w_sum += wt
+                if w_sum > 0:
+                    port_sec_q[sec] = w_q / w_sum
+                    
+            bench_sec_q = {}
+            for sec, group in universe.groupby("Sub-Sector"):
+                mean_q = group["QUALITY_SCORE"].dropna().mean()
+                if pd.notna(mean_q):
+                    bench_sec_q[sec] = mean_q
+                    
+            comparison_multiples = []
+            for sec in sorted(list(set(port_sec_q.keys()).union(set(bench_sec_q.keys())))):
+                p_q_val = port_sec_q.get(sec, 0.0)
+                b_q_val = bench_sec_q.get(sec, 0.0)
+                if p_q_val > 0 or b_q_val > 0:
+                    gap = p_q_val - b_q_val if (p_q_val > 0 and b_q_val > 0) else 0.0
+                    comparison_multiples.append({
+                        "Sector": sec,
+                        "Portfolio Avg Quality": float(f"{p_q_val:.1f}") if p_q_val > 0 else None,
+                        "Benchmark Avg Quality": float(f"{b_q_val:.1f}") if b_q_val > 0 else None,
+                        "Quality Gap": gap
+                    })
+            if comparison_multiples:
+                comp_mult_df = pd.DataFrame(comparison_multiples)
+                st.dataframe(
+                    comp_mult_df,
+                    width='stretch',
+                    hide_index=True,
+                    column_config={
+                        "Sector": "Sub-Sector / Industry",
+                        "Portfolio Avg Quality": st.column_config.NumberColumn("Portfolio Quality Score (/100)", format="%.1f"),
+                        "Benchmark Avg Quality": st.column_config.NumberColumn("Benchmark Quality Score (/100)", format="%.1f"),
+                        "Quality Gap": st.column_config.NumberColumn("Quality Gap", format="%+.1f")
+                    }
+                )
+            else:
+                st.info("No matching sector quality metrics available.")
+        else:
+            st.info("Quality metrics comparison requires sector details from the stock universe database.")
+
+    st.write("")
     st.divider()
 
     # 3. Interactive Report Tabs
