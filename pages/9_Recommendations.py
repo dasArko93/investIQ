@@ -318,7 +318,7 @@ if require_data(universe, "Upload the stock universe to generate recommendations
         p_col1, p_col2, p_col3 = st.columns([1, 1, 1])
         with p_col1:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-            only_nifty100 = st.checkbox("Show Only Nifty 100 Constituents", value=False, help="Filter to active Nifty 100 symbols fetched from NSE")
+            only_nifty100 = st.checkbox("Show Only Nifty 100 Constituents", value=True, help="Filter to active Nifty 100 symbols fetched from NSE")
         with p_col2:
             mcap_choices = ["Large Cap", "Mid Cap", "Small Cap"]
             selected_mcaps = st.multiselect("Market Cap Categories", options=mcap_choices, default=[], placeholder="All Market Caps (Default)")
@@ -849,84 +849,96 @@ if require_data(universe, "Upload the stock universe to generate recommendations
                 # Evaluate counter recommendations
                 counter_recs = []
                 
-                # 1. High Volatility Check
-                if port_metrics["volatility"] > bench_vol:
-                    defensive = advisory_universe[advisory_universe["Sharpe Ratio"] >= 1.0].sort_values(by="Sharpe Ratio", ascending=False)
-                    if defensive.empty:
-                        defensive = advisory_universe.sort_values(by="Sharpe Ratio", ascending=False).head(15)
-                    for _, row in defensive.iterrows():
+                # 1. Volatility / Defensive stability
+                is_high_vol = port_metrics["volatility"] > bench_vol
+                vol_target = "Reduce Volatility (Risk)" if is_high_vol else "Maintain Low Volatility"
+                vol_rationale = "Inject defensive stability and improve Sharpe ratio (risk-adjusted return)." if is_high_vol else "Preserve defensive stability and sustain high risk-adjusted return."
+                
+                defensive = advisory_universe[advisory_universe["Sharpe Ratio"] >= 1.0].sort_values(by="Sharpe Ratio", ascending=False)
+                if defensive.empty:
+                    defensive = advisory_universe.sort_values(by="Sharpe Ratio", ascending=False).head(15)
+                
+                for _, row in defensive.head(5).iterrows():
+                    counter_recs.append({
+                        "Ticker": row["Ticker"],
+                        "Name": row["Name"],
+                        "Sector": row.get("Sub-Sector", "N/A"),
+                        "Market Cap": classify_mcap(row.get("Market Cap", 0.0)),
+                        "Balancing Target": vol_target,
+                        "Action / Rationale": vol_rationale,
+                        "Key Metric": f"Sharpe Ratio: {row.get('Sharpe Ratio', 0.0):.2f}",
+                        "pe": float(row.get("PE Ratio", 0.0)) if pd.notna(row.get("PE Ratio")) else 0.0,
+                        "quality": float(row.get("QUALITY_SCORE", 0.0)) if pd.notna(row.get("QUALITY_SCORE")) else 0.0,
+                        "sharpe": float(row.get("Sharpe Ratio", 0.0)) if pd.notna(row.get("Sharpe Ratio")) else 0.0
+                    })
+                
+                # 2. Valuation Check
+                is_high_pe = port_metrics["pe"] > bench_pe
+                val_target = "Reduce Valuation (P/E)" if is_high_pe else "Maintain Value Focus"
+                val_rationale = "Lower overall portfolio P/E with high-growth, lower-PEG value stocks." if is_high_pe else "Sustain attractive valuation entry points with growth-at-reasonable-price (GARP) stocks."
+                
+                value_picks = advisory_universe[(advisory_universe["PEG Ratio (Forward)"] > 0) & (advisory_universe["PEG Ratio (Forward)"] < 1.5) & (advisory_universe["PE Ratio"] < bench_pe)].sort_values(by="PEG Ratio (Forward)", ascending=True)
+                if value_picks.empty:
+                    value_picks = advisory_universe[(advisory_universe["PE Ratio"] > 0) & (advisory_universe["PE Ratio"] < bench_pe)].sort_values(by="PE Ratio", ascending=True)
+                
+                for _, row in value_picks.head(5).iterrows():
+                    if not any(r["Ticker"] == row["Ticker"] for r in counter_recs):
                         counter_recs.append({
                             "Ticker": row["Ticker"],
                             "Name": row["Name"],
                             "Sector": row.get("Sub-Sector", "N/A"),
                             "Market Cap": classify_mcap(row.get("Market Cap", 0.0)),
-                            "Balancing Target": "Reduce Volatility (Risk)",
-                            "Action / Rationale": "Inject defensive stability and improve Sharpe ratio (risk-adjusted return).",
-                            "Key Metric": f"Sharpe Ratio: {row.get('Sharpe Ratio', 0.0):.2f}",
+                            "Balancing Target": val_target,
+                            "Action / Rationale": val_rationale,
+                            "Key Metric": f"Forward PEG: {row.get('PEG Ratio (Forward)', 0.0):.2f}",
                             "pe": float(row.get("PE Ratio", 0.0)) if pd.notna(row.get("PE Ratio")) else 0.0,
                             "quality": float(row.get("QUALITY_SCORE", 0.0)) if pd.notna(row.get("QUALITY_SCORE")) else 0.0,
                             "sharpe": float(row.get("Sharpe Ratio", 0.0)) if pd.notna(row.get("Sharpe Ratio")) else 0.0
                         })
-                
-                # 2. Valuation Check
-                if port_metrics["pe"] > bench_pe:
-                    value_picks = advisory_universe[(advisory_universe["PEG Ratio (Forward)"] > 0) & (advisory_universe["PEG Ratio (Forward)"] < 1.5) & (advisory_universe["PE Ratio"] < bench_pe)].sort_values(by="PEG Ratio (Forward)", ascending=True)
-                    if value_picks.empty:
-                        value_picks = advisory_universe[(advisory_universe["PE Ratio"] > 0) & (advisory_universe["PE Ratio"] < bench_pe)].sort_values(by="PE Ratio", ascending=True)
-                    for _, row in value_picks.iterrows():
-                        if not any(r["Ticker"] == row["Ticker"] for r in counter_recs):
-                            counter_recs.append({
-                                "Ticker": row["Ticker"],
-                                "Name": row["Name"],
-                                "Sector": row.get("Sub-Sector", "N/A"),
-                                "Market Cap": classify_mcap(row.get("Market Cap", 0.0)),
-                                "Balancing Target": "Reduce Valuation (P/E)",
-                                "Action / Rationale": "Lower overall portfolio P/E with high-growth, lower-PEG value stocks.",
-                                "Key Metric": f"Forward PEG: {row.get('PEG Ratio (Forward)', 0.0):.2f}",
-                                "pe": float(row.get("PE Ratio", 0.0)) if pd.notna(row.get("PE Ratio")) else 0.0,
-                                "quality": float(row.get("QUALITY_SCORE", 0.0)) if pd.notna(row.get("QUALITY_SCORE")) else 0.0,
-                                "sharpe": float(row.get("Sharpe Ratio", 0.0)) if pd.notna(row.get("Sharpe Ratio")) else 0.0
-                            })
                             
                 # 3. Quality Check
-                if port_metrics["quality"] < bench_quality:
-                    quality_picks = advisory_universe[advisory_universe["QUALITY_SCORE"] >= 70.0].sort_values(by="QUALITY_SCORE", ascending=False)
-                    if quality_picks.empty:
-                        quality_picks = advisory_universe.sort_values(by="QUALITY_SCORE", ascending=False).head(15)
-                    for _, row in quality_picks.iterrows():
-                        if not any(r["Ticker"] == row["Ticker"] for r in counter_recs):
-                            counter_recs.append({
-                                "Ticker": row["Ticker"],
-                                "Name": row["Name"],
-                                "Sector": row.get("Sub-Sector", "N/A"),
-                                "Market Cap": classify_mcap(row.get("Market Cap", 0.0)),
-                                "Balancing Target": "Boost Quality Score",
-                                "Action / Rationale": "Enhance safety margins and ROCE/ROE via Quality Compounders.",
-                                "Key Metric": f"Quality: {row.get('QUALITY_SCORE', 0.0):.1f}/100",
-                                "pe": float(row.get("PE Ratio", 0.0)) if pd.notna(row.get("PE Ratio")) else 0.0,
-                                "quality": float(row.get("QUALITY_SCORE", 0.0)) if pd.notna(row.get("QUALITY_SCORE")) else 0.0,
-                                "sharpe": float(row.get("Sharpe Ratio", 0.0)) if pd.notna(row.get("Sharpe Ratio")) else 0.0
-                            })
+                is_low_quality = port_metrics["quality"] < bench_quality
+                q_target = "Boost Quality Score" if is_low_quality else "Maintain Premium Quality"
+                q_rationale = "Enhance safety margins and ROCE/ROE via Quality Compounders." if is_low_quality else "Sustain superior business return ratios (ROCE/ROE) and strong balance sheets."
+                
+                quality_picks = advisory_universe[advisory_universe["QUALITY_SCORE"] >= 70.0].sort_values(by="QUALITY_SCORE", ascending=False)
+                if quality_picks.empty:
+                    quality_picks = advisory_universe.sort_values(by="QUALITY_SCORE", ascending=False).head(15)
+                
+                for _, row in quality_picks.head(5).iterrows():
+                    if not any(r["Ticker"] == row["Ticker"] for r in counter_recs):
+                        counter_recs.append({
+                            "Ticker": row["Ticker"],
+                            "Name": row["Name"],
+                            "Sector": row.get("Sub-Sector", "N/A"),
+                            "Market Cap": classify_mcap(row.get("Market Cap", 0.0)),
+                            "Balancing Target": q_target,
+                            "Action / Rationale": q_rationale,
+                            "Key Metric": f"Quality: {row.get('QUALITY_SCORE', 0.0):.1f}/100",
+                            "pe": float(row.get("PE Ratio", 0.0)) if pd.notna(row.get("PE Ratio")) else 0.0,
+                            "quality": float(row.get("QUALITY_SCORE", 0.0)) if pd.notna(row.get("QUALITY_SCORE")) else 0.0,
+                            "sharpe": float(row.get("Sharpe Ratio", 0.0)) if pd.notna(row.get("Sharpe Ratio")) else 0.0
+                        })
                             
-                # Fill general strong recommendations if list is short
-                if len(counter_recs) < 15:
-                    strong_picks = advisory_universe[advisory_universe["Fundamental Score"] >= 65.0].sort_values(by="Fundamental Score", ascending=False)
-                    if strong_picks.empty:
-                        strong_picks = advisory_universe.sort_values(by="Fundamental Score", ascending=False).head(15)
-                    for _, row in strong_picks.iterrows():
-                        if not any(r["Ticker"] == row["Ticker"] for r in counter_recs):
-                            counter_recs.append({
-                                "Ticker": row["Ticker"],
-                                "Name": row["Name"],
-                                "Sector": row.get("Sub-Sector", "N/A"),
-                                "Market Cap": classify_mcap(row.get("Market Cap", 0.0)),
-                                "Balancing Target": "Boost Overall Fundamentals",
-                                "Action / Rationale": "Reinforce general portfolio fundamental composition.",
-                                "Key Metric": f"Fundamental Score: {row.get('Fundamental Score', 0.0):.1f}",
-                                "pe": float(row.get("PE Ratio", 0.0)) if pd.notna(row.get("PE Ratio")) else 0.0,
-                                "quality": float(row.get("QUALITY_SCORE", 0.0)) if pd.notna(row.get("QUALITY_SCORE")) else 0.0,
-                                "sharpe": float(row.get("Sharpe Ratio", 0.0)) if pd.notna(row.get("Sharpe Ratio")) else 0.0
-                            })
+                # 4. General picks
+                strong_picks = advisory_universe[advisory_universe["Fundamental Score"] >= 65.0].sort_values(by="Fundamental Score", ascending=False)
+                if strong_picks.empty:
+                    strong_picks = advisory_universe.sort_values(by="Fundamental Score", ascending=False).head(15)
+                
+                for _, row in strong_picks.head(5).iterrows():
+                    if not any(r["Ticker"] == row["Ticker"] for r in counter_recs):
+                        counter_recs.append({
+                            "Ticker": row["Ticker"],
+                            "Name": row["Name"],
+                            "Sector": row.get("Sub-Sector", "N/A"),
+                            "Market Cap": classify_mcap(row.get("Market Cap", 0.0)),
+                            "Balancing Target": "Boost Overall Fundamentals",
+                            "Action / Rationale": "Reinforce general portfolio fundamental composition.",
+                            "Key Metric": f"Fundamental Score: {row.get('Fundamental Score', 0.0):.1f}",
+                            "pe": float(row.get("PE Ratio", 0.0)) if pd.notna(row.get("PE Ratio")) else 0.0,
+                            "quality": float(row.get("QUALITY_SCORE", 0.0)) if pd.notna(row.get("QUALITY_SCORE")) else 0.0,
+                            "sharpe": float(row.get("Sharpe Ratio", 0.0)) if pd.notna(row.get("Sharpe Ratio")) else 0.0
+                        })
                 
                 # Render counter recommendations as a structured table list
                 if counter_recs:
