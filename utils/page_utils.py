@@ -357,6 +357,7 @@ def render_sidebar():
             st.page_link("pages/5_MF_Holding_Pattern.py", label="MF Holding Pattern", icon="📊")
             st.caption("🤖 Advisor")
             st.page_link("pages/9_Recommendations.py", label="Recommendations")
+            st.page_link("pages/12_Gemini_AI.py", label="Gemini AI Chat", icon="💬")
             st.caption("⚡ Actions")
             st.page_link("pages/8_Rebalance.py", label="Rebalance")
             st.caption("🧹 Database Operations")
