@@ -41,10 +41,22 @@ def inject_global_css():
             border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
         }
 
-        /* Hide collapse/expand sidebar controls */
-        [data-testid="stSidebarCollapseButton"],
-        [data-testid="collapsedControl"] {
-            display: none !important;
+        /* Sidebar collapse controls: hide on desktop for clean layout, keep toggle accessible on mobile */
+        @media (min-width: 769px) {
+            [data-testid="stSidebarCollapseButton"],
+            [data-testid="collapsedControl"] {
+                display: none !important;
+            }
+        }
+        @media (max-width: 768px) {
+            [data-testid="collapsedControl"] {
+                display: flex !important;
+                visibility: visible !important;
+                z-index: 999999 !important;
+                background: rgba(255, 255, 255, 0.85) !important;
+                border-radius: 8px !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+            }
         }
 
         /* Sidebar Text Colors */

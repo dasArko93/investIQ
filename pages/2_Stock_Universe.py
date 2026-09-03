@@ -23,10 +23,46 @@ st.write(
     "Upload or review your stock universe here. This page now includes interactive charts to explore quality, sectors, and valuation patterns."
 )
 
-file = st.file_uploader("Upload Universe", type=["csv"])
-if file:
-    count = UniverseService.upload(file)
-    st.success(f"{count} stocks loaded")
+universe_tab1, universe_tab2 = st.tabs(["📁 Upload File", "📋 Paste CSV (Mobile Friendly)"])
+
+with universe_tab1:
+    android_mode = st.toggle(
+        "📱 Android Compatibility Mode (Show All Files)",
+        value=True,
+        help="Enable this if CSV files appear grayed out or unselectable in your Android file manager.",
+        key="universe_android_mode"
+    )
+    file_types = None if android_mode else ["csv", "xlsx", "xls", "txt"]
+    file = st.file_uploader("Upload Universe (.csv, .xlsx)", type=file_types, key="universe_file_uploader")
+    if file:
+        fname = getattr(file, "name", "file")
+        if android_mode and not fname.lower().endswith((".csv", ".xlsx", ".xls", ".txt")):
+            st.error(f"Skipped '{fname}': Please upload a .csv or .xlsx file.")
+        else:
+            try:
+                count = UniverseService.upload(file)
+                st.success(f"✅ {count} stocks loaded successfully!")
+            except Exception as e:
+                st.error(f"Failed to process universe file: {e}")
+
+with universe_tab2:
+    st.caption("📱 **Quick Paste for Mobile Devices:** Copy your stock universe CSV text and paste it below.")
+    pasted_universe = st.text_area(
+        "Paste Stock Universe CSV Text",
+        height=180,
+        placeholder="Ticker,Name,Sub-Sector,Market Cap,Close Price,...\nTCS,Tata Consultancy Services,IT - Software,1400000,3500,...",
+        key="universe_pasted_text"
+    )
+    if st.button("⬆️ Process Pasted Universe", type="primary", key="btn_process_pasted_universe"):
+        if not pasted_universe.strip():
+            st.warning("Please paste your CSV text before submitting.")
+        else:
+            try:
+                count = UniverseService.upload(pasted_universe.strip())
+                st.success(f"✅ {count} stocks loaded successfully!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Failed to process pasted universe: {e}")
 
 # Initialize reset counter if not present
 if "reset_counter" not in st.session_state:

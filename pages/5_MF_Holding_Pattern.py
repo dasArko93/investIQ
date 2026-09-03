@@ -95,42 +95,86 @@ with st.expander("📂 Upload Mutual Fund Files", expanded=not bool(st.session_s
         "Upload one or more **Tickertape Holding Pattern** exports. "
         "Each file should begin with the `Holding Pattern History by Tickertape` header."
     )
-    uploaded = st.file_uploader(
-        "Select Tickertape CSV files / ZIP Backup",
-        type=["csv", "txt", "zip"],
-        accept_multiple_files=True,
-        key="mf_uploader",
-        help="Download from Tickertape → Mutual Fund page → Holdings → Export CSV, or upload a ZIP backup",
-    )
+    
+    mf_tab1, mf_tab2 = st.tabs(["📁 Upload File(s)", "📋 Paste CSV (Mobile Friendly)"])
 
-    col_upload, col_clear = st.columns([3, 1])
-    with col_upload:
-        if st.button("⬆️ Parse & Load Selected Files", type="primary", width='stretch'):
-            if not uploaded:
-                st.warning("Please select at least one file before loading.")
-            else:
-                errors = []
-                loaded = 0
-                for f in uploaded:
-                    if f.name.endswith(".zip"):
-                        zip_loaded, zip_errors = MFHoldingService.process_zip_file(f)
-                        loaded += zip_loaded
-                        errors.extend(zip_errors)
-                    else:
-                        try:
-                            fname, df = MFHoldingService.parse_tickertape_file(f)
-                            st.session_state["mf_holdings"][fname] = df
-                            MFHoldingService.save_to_db(fname, df)
-                            loaded += 1
-                        except Exception as exc:
-                            errors.append(f"**{f.name}**: {exc}")
-                if loaded:
-                    # Sync memory state with newly loaded database items
-                    st.session_state["mf_holdings"] = MFHoldingService.load_from_db()
-                    st.success(f"✅ Loaded & Saved **{loaded}** fund(s) successfully!")
-                for err in errors:
-                    st.error(err)
+    with mf_tab1:
+        android_mode = st.toggle(
+            "📱 Android Compatibility Mode (Show All Files)",
+            value=True,
+            help="Enable this if CSV or ZIP files appear grayed out or unselectable in Android.",
+            key="mf_android_mode"
+        )
+        file_types = None if android_mode else ["csv", "txt", "zip"]
+        uploaded = st.file_uploader(
+            "Select Tickertape CSV files / ZIP Backup",
+            type=file_types,
+            accept_multiple_files=True,
+            key="mf_uploader",
+            help="Download from Tickertape → Mutual Fund page → Holdings → Export CSV, or upload a ZIP backup",
+        )
+
+        col_upload, col_clear = st.columns([3, 1])
+        with col_upload:
+            if st.button("⬆️ Parse & Load Selected Files", type="primary", width='stretch', key="btn_parse_mf_files"):
+                if not uploaded:
+                    st.warning("Please select at least one file before loading.")
+                else:
+                    errors = []
+                    loaded = 0
+                    for f in uploaded:
+                        fname = getattr(f, "name", "")
+                        if android_mode and not fname.lower().endswith((".csv", ".txt", ".zip")):
+                            errors.append(f"Skipped '{fname}': Please upload a .csv, .txt, or .zip file.")
+                            continue
+
+                        if fname.lower().endswith(".zip"):
+                            zip_loaded, zip_errors = MFHoldingService.process_zip_file(f)
+                            loaded += zip_loaded
+                            errors.extend(zip_errors)
+                        else:
+                            try:
+                                fname_parsed, df = MFHoldingService.parse_tickertape_file(f)
+                                st.session_state["mf_holdings"][fname_parsed] = df
+                                MFHoldingService.save_to_db(fname_parsed, df)
+                                loaded += 1
+                            except Exception as exc:
+                                errors.append(f"**{f.name}**: {exc}")
+                    if loaded:
+                        # Sync memory state with newly loaded database items
+                        st.session_state["mf_holdings"] = MFHoldingService.load_from_db()
+                        st.success(f"✅ Loaded & Saved **{loaded}** fund(s) successfully!")
+                    for err in errors:
+                        st.error(err)
+                    st.rerun()
+
+        with col_clear:
+            if st.button("🗑️ Clear All Funds", width='stretch', key="btn_clear_mf_tab1"):
+                st.session_state["mf_holdings"] = {}
+                MFHoldingService.clear_all_from_db()
                 st.rerun()
+
+    with mf_tab2:
+        st.caption("📱 **Quick Paste for Mobile Devices:** Copy Tickertape holding pattern CSV text and paste it below.")
+        pasted_mf = st.text_area(
+            "Paste Tickertape CSV Text",
+            height=180,
+            placeholder="Holding Pattern History by Tickertape\nFor: HDFC Top 100 Fund\n...\nHolding Type,31-Dec-25,31-Mar-26,...\nEquity,95.2,94.8,...",
+            key="mf_pasted_text"
+        )
+        if st.button("⬆️ Process Pasted Mutual Fund", type="primary", key="btn_process_pasted_mf"):
+            if not pasted_mf.strip():
+                st.warning("Please paste Tickertape CSV text before submitting.")
+            else:
+                try:
+                    fname_parsed, df = MFHoldingService.parse_tickertape_file(pasted_mf.strip())
+                    st.session_state["mf_holdings"][fname_parsed] = df
+                    MFHoldingService.save_to_db(fname_parsed, df)
+                    st.session_state["mf_holdings"] = MFHoldingService.load_from_db()
+                    st.success(f"✅ Loaded & Saved **{fname_parsed}** successfully!")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Failed to process pasted mutual fund: {exc}")
 
     with col_clear:
         if st.button("🗑️ Clear All Funds", width='stretch'):

@@ -112,17 +112,37 @@ class MFHoldingService:
             Holding Type | <date1> | <date2> | ...
         """
         if hasattr(uploaded_file, "read"):
-            raw_bytes = uploaded_file.read()
+            if hasattr(uploaded_file, "seek"):
+                uploaded_file.seek(0)
+            raw = uploaded_file.read()
             name = getattr(uploaded_file, "name", "unknown.csv")
+            if isinstance(raw, str):
+                text = raw
+            else:
+                try:
+                    text = raw.decode("utf-8")
+                except UnicodeDecodeError:
+                    text = raw.decode("latin-1")
+        elif isinstance(uploaded_file, str):
+            if "\n" in uploaded_file or not os.path.exists(uploaded_file):
+                text = uploaded_file
+                name = "Pasted_Fund.csv"
+            else:
+                with open(uploaded_file, "rb") as f:
+                    raw_bytes = f.read()
+                name = os.path.basename(uploaded_file)
+                try:
+                    text = raw_bytes.decode("utf-8")
+                except UnicodeDecodeError:
+                    text = raw_bytes.decode("latin-1")
         else:
             with open(uploaded_file, "rb") as f:
                 raw_bytes = f.read()
             name = os.path.basename(uploaded_file)
-
-        try:
-            text = raw_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            text = raw_bytes.decode("latin-1")
+            try:
+                text = raw_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                text = raw_bytes.decode("latin-1")
 
         lines = text.splitlines()
 
