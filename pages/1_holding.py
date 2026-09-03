@@ -99,20 +99,81 @@ st.write(
     "A unified portfolio view that combines holdings details, allocation insights, health metrics, and executive summary report generation."
 )
 
-files = st.file_uploader("Upload Holdings", type=["csv", "xlsx"], accept_multiple_files=True)
-if files:
-    total_uploaded = 0
-    errors = []
-    for file in files:
-        try:
-            rows = HoldingsService.upload(file)
-            total_uploaded += rows
-        except Exception as e:
-            errors.append(f"Failed to process {file.name}: {e}")
-    if total_uploaded > 0:
-        st.success(f"Successfully uploaded {total_uploaded} holdings from {len(files) - len(errors)} file(s)!")
-    for err in errors:
-        st.error(err)
+upload_tab1, upload_tab2 = st.tabs(["📁 Upload File", "📋 Paste CSV (Mobile Friendly)"])
+
+with upload_tab1:
+    col_opt1, col_opt2 = st.columns([3, 2])
+    with col_opt1:
+        android_mode = st.toggle(
+            "📱 Android Compatibility Mode (Show All Files)",
+            value=True,
+            help="Enable this if CSV files appear grayed out or unselectable in your Android file manager."
+        )
+    with col_opt2:
+        allow_multi = st.checkbox("Upload multiple files", value=False, help="Leave unchecked on mobile for higher stability")
+
+    file_types = None if android_mode else ["csv", "xlsx", "xls", "txt"]
+    
+    if allow_multi:
+        uploaded_files = st.file_uploader(
+            "Select Holdings File(s) (.csv, .xlsx)",
+            type=file_types,
+            accept_multiple_files=True,
+            key="holdings_uploader_multi"
+        )
+    else:
+        single_file = st.file_uploader(
+            "Select Holdings File (.csv, .xlsx)",
+            type=file_types,
+            accept_multiple_files=False,
+            key="holdings_uploader_single"
+        )
+        uploaded_files = [single_file] if single_file is not None else []
+
+    if uploaded_files:
+        total_uploaded = 0
+        errors = []
+        for file in uploaded_files:
+            fname = getattr(file, "name", "file")
+            # If in android_mode, check extension safely
+            if android_mode and not fname.lower().endswith((".csv", ".xlsx", ".xls", ".txt")):
+                errors.append(f"Skipped '{fname}': Please upload a .csv or .xlsx file.")
+                continue
+            try:
+                rows = HoldingsService.upload(file)
+                if rows > 0:
+                    total_uploaded += rows
+                else:
+                    errors.append(f"'{fname}' was parsed but contained no valid holding rows. Ensure it matches standard Zerodha / broker format.")
+            except Exception as e:
+                errors.append(f"Failed to process {fname}: {e}")
+
+        if total_uploaded > 0:
+            st.success(f"Successfully uploaded {total_uploaded} holdings from {len(uploaded_files) - len(errors)} file(s)!")
+        for err in errors:
+            st.error(err)
+
+with upload_tab2:
+    st.caption("📱 **Quick Paste for Mobile Devices:** Copy your CSV statement text from Google Drive, email, or a text viewer and paste it below.")
+    pasted_csv = st.text_area(
+        "Paste Holdings CSV Text",
+        height=180,
+        placeholder="Holdings - 09-Jun-26\nSecurity,Quantity,Average Cost Rs,...\nTCS,10,3500,...",
+        key="holdings_pasted_text"
+    )
+    if st.button("⬆️ Process Pasted Holdings", type="primary", key="btn_process_pasted_holdings"):
+        if not pasted_csv.strip():
+            st.warning("Please paste your CSV text before submitting.")
+        else:
+            try:
+                rows = HoldingsService.upload(pasted_csv.strip())
+                if rows > 0:
+                    st.success(f"Successfully loaded {rows} holdings from pasted data!")
+                    st.rerun()
+                else:
+                    st.error("No valid holdings recognized. Please make sure the header row includes 'Security' and 'Quantity'/'Qty'.")
+            except Exception as e:
+                st.error(f"Failed to process pasted holdings: {e}")
 
 holdings = load_holdings()
 universe = load_universe()

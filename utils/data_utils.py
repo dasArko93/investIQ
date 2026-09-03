@@ -1,3 +1,5 @@
+import os
+import io
 import re
 import csv
 from io import StringIO
@@ -7,18 +9,114 @@ import pandas as pd
 from pandas.errors import ParserError
 
 
+def parse_holdings_excel(file):
+    """Parse Excel holdings file (.xlsx or .xls) extracting metadata and rows."""
+    if hasattr(file, "seek"):
+        file.seek(0)
+    df_raw = pd.read_excel(file, header=None)
+    if df_raw.empty:
+        return pd.DataFrame(), datetime.utcnow()
+
+    # 1. Extract date from the first few rows
+    snapshot_date = None
+    for r_idx in range(min(15, len(df_raw))):
+        row_str = " ".join([str(val) for val in df_raw.iloc[r_idx].dropna()])
+        if "Holdings - " in row_str:
+            match = re.search(r"Holdings\s*-\s*([A-Za-z0-9\-]+)", row_str)
+            if match:
+                date_str = match.group(1)
+                for fmt in ("%d-%b-%y", "%d-%b-%Y", "%Y-%m-%d"):
+                    try:
+                        snapshot_date = datetime.strptime(date_str, fmt)
+                        break
+                    except ValueError:
+                        pass
+        if snapshot_date:
+            break
+
+    if not snapshot_date:
+        snapshot_date = datetime.utcnow()
+    snapshot_date = datetime(snapshot_date.year, snapshot_date.month, snapshot_date.day)
+
+    # 2. Extract header row
+    header_idx = -1
+    header_row = None
+    for idx in range(len(df_raw)):
+        row_vals = [str(x).strip() for x in df_raw.iloc[idx].tolist() if pd.notna(x)]
+        if "Security" in row_vals and any(q in row_vals for q in ("Quantity", "Qty", "Qty.")):
+            header_idx = idx
+            header_row = [str(x).strip() if pd.notna(x) else f"Col_{i}" for i, x in enumerate(df_raw.iloc[idx].tolist())]
+            break
+
+    if header_row is None:
+        return pd.DataFrame(), snapshot_date
+
+    # 3. Extract valid rows
+    data_rows = df_raw.iloc[header_idx + 1:].values.tolist()
+    valid_rows = []
+    for r in data_rows:
+        r_str = [str(x).strip() if pd.notna(x) else "" for x in r]
+        if not r_str or len(r_str) == 0:
+            continue
+        sec = r_str[0]
+        if sec in ("", "Stocks/ETFs", "Smallcases", "Security", "nan") or "Visit:" in sec:
+            continue
+
+        qty_idx = -1
+        for i, col in enumerate(header_row):
+            if "Quantity" in col or "Qty" in col:
+                qty_idx = i
+                break
+        if qty_idx != -1 and qty_idx < len(r_str):
+            qty_val = r_str[qty_idx]
+            if qty_val in ("", "-", "0.00", "0", "nan"):
+                if qty_val == "-":
+                    continue
+
+        avg_cost_idx = -1
+        for i, col in enumerate(header_row):
+            if "Average Cost" in col or "Avg Cost" in col:
+                avg_cost_idx = i
+                break
+        if avg_cost_idx != -1 and avg_cost_idx < len(r_str):
+            cost_val = r_str[avg_cost_idx]
+            if cost_val == "-":
+                continue
+
+        valid_rows.append(r_str[:len(header_row)])
+
+    for r in valid_rows:
+        if len(r) < len(header_row):
+            r.extend([""] * (len(header_row) - len(r)))
+
+    df = pd.DataFrame(valid_rows, columns=header_row)
+    return df, snapshot_date
+
+
 def parse_holdings_file(file):
+    name = str(getattr(file, "name", "")).lower()
+    if name.endswith((".xlsx", ".xls")):
+        return parse_holdings_excel(file)
+
     if hasattr(file, "read"):
         if hasattr(file, "seek"):
             file.seek(0)
         raw = file.read()
         if isinstance(raw, bytes):
+            # Check for Excel PK zip header or OLE header
+            if raw.startswith(b"PK\x03\x04") or raw.startswith(b"\xd0\xcf\x11\xe0"):
+                return parse_holdings_excel(io.BytesIO(raw))
             text = raw.decode("utf-8-sig", errors="ignore")
         else:
             text = raw
+    elif isinstance(file, str):
+        if "\n" in file or not os.path.exists(file):
+            text = file
+        else:
+            with open(file, "r", encoding="utf-8-sig", errors="ignore") as f:
+                text = f.read()
     else:
-        with open(file, "r", encoding="utf-8-sig", errors="ignore") as f:
-            text = f.read()
+        text = str(file)
 
     # 1. Extract date from the first few lines
     snapshot_date = None
@@ -157,10 +255,18 @@ def key(value):
 
 
 def read_table(file):
-    name = str(getattr(file, "name", file)).lower()
+    if isinstance(file, str):
+        if "\n" in file or not os.path.exists(file):
+            return pd.read_csv(StringIO(file))
+        name = file.lower()
+    else:
+        name = str(getattr(file, "name", "")).lower()
+
     if name.endswith((".xlsx", ".xls")):
         return pd.read_excel(file)
     try:
+        if hasattr(file, "seek"):
+            file.seek(0)
         return pd.read_csv(file)
     except ParserError:
         return read_repaired_csv(file)
@@ -170,14 +276,20 @@ def read_repaired_csv(file):
     if hasattr(file, "seek"):
         file.seek(0)
         raw = file.read()
+    elif isinstance(file, str):
+        if "\n" in file or not os.path.exists(file):
+            raw = file
+        else:
+            with open(file, "rb") as handle:
+                raw = handle.read()
     else:
         with open(file, "rb") as handle:
             raw = handle.read()
 
     if isinstance(raw, bytes):
-        text = raw.decode("utf-8-sig")
+        text = raw.decode("utf-8-sig", errors="ignore")
     else:
-        text = raw
+        text = str(raw)
 
     reader = csv.reader(StringIO(text))
     rows = list(reader)
