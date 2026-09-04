@@ -281,3 +281,61 @@ class MFHolding(Base):
     date = Column(String)
     allocation = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class MFScheme(Base):
+    """Mutual fund scheme metadata categorized by SEBI market cap classification."""
+    __tablename__ = "schemes"
+
+    id = Column(Integer, primary_key=True)
+    scheme_code = Column(String, unique=True, index=True)
+    scheme_name = Column(String, index=True)
+    amc = Column(String, index=True)
+    category = Column(String, index=True)  # Large Cap, Mid Cap, Small Cap, Flexi/Multi Cap
+    aum_cr = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class MFPortfolioSnapshot(Base):
+    """Records disclosure download batch dates and audit metadata."""
+    __tablename__ = "mf_snapshots"
+
+    id = Column(Integer, primary_key=True)
+    snapshot_date = Column(DateTime, index=True)
+    month_str = Column(String, index=True)  # e.g., '2026-03', '2026-02'
+    source = Column(String, default="AMC Disclosure")
+    total_schemes = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class MFSchemeHolding(Base):
+    """Junction table mapping individual stock holdings per scheme per snapshot date."""
+    __tablename__ = "scheme_holdings"
+
+    id = Column(Integer, primary_key=True)
+    scheme_id = Column(Integer, index=True)
+    isin = Column(String, index=True)
+    ticker = Column(String, index=True)
+    stock_name = Column(String, index=True)
+    sector = Column(String, index=True)
+    market_cap_category = Column(String, index=True)  # Large Cap, Mid Cap, Small Cap
+    weight_pct = Column(Float, default=0.0)
+    quantity = Column(Float, default=0.0)
+    market_value = Column(Float, default=0.0)
+    snapshot_date = Column(DateTime, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class UserPortfolioHolding(Base):
+    """User portfolio stock holdings mapped by ISIN for consensus gap analysis."""
+    __tablename__ = "user_portfolio"
+
+    id = Column(Integer, primary_key=True)
+    isin = Column(String, index=True)
+    ticker = Column(String, index=True)
+    stock_name = Column(String)
+    holding_qty = Column(Float, default=0.0)
+    current_weight_pct = Column(Float, default=0.0)
+    current_value = Column(Float, default=0.0)
+    snapshot_date = Column(DateTime, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
