@@ -1,0 +1,683 @@
+Scheme Code,ISIN,Ticker,Company,Sector,Market Cap,Weight %
+HDFC_TOP100,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,9.4
+HDFC_TOP100,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,9.0
+HDFC_TOP100,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.2
+HDFC_TOP100,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.2
+HDFC_TOP100,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,5.1
+HDFC_TOP100,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.4
+HDFC_TOP100,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,3.5
+HDFC_TOP100,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,3.2
+HDFC_TOP100,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,3.4
+HDFC_TOP100,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.6
+HDFC_TOP100,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.8
+HDFC_TOP100,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,3.1
+HDFC_TOP100,INE044A01036,SUNPHARMA,Sun Pharmaceutical Industries Ltd,Healthcare,Large Cap,2.6
+HDFC_TOP100,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.5
+HDFC_TOP100,INE038A01020,HINDALCO,Hindalco Industries Ltd,Metals & Mining,Large Cap,2.1
+ICICI_PRU_BLUECHIP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,9.7
+ICICI_PRU_BLUECHIP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.6
+ICICI_PRU_BLUECHIP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.9
+ICICI_PRU_BLUECHIP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,5.6
+ICICI_PRU_BLUECHIP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.3
+ICICI_PRU_BLUECHIP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,5.3
+ICICI_PRU_BLUECHIP,INE585B01010,MARUTI,Maruti Suzuki India Ltd,Automobile,Large Cap,3.9
+ICICI_PRU_BLUECHIP,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,2.5
+ICICI_PRU_BLUECHIP,INE481G01011,ULTRACEMCO,UltraTech Cement Ltd,Materials / Cement,Large Cap,3.1
+ICICI_PRU_BLUECHIP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.0
+ICICI_PRU_BLUECHIP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,4.5
+ICICI_PRU_BLUECHIP,INE075A01022,WIPRO,Wipro Ltd,Information Technology,Large Cap,1.8
+ICICI_PRU_BLUECHIP,INE742F01042,ADANIPORTS,Adani Ports and SEZ Ltd,Services / Infrastructure,Large Cap,2.7
+ICICI_PRU_BLUECHIP,INE044A01036,SUNPHARMA,Sun Pharmaceutical Industries Ltd,Healthcare,Large Cap,2.4
+ICICI_PRU_BLUECHIP,INE021A01026,ASIANPAINT,Asian Paints Ltd,Consumer Durables,Large Cap,2.0
+SBI_BLUECHIP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.6
+SBI_BLUECHIP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.5
+SBI_BLUECHIP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,7.8
+SBI_BLUECHIP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,4.8
+SBI_BLUECHIP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,3.9
+SBI_BLUECHIP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.3
+SBI_BLUECHIP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.7
+SBI_BLUECHIP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.0
+SBI_BLUECHIP,INE752E01010,POWERGRID,Power Grid Corporation of India Ltd,Power / Utilities,Large Cap,2.9
+SBI_BLUECHIP,INE522F01014,COALINDIA,Coal India Ltd,Metals & Mining,Large Cap,2.4
+SBI_BLUECHIP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,4.2
+SBI_BLUECHIP,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,2.8
+SBI_BLUECHIP,INE860A01027,HCLTECH,HCL Technologies Ltd,Information Technology,Large Cap,1.9
+SBI_BLUECHIP,INE155A01022,TATAMOTORS,Tata Motors Ltd,Automobile,Large Cap,2.1
+SBI_BLUECHIP,INE059A01026,CIPLA,Cipla Ltd,Healthcare,Large Cap,1.7
+MIRAELARGE,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,9.1
+MIRAELARGE,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,9.2
+MIRAELARGE,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.4
+MIRAELARGE,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.4
+MIRAELARGE,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,3.8
+MIRAELARGE,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.9
+MIRAELARGE,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,4.1
+MIRAELARGE,INE155A01022,TATAMOTORS,Tata Motors Ltd,Automobile,Large Cap,3.3
+MIRAELARGE,INE044A01036,SUNPHARMA,Sun Pharmaceutical Industries Ltd,Healthcare,Large Cap,3.2
+MIRAELARGE,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,3.7
+MIRAELARGE,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.4
+MIRAELARGE,INE585B01010,MARUTI,Maruti Suzuki India Ltd,Automobile,Large Cap,3.0
+MIRAELARGE,INE075A01022,WIPRO,Wipro Ltd,Information Technology,Large Cap,1.6
+MIRAELARGE,INE066A01021,EICHERMOT,Eicher Motors Ltd,Automobile,Large Cap,2.3
+MIRAELARGE,INE239A01024,NESTLEIND,Nestle India Ltd,Fast Moving Consumer Goods,Large Cap,1.8
+AXIS_BLUECHIP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,7.6
+AXIS_BLUECHIP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,9.3
+AXIS_BLUECHIP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.0
+AXIS_BLUECHIP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,5.2
+AXIS_BLUECHIP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,5.0
+AXIS_BLUECHIP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.2
+AXIS_BLUECHIP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.8
+AXIS_BLUECHIP,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,3.8
+AXIS_BLUECHIP,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,2.9
+AXIS_BLUECHIP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.1
+AXIS_BLUECHIP,INE021A01026,ASIANPAINT,Asian Paints Ltd,Consumer Durables,Large Cap,2.7
+AXIS_BLUECHIP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.4
+AXIS_BLUECHIP,INE089A01023,DRREDDY,Dr. Reddy's Laboratories Ltd,Healthcare,Large Cap,2.1
+AXIS_BLUECHIP,INE437A01024,APOLLOHOSP,Apollo Hospitals Enterprise Ltd,Healthcare,Large Cap,1.9
+AXIS_BLUECHIP,INE860A01027,HCLTECH,HCL Technologies Ltd,Information Technology,Large Cap,1.8
+NIPPON_LARGECAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,9.2
+NIPPON_LARGECAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.5
+NIPPON_LARGECAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.0
+NIPPON_LARGECAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.0
+NIPPON_LARGECAP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,4.2
+NIPPON_LARGECAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.3
+NIPPON_LARGECAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.7
+NIPPON_LARGECAP,INE213A01029,ONGC,Oil & Natural Gas Corporation Ltd,Energy / Oil & Gas,Large Cap,3.4
+NIPPON_LARGECAP,INE522F01014,COALINDIA,Coal India Ltd,Metals & Mining,Large Cap,3.0
+NIPPON_LARGECAP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.8
+NIPPON_LARGECAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,2.9
+NIPPON_LARGECAP,INE029A01011,BPCL,Bharat Petroleum Corporation Ltd,Energy / Oil & Gas,Large Cap,2.4
+NIPPON_LARGECAP,INE019A01038,JSWSTEEL,JSW Steel Ltd,Metals & Mining,Large Cap,2.2
+NIPPON_LARGECAP,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,2.6
+NIPPON_LARGECAP,INE917I01010,BAJAJ-AUTO,Bajaj Auto Ltd,Automobile,Large Cap,2.0
+UTI_NIFTY50,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,13.1
+UTI_NIFTY50,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,10.2
+UTI_NIFTY50,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.8
+UTI_NIFTY50,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.8
+UTI_NIFTY50,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,4.1
+UTI_NIFTY50,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,3.9
+UTI_NIFTY50,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,3.7
+UTI_NIFTY50,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,3.4
+UTI_NIFTY50,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,2.8
+UTI_NIFTY50,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,2.8
+UTI_NIFTY50,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,2.6
+UTI_NIFTY50,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.4
+UTI_NIFTY50,INE101A01026,M&M,Mahindra & Mahindra Ltd,Automobile,Large Cap,2.1
+UTI_NIFTY50,INE860A01027,HCLTECH,HCL Technologies Ltd,Information Technology,Large Cap,1.9
+UTI_NIFTY50,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,1.8
+ABSLLARGECAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,10.2
+ABSLLARGECAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,9.0
+ABSLLARGECAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.5
+ABSLLARGECAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.3
+ABSLLARGECAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,5.2
+ABSLLARGECAP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,3.8
+ABSLLARGECAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,3.9
+ABSLLARGECAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,3.1
+ABSLLARGECAP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.4
+ABSLLARGECAP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.7
+ABSLLARGECAP,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,2.9
+ABSLLARGECAP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.5
+ABSLLARGECAP,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,2.6
+ABSLLARGECAP,INE155A01022,TATAMOTORS,Tata Motors Ltd,Automobile,Large Cap,2.2
+ABSLLARGECAP,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,2.0
+DSPTOPP100,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,9.7
+DSPTOPP100,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.9
+DSPTOPP100,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.3
+DSPTOPP100,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.0
+DSPTOPP100,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,5.3
+DSPTOPP100,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.5
+DSPTOPP100,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,3.6
+DSPTOPP100,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.8
+DSPTOPP100,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,2.9
+DSPTOPP100,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.2
+DSPTOPP100,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.5
+DSPTOPP100,INE752E01010,POWERGRID,Power Grid Corporation of India Ltd,Power / Utilities,Large Cap,2.6
+DSPTOPP100,INE213A01029,ONGC,Oil & Natural Gas Corporation Ltd,Energy / Oil & Gas,Large Cap,2.3
+DSPTOPP100,INE038A01020,HINDALCO,Hindalco Industries Ltd,Metals & Mining,Large Cap,2.1
+DSPTOPP100,INE101A01026,M&M,Mahindra & Mahindra Ltd,Automobile,Large Cap,2.4
+CANROBLARGER,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,10.5
+CANROBLARGER,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,9.4
+CANROBLARGER,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,6.4
+CANROBLARGER,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.0
+CANROBLARGER,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,4.8
+CANROBLARGER,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.5
+CANROBLARGER,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.8
+CANROBLARGER,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.9
+CANROBLARGER,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,2.6
+CANROBLARGER,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,3.1
+CANROBLARGER,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,2.6
+CANROBLARGER,INE437A01024,APOLLOHOSP,Apollo Hospitals Enterprise Ltd,Healthcare,Large Cap,2.2
+CANROBLARGER,INE089A01023,DRREDDY,Dr. Reddy's Laboratories Ltd,Healthcare,Large Cap,2.0
+CANROBLARGER,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,2.8
+CANROBLARGER,INE021A01026,ASIANPAINT,Asian Paints Ltd,Consumer Durables,Large Cap,1.7
+HDFC_MIDCAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,4.9
+HDFC_MIDCAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.6
+HDFC_MIDCAP,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,4.1
+HDFC_MIDCAP,INE006I01046,ASTRAL,Astral Ltd,Building Materials,Mid Cap,3.1
+HDFC_MIDCAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,3.8
+HDFC_MIDCAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,4.2
+HDFC_MIDCAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,3.5
+HDFC_MIDCAP,INE660A01013,SUNDARMFIN,Sundaram Finance Ltd,Financial Services,Mid Cap,2.9
+HDFC_MIDCAP,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,3.1
+HDFC_MIDCAP,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,3.2
+HDFC_MIDCAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.5
+HDFC_MIDCAP,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,2.8
+HDFC_MIDCAP,INE356A01018,MPHASIS,Mphasis Ltd,Information Technology,Mid Cap,2.6
+HDFC_MIDCAP,INE674K01013,ABCAPITAL,Aditya Birla Capital Ltd,Financial Services,Mid Cap,2.6
+HDFC_MIDCAP,INE603J01030,PIIND,PI Industries Ltd,Chemicals / Agro,Mid Cap,2.4
+KOTAK_EMERGING,INE578A01017,SUPREMEIND,Supreme Industries Ltd,Capital Goods,Mid Cap,4.3
+KOTAK_EMERGING,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,4.5
+KOTAK_EMERGING,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.1
+KOTAK_EMERGING,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.6
+KOTAK_EMERGING,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.9
+KOTAK_EMERGING,INE356A01018,MPHASIS,Mphasis Ltd,Information Technology,Mid Cap,2.7
+KOTAK_EMERGING,INE061F01013,FORTIS,Fortis Healthcare Ltd,Healthcare,Mid Cap,3.2
+KOTAK_EMERGING,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,2.8
+KOTAK_EMERGING,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,2.9
+KOTAK_EMERGING,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.8
+KOTAK_EMERGING,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,3.1
+KOTAK_EMERGING,INE121A01024,CHOLAFIN,Cholamandalam Investment & Finance,Financial Services,Mid Cap,2.6
+KOTAK_EMERGING,INE685A01028,TORNTPHARM,Torrent Pharmaceuticals Ltd,Healthcare,Mid Cap,2.7
+KOTAK_EMERGING,INE093I01010,OBEROIRLTY,Oberoi Realty Ltd,Real Estate,Mid Cap,2.4
+KOTAK_EMERGING,INE603J01030,PIIND,PI Industries Ltd,Chemicals / Agro,Mid Cap,2.2
+AXIS_MIDCAP,INE006I01046,ASTRAL,Astral Ltd,Building Materials,Mid Cap,3.8
+AXIS_MIDCAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.7
+AXIS_MIDCAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,4.1
+AXIS_MIDCAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,3.9
+AXIS_MIDCAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,3.7
+AXIS_MIDCAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.0
+AXIS_MIDCAP,INE176A01028,BATAINDIA,Bata India Ltd,Consumer Discretionary,Mid Cap,2.1
+AXIS_MIDCAP,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,3.3
+AXIS_MIDCAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.4
+AXIS_MIDCAP,INE578A01017,SUPREMEIND,Supreme Industries Ltd,Capital Goods,Mid Cap,2.8
+AXIS_MIDCAP,INE414G01012,MUTHOOTFIN,Muthoot Finance Ltd,Financial Services,Mid Cap,2.6
+AXIS_MIDCAP,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.8
+AXIS_MIDCAP,INE121A01024,CHOLAFIN,Cholamandalam Investment & Finance,Financial Services,Mid Cap,2.4
+AXIS_MIDCAP,INE111A01025,CONCOR,Container Corporation of India Ltd,Services / Logistics,Mid Cap,2.2
+AXIS_MIDCAP,INE196A01026,MARICO,Marico Ltd,Fast Moving Consumer Goods,Mid Cap,2.0
+SBI_MAGNUM_MID,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,5.0
+SBI_MAGNUM_MID,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,4.8
+SBI_MAGNUM_MID,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.5
+SBI_MAGNUM_MID,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,4.1
+SBI_MAGNUM_MID,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.1
+SBI_MAGNUM_MID,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,3.6
+SBI_MAGNUM_MID,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,3.1
+SBI_MAGNUM_MID,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,3.0
+SBI_MAGNUM_MID,INE061F01013,FORTIS,Fortis Healthcare Ltd,Healthcare,Mid Cap,2.9
+SBI_MAGNUM_MID,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,2.7
+SBI_MAGNUM_MID,INE660A01013,SUNDARMFIN,Sundaram Finance Ltd,Financial Services,Mid Cap,2.6
+SBI_MAGNUM_MID,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.8
+SBI_MAGNUM_MID,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,2.4
+SBI_MAGNUM_MID,INE093I01010,OBEROIRLTY,Oberoi Realty Ltd,Real Estate,Mid Cap,2.1
+SBI_MAGNUM_MID,INE674K01013,ABCAPITAL,Aditya Birla Capital Ltd,Financial Services,Mid Cap,2.2
+NIPPON_MIDCAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,5.3
+NIPPON_MIDCAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,4.7
+NIPPON_MIDCAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,4.4
+NIPPON_MIDCAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.1
+NIPPON_MIDCAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.2
+NIPPON_MIDCAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.8
+NIPPON_MIDCAP,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,3.3
+NIPPON_MIDCAP,INE006I01046,ASTRAL,Astral Ltd,Building Materials,Mid Cap,3.0
+NIPPON_MIDCAP,INE356A01018,MPHASIS,Mphasis Ltd,Information Technology,Mid Cap,2.4
+NIPPON_MIDCAP,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,2.7
+NIPPON_MIDCAP,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,2.6
+NIPPON_MIDCAP,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.7
+NIPPON_MIDCAP,INE660A01013,SUNDARMFIN,Sundaram Finance Ltd,Financial Services,Mid Cap,2.3
+NIPPON_MIDCAP,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,2.3
+NIPPON_MIDCAP,INE603J01030,PIIND,PI Industries Ltd,Chemicals / Agro,Mid Cap,2.1
+DSP_MIDCAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,5.0
+DSP_MIDCAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,4.7
+DSP_MIDCAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,4.3
+DSP_MIDCAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.3
+DSP_MIDCAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,3.9
+DSP_MIDCAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.7
+DSP_MIDCAP,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,3.2
+DSP_MIDCAP,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,2.9
+DSP_MIDCAP,INE006I01046,ASTRAL,Astral Ltd,Building Materials,Mid Cap,2.7
+DSP_MIDCAP,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,2.6
+DSP_MIDCAP,INE674K01013,ABCAPITAL,Aditya Birla Capital Ltd,Financial Services,Mid Cap,2.4
+DSP_MIDCAP,INE121A01024,CHOLAFIN,Cholamandalam Investment & Finance,Financial Services,Mid Cap,2.2
+DSP_MIDCAP,INE414G01012,MUTHOOTFIN,Muthoot Finance Ltd,Financial Services,Mid Cap,2.1
+DSP_MIDCAP,INE685A01028,TORNTPHARM,Torrent Pharmaceuticals Ltd,Healthcare,Mid Cap,2.0
+DSP_MIDCAP,INE111A01025,CONCOR,Container Corporation of India Ltd,Services / Logistics,Mid Cap,1.9
+ABSLLMIDCAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,5.4
+ABSLLMIDCAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,4.9
+ABSLLMIDCAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.5
+ABSLLMIDCAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,4.1
+ABSLLMIDCAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.9
+ABSLLMIDCAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,2.9
+ABSLLMIDCAP,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,3.2
+ABSLLMIDCAP,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,3.0
+ABSLLMIDCAP,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,2.9
+ABSLLMIDCAP,INE061F01013,FORTIS,Fortis Healthcare Ltd,Healthcare,Mid Cap,2.7
+ABSLLMIDCAP,INE176A01028,BATAINDIA,Bata India Ltd,Consumer Discretionary,Mid Cap,2.0
+ABSLLMIDCAP,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.5
+ABSLLMIDCAP,INE603J01030,PIIND,PI Industries Ltd,Chemicals / Agro,Mid Cap,2.1
+ABSLLMIDCAP,INE093I01010,OBEROIRLTY,Oberoi Realty Ltd,Real Estate,Mid Cap,2.0
+ABSLLMIDCAP,INE111A01025,CONCOR,Container Corporation of India Ltd,Services / Logistics,Mid Cap,1.9
+TATA_MIDCAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,5.1
+TATA_MIDCAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,4.7
+TATA_MIDCAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.6
+TATA_MIDCAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.2
+TATA_MIDCAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.9
+TATA_MIDCAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,3.7
+TATA_MIDCAP,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,3.1
+TATA_MIDCAP,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,2.9
+TATA_MIDCAP,INE356A01018,MPHASIS,Mphasis Ltd,Information Technology,Mid Cap,2.3
+TATA_MIDCAP,INE006I01046,ASTRAL,Astral Ltd,Building Materials,Mid Cap,2.6
+TATA_MIDCAP,INE121A01024,CHOLAFIN,Cholamandalam Investment & Finance,Financial Services,Mid Cap,2.4
+TATA_MIDCAP,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,2.3
+TATA_MIDCAP,INE578A01017,SUPREMEIND,Supreme Industries Ltd,Capital Goods,Mid Cap,2.1
+TATA_MIDCAP,INE674K01013,ABCAPITAL,Aditya Birla Capital Ltd,Financial Services,Mid Cap,2.0
+TATA_MIDCAP,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.2
+MOTILAL_MID,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,5.8
+MOTILAL_MID,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,5.4
+MOTILAL_MID,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,4.2
+MOTILAL_MID,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,4.8
+MOTILAL_MID,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.5
+MOTILAL_MID,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,4.1
+MOTILAL_MID,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.1
+MOTILAL_MID,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,3.3
+MOTILAL_MID,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,3.1
+MOTILAL_MID,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,2.9
+MOTILAL_MID,INE356A01018,MPHASIS,Mphasis Ltd,Information Technology,Mid Cap,2.3
+MOTILAL_MID,INE006I01046,ASTRAL,Astral Ltd,Building Materials,Mid Cap,2.5
+MOTILAL_MID,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.6
+MOTILAL_MID,INE121A01024,CHOLAFIN,Cholamandalam Investment & Finance,Financial Services,Mid Cap,2.1
+MOTILAL_MID,INE111A01025,CONCOR,Container Corporation of India Ltd,Services / Logistics,Mid Cap,2.0
+QUANT_MIDCAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,6.0
+QUANT_MIDCAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,5.7
+QUANT_MIDCAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,5.3
+QUANT_MIDCAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,4.1
+QUANT_MIDCAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.7
+QUANT_MIDCAP,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.5
+QUANT_MIDCAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,4.0
+QUANT_MIDCAP,INE226A01021,VOLTAS,Voltas Ltd,Consumer Durables,Mid Cap,3.4
+QUANT_MIDCAP,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,3.2
+QUANT_MIDCAP,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,3.0
+QUANT_MIDCAP,INE061F01013,FORTIS,Fortis Healthcare Ltd,Healthcare,Mid Cap,2.9
+QUANT_MIDCAP,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,2.7
+QUANT_MIDCAP,INE356A01018,MPHASIS,Mphasis Ltd,Information Technology,Mid Cap,2.0
+QUANT_MIDCAP,INE006I01046,ASTRAL,Astral Ltd,Building Materials,Mid Cap,2.2
+QUANT_MIDCAP,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,2.3
+NIPPON_SMALLCAP,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,4.7
+NIPPON_SMALLCAP,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,3.9
+NIPPON_SMALLCAP,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,3.1
+NIPPON_SMALLCAP,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.2
+NIPPON_SMALLCAP,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,3.3
+NIPPON_SMALLCAP,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,2.9
+NIPPON_SMALLCAP,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,2.8
+NIPPON_SMALLCAP,INE643N01012,SONACOMS,Sona BLW Precision Forgings Ltd,Automobile,Small Cap,2.5
+NIPPON_SMALLCAP,INE372A01015,APARINDS,Apar Industries Ltd,Capital Goods,Small Cap,3.4
+NIPPON_SMALLCAP,INE668F01031,JYOTHYLAB,Jyothy Labs Ltd,Fast Moving Consumer Goods,Small Cap,2.3
+NIPPON_SMALLCAP,INE474S01017,MEDANTA,Global Health Ltd (Medanta),Healthcare,Small Cap,3.1
+NIPPON_SMALLCAP,INE177H01002,GPIL,Godawari Power & Ispat Ltd,Metals & Mining,Small Cap,2.3
+NIPPON_SMALLCAP,INE404N01024,ABSLAMC,Aditya Birla Sun Life AMC Ltd,Financial Services,Small Cap,2.1
+NIPPON_SMALLCAP,INE068V01023,GLAND,Gland Pharma Ltd,Healthcare,Small Cap,2.0
+NIPPON_SMALLCAP,INE0N0801024,CLEAN,Clean Science and Technology Ltd,Chemicals / Agro,Small Cap,1.9
+SBI_SMALLCAP,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,4.1
+SBI_SMALLCAP,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,3.6
+SBI_SMALLCAP,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,3.4
+SBI_SMALLCAP,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,2.8
+SBI_SMALLCAP,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,3.1
+SBI_SMALLCAP,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,2.7
+SBI_SMALLCAP,INE429E01023,SAFARI,Safari Industries (India) Ltd,Consumer Durables,Small Cap,2.5
+SBI_SMALLCAP,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,3.3
+SBI_SMALLCAP,INE463V01026,ANANDRATHI,Anand Rathi Wealth Ltd,Financial Services,Small Cap,2.8
+SBI_SMALLCAP,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,2.9
+SBI_SMALLCAP,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,2.6
+SBI_SMALLCAP,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,2.5
+SBI_SMALLCAP,INE643N01012,SONACOMS,Sona BLW Precision Forgings Ltd,Automobile,Small Cap,2.3
+SBI_SMALLCAP,INE177H01002,GPIL,Godawari Power & Ispat Ltd,Metals & Mining,Small Cap,2.2
+SBI_SMALLCAP,INE0JR201011,LATENTVIEW,LatentView Analytics Ltd,Information Technology,Small Cap,2.0
+AXIS_SMALLCAP,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,5.0
+AXIS_SMALLCAP,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.5
+AXIS_SMALLCAP,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,3.8
+AXIS_SMALLCAP,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,3.0
+AXIS_SMALLCAP,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,3.2
+AXIS_SMALLCAP,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,3.0
+AXIS_SMALLCAP,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,2.8
+AXIS_SMALLCAP,INE429E01023,SAFARI,Safari Industries (India) Ltd,Consumer Durables,Small Cap,2.3
+AXIS_SMALLCAP,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,2.6
+AXIS_SMALLCAP,INE463V01026,ANANDRATHI,Anand Rathi Wealth Ltd,Financial Services,Small Cap,2.5
+AXIS_SMALLCAP,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,2.3
+AXIS_SMALLCAP,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,2.2
+AXIS_SMALLCAP,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,2.1
+AXIS_SMALLCAP,INE177H01002,GPIL,Godawari Power & Ispat Ltd,Metals & Mining,Small Cap,2.0
+AXIS_SMALLCAP,INE0N0801024,CLEAN,Clean Science and Technology Ltd,Chemicals / Agro,Small Cap,1.9
+KOTAK_SMALLCAP,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,4.5
+KOTAK_SMALLCAP,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,4.6
+KOTAK_SMALLCAP,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.3
+KOTAK_SMALLCAP,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,3.6
+KOTAK_SMALLCAP,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,2.9
+KOTAK_SMALLCAP,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,3.1
+KOTAK_SMALLCAP,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,2.9
+KOTAK_SMALLCAP,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,2.7
+KOTAK_SMALLCAP,INE429E01023,SAFARI,Safari Industries (India) Ltd,Consumer Durables,Small Cap,2.2
+KOTAK_SMALLCAP,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,2.4
+KOTAK_SMALLCAP,INE463V01026,ANANDRATHI,Anand Rathi Wealth Ltd,Financial Services,Small Cap,2.4
+KOTAK_SMALLCAP,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,2.1
+KOTAK_SMALLCAP,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,2.0
+KOTAK_SMALLCAP,INE474S01017,MEDANTA,Global Health Ltd (Medanta),Healthcare,Small Cap,1.9
+KOTAK_SMALLCAP,INE643N01012,SONACOMS,Sona BLW Precision Forgings Ltd,Automobile,Small Cap,1.8
+HDFC_SMALLCAP,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,4.2
+HDFC_SMALLCAP,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.0
+HDFC_SMALLCAP,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,3.4
+HDFC_SMALLCAP,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,3.0
+HDFC_SMALLCAP,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,2.4
+HDFC_SMALLCAP,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,2.7
+HDFC_SMALLCAP,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,2.6
+HDFC_SMALLCAP,INE429E01023,SAFARI,Safari Industries (India) Ltd,Consumer Durables,Small Cap,2.0
+HDFC_SMALLCAP,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,2.3
+HDFC_SMALLCAP,INE463V01026,ANANDRATHI,Anand Rathi Wealth Ltd,Financial Services,Small Cap,2.3
+HDFC_SMALLCAP,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,2.1
+HDFC_SMALLCAP,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,2.0
+HDFC_SMALLCAP,INE177H01002,GPIL,Godawari Power & Ispat Ltd,Metals & Mining,Small Cap,1.9
+HDFC_SMALLCAP,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,1.8
+HDFC_SMALLCAP,INE474S01017,MEDANTA,Global Health Ltd (Medanta),Healthcare,Small Cap,1.7
+DSPMICROSMALL,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,4.1
+DSPMICROSMALL,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,4.7
+DSPMICROSMALL,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,3.8
+DSPMICROSMALL,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,3.1
+DSPMICROSMALL,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,3.4
+DSPMICROSMALL,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,3.1
+DSPMICROSMALL,INE463V01026,ANANDRATHI,Anand Rathi Wealth Ltd,Financial Services,Small Cap,3.0
+DSPMICROSMALL,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,2.7
+DSPMICROSMALL,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,2.5
+DSPMICROSMALL,INE429E01023,SAFARI,Safari Industries (India) Ltd,Consumer Durables,Small Cap,2.0
+DSPMICROSMALL,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,2.2
+DSPMICROSMALL,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,2.1
+DSPMICROSMALL,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,2.0
+DSPMICROSMALL,INE177H01002,GPIL,Godawari Power & Ispat Ltd,Metals & Mining,Small Cap,1.9
+DSPMICROSMALL,INE0J9401016,BIKAJI,Bikaji Foods International Ltd,Fast Moving Consumer Goods,Small Cap,1.8
+CANROBSMALL,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,4.8
+CANROBSMALL,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,4.0
+CANROBSMALL,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,3.6
+CANROBSMALL,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,2.9
+CANROBSMALL,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,2.8
+CANROBSMALL,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,3.0
+CANROBSMALL,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,2.8
+CANROBSMALL,INE429E01023,SAFARI,Safari Industries (India) Ltd,Consumer Durables,Small Cap,2.2
+CANROBSMALL,INE463V01026,ANANDRATHI,Anand Rathi Wealth Ltd,Financial Services,Small Cap,2.5
+CANROBSMALL,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,2.3
+CANROBSMALL,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,2.2
+CANROBSMALL,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,2.1
+CANROBSMALL,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,2.0
+CANROBSMALL,INE474S01017,MEDANTA,Global Health Ltd (Medanta),Healthcare,Small Cap,1.9
+CANROBSMALL,INE177H01002,GPIL,Godawari Power & Ispat Ltd,Metals & Mining,Small Cap,1.8
+QUANT_SMALLCAP,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,6.0
+QUANT_SMALLCAP,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,4.5
+QUANT_SMALLCAP,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,4.8
+QUANT_SMALLCAP,INE739E01017,CERA,Cera Sanitaryware Ltd,Consumer Durables,Small Cap,4.3
+QUANT_SMALLCAP,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,3.5
+QUANT_SMALLCAP,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,3.6
+QUANT_SMALLCAP,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,3.3
+QUANT_SMALLCAP,INE429E01023,SAFARI,Safari Industries (India) Ltd,Consumer Durables,Small Cap,2.7
+QUANT_SMALLCAP,INE463V01026,ANANDRATHI,Anand Rathi Wealth Ltd,Financial Services,Small Cap,3.0
+QUANT_SMALLCAP,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,2.7
+QUANT_SMALLCAP,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,2.5
+QUANT_SMALLCAP,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,2.3
+QUANT_SMALLCAP,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,2.2
+QUANT_SMALLCAP,INE474S01017,MEDANTA,Global Health Ltd (Medanta),Healthcare,Small Cap,2.1
+QUANT_SMALLCAP,INE177H01002,GPIL,Godawari Power & Ispat Ltd,Metals & Mining,Small Cap,2.0
+PPFAS_FLEXICAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,7.9
+PPFAS_FLEXICAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.1
+PPFAS_FLEXICAP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,6.5
+PPFAS_FLEXICAP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,5.5
+PPFAS_FLEXICAP,INE522F01014,COALINDIA,Coal India Ltd,Metals & Mining,Large Cap,5.1
+PPFAS_FLEXICAP,INE752E01010,POWERGRID,Power Grid Corporation of India Ltd,Power / Utilities,Large Cap,4.4
+PPFAS_FLEXICAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,3.4
+PPFAS_FLEXICAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,3.1
+PPFAS_FLEXICAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.2
+PPFAS_FLEXICAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,2.8
+PPFAS_FLEXICAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,2.6
+PPFAS_FLEXICAP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,2.9
+PPFAS_FLEXICAP,INE101A01026,M&M,Mahindra & Mahindra Ltd,Automobile,Large Cap,2.6
+PPFAS_FLEXICAP,INE044A01036,SUNPHARMA,Sun Pharmaceutical Industries Ltd,Healthcare,Large Cap,2.3
+PPFAS_FLEXICAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,2.2
+HDFC_FLEXICAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.2
+HDFC_FLEXICAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,7.8
+HDFC_FLEXICAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,7.0
+HDFC_FLEXICAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,4.6
+HDFC_FLEXICAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.8
+HDFC_FLEXICAP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,3.5
+HDFC_FLEXICAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,3.1
+HDFC_FLEXICAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.1
+HDFC_FLEXICAP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.0
+HDFC_FLEXICAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,3.4
+HDFC_FLEXICAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,3.2
+HDFC_FLEXICAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,2.8
+HDFC_FLEXICAP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.2
+HDFC_FLEXICAP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,2.8
+HDFC_FLEXICAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,2.5
+KOTAK_FLEXICAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.9
+KOTAK_FLEXICAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.0
+KOTAK_FLEXICAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,7.4
+KOTAK_FLEXICAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,4.9
+KOTAK_FLEXICAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,3.9
+KOTAK_FLEXICAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.3
+KOTAK_FLEXICAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.3
+KOTAK_FLEXICAP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.5
+KOTAK_FLEXICAP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.3
+KOTAK_FLEXICAP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.6
+KOTAK_FLEXICAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,3.1
+KOTAK_FLEXICAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,2.9
+KOTAK_FLEXICAP,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,2.8
+KOTAK_FLEXICAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,2.4
+KOTAK_FLEXICAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,1.7
+UTI_FLEXICAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,9.5
+UTI_FLEXICAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,7.6
+UTI_FLEXICAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.1
+UTI_FLEXICAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,5.4
+UTI_FLEXICAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,5.0
+UTI_FLEXICAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.4
+UTI_FLEXICAP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.3
+UTI_FLEXICAP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.5
+UTI_FLEXICAP,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,3.2
+UTI_FLEXICAP,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,3.0
+UTI_FLEXICAP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,2.3
+UTI_FLEXICAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,5.2
+UTI_FLEXICAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,2.8
+UTI_FLEXICAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,2.3
+UTI_FLEXICAP,INE021A01026,ASIANPAINT,Asian Paints Ltd,Consumer Durables,Large Cap,1.9
+SBI_FLEXICAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.8
+SBI_FLEXICAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.2
+SBI_FLEXICAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,7.6
+SBI_FLEXICAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,4.8
+SBI_FLEXICAP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,4.3
+SBI_FLEXICAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.3
+SBI_FLEXICAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.3
+SBI_FLEXICAP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.8
+SBI_FLEXICAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,2.9
+SBI_FLEXICAP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.7
+SBI_FLEXICAP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.0
+SBI_FLEXICAP,INE522F01014,COALINDIA,Coal India Ltd,Metals & Mining,Large Cap,2.7
+SBI_FLEXICAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,2.8
+SBI_FLEXICAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,2.6
+SBI_FLEXICAP,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,2.5
+MOTILAL_MULTI,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,5.4
+MOTILAL_MULTI,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,5.1
+MOTILAL_MULTI,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,3.9
+MOTILAL_MULTI,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,4.5
+MOTILAL_MULTI,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.2
+MOTILAL_MULTI,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.0
+MOTILAL_MULTI,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,2.7
+MOTILAL_MULTI,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,7.2
+MOTILAL_MULTI,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,6.7
+MOTILAL_MULTI,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,2.5
+MOTILAL_MULTI,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,4.8
+MOTILAL_MULTI,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.1
+MOTILAL_MULTI,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,2.8
+MOTILAL_MULTI,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,2.6
+MOTILAL_MULTI,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,1.8
+QUANT_FLEXICAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,6.4
+QUANT_FLEXICAP,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,6.0
+QUANT_FLEXICAP,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,5.7
+QUANT_FLEXICAP,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,5.3
+QUANT_FLEXICAP,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,4.1
+QUANT_FLEXICAP,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,3.7
+QUANT_FLEXICAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,7.1
+QUANT_FLEXICAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,7.6
+QUANT_FLEXICAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,7.0
+QUANT_FLEXICAP,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,4.3
+QUANT_FLEXICAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,3.1
+QUANT_FLEXICAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,2.8
+QUANT_FLEXICAP,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,3.3
+QUANT_FLEXICAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,2.8
+QUANT_FLEXICAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,2.5
+FRANKLIN_FLEXICAP,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.8
+FRANKLIN_FLEXICAP,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.2
+FRANKLIN_FLEXICAP,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,7.6
+FRANKLIN_FLEXICAP,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.2
+FRANKLIN_FLEXICAP,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,4.1
+FRANKLIN_FLEXICAP,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.3
+FRANKLIN_FLEXICAP,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,3.3
+FRANKLIN_FLEXICAP,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,3.9
+FRANKLIN_FLEXICAP,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.4
+FRANKLIN_FLEXICAP,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.7
+FRANKLIN_FLEXICAP,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.0
+FRANKLIN_FLEXICAP,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,3.0
+FRANKLIN_FLEXICAP,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,2.4
+FRANKLIN_FLEXICAP,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,2.7
+FRANKLIN_FLEXICAP,INE044A01036,SUNPHARMA,Sun Pharmaceutical Industries Ltd,Healthcare,Large Cap,2.1
+AXIS_ELSS,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,7.9
+AXIS_ELSS,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.4
+AXIS_ELSS,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,7.8
+AXIS_ELSS,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,5.5
+AXIS_ELSS,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,5.1
+AXIS_ELSS,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,3.9
+AXIS_ELSS,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.5
+AXIS_ELSS,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.7
+AXIS_ELSS,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,3.3
+AXIS_ELSS,INE089A01023,DRREDDY,Dr. Reddy's Laboratories Ltd,Healthcare,Large Cap,3.0
+AXIS_ELSS,INE437A01024,APOLLOHOSP,Apollo Hospitals Enterprise Ltd,Healthcare,Large Cap,2.7
+AXIS_ELSS,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,3.8
+AXIS_ELSS,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,2.6
+AXIS_ELSS,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,1.8
+AXIS_ELSS,INE021A01026,ASIANPAINT,Asian Paints Ltd,Consumer Durables,Large Cap,2.0
+MIRAE_ELSS,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,9.6
+MIRAE_ELSS,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,9.0
+MIRAE_ELSS,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.4
+MIRAE_ELSS,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.8
+MIRAE_ELSS,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,4.5
+MIRAE_ELSS,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.7
+MIRAE_ELSS,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,4.1
+MIRAE_ELSS,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,3.2
+MIRAE_ELSS,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,3.3
+MIRAE_ELSS,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,3.1
+MIRAE_ELSS,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,2.9
+MIRAE_ELSS,INE044A01036,SUNPHARMA,Sun Pharmaceutical Industries Ltd,Healthcare,Large Cap,2.7
+MIRAE_ELSS,INE280A01028,TITAN,Titan Company Ltd,Consumer Durables,Large Cap,2.5
+MIRAE_ELSS,INE155A01022,TATAMOTORS,Tata Motors Ltd,Automobile,Large Cap,2.3
+MIRAE_ELSS,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,2.4
+SBI_LONGTERM,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,8.6
+SBI_LONGTERM,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,8.0
+SBI_LONGTERM,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,7.4
+SBI_LONGTERM,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,4.6
+SBI_LONGTERM,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,4.1
+SBI_LONGTERM,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.3
+SBI_LONGTERM,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.3
+SBI_LONGTERM,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.8
+SBI_LONGTERM,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,2.9
+SBI_LONGTERM,INE522F01014,COALINDIA,Coal India Ltd,Metals & Mining,Large Cap,3.1
+SBI_LONGTERM,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,2.9
+SBI_LONGTERM,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,2.9
+SBI_LONGTERM,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,2.7
+SBI_LONGTERM,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,1.9
+SBI_LONGTERM,INE155A01022,TATAMOTORS,Tata Motors Ltd,Automobile,Large Cap,2.1
+HDFC_TAXSAVER,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,9.2
+HDFC_TAXSAVER,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,8.5
+HDFC_TAXSAVER,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,7.8
+HDFC_TAXSAVER,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,5.0
+HDFC_TAXSAVER,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,4.7
+HDFC_TAXSAVER,INE154A01025,ITC,ITC Ltd,Fast Moving Consumer Goods,Large Cap,3.6
+HDFC_TAXSAVER,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,3.2
+HDFC_TAXSAVER,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,4.1
+HDFC_TAXSAVER,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,3.6
+HDFC_TAXSAVER,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,2.8
+HDFC_TAXSAVER,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,3.1
+HDFC_TAXSAVER,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,3.1
+HDFC_TAXSAVER,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,2.9
+HDFC_TAXSAVER,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,2.5
+HDFC_TAXSAVER,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,2.3
+QUANT_ELSS,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,6.2
+QUANT_ELSS,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,5.8
+QUANT_ELSS,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,5.5
+QUANT_ELSS,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,4.2
+QUANT_ELSS,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,7.8
+QUANT_ELSS,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,7.2
+QUANT_ELSS,INE002A01018,RELIANCE,Reliance Industries Ltd,Energy / Oil & Gas,Large Cap,6.8
+QUANT_ELSS,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,3.9
+QUANT_ELSS,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,3.5
+QUANT_ELSS,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,4.0
+QUANT_ELSS,INE849A01020,TRENT,Trent Ltd,Consumer Services / Retail,Mid Cap,3.8
+QUANT_ELSS,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,2.6
+QUANT_ELSS,INE397D01024,BHARTIARTL,Bharti Airtel Ltd,Telecommunication,Large Cap,3.0
+QUANT_ELSS,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,2.8
+QUANT_ELSS,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,2.4
+ICICIPRU_TECH,INE009A01021,INFY,Infosys Ltd,Information Technology,Large Cap,13.8
+ICICIPRU_TECH,INE467B01029,TCS,Tata Consultancy Services Ltd,Information Technology,Large Cap,12.4
+ICICIPRU_TECH,INE860A01027,HCLTECH,HCL Technologies Ltd,Information Technology,Large Cap,10.0
+ICICIPRU_TECH,INE075A01022,WIPRO,Wipro Ltd,Information Technology,Large Cap,8.2
+ICICIPRU_TECH,INE669C01036,TECHM,Tech Mahindra Ltd,Information Technology,Large Cap,7.6
+ICICIPRU_TECH,INE262H01013,PERSISTENT,Persistent Systems Ltd,Information Technology,Mid Cap,5.8
+ICICIPRU_TECH,INE591G01017,COFORGE,Coforge Ltd,Information Technology,Mid Cap,2.0
+ICICIPRU_TECH,INE356A01018,MPHASIS,Mphasis Ltd,Information Technology,Mid Cap,4.8
+ICICIPRU_TECH,INE04I401011,KPITTECH,KPIT Technologies Ltd,Information Technology,Small Cap,4.2
+ICICIPRU_TECH,INE136B01020,CYIENT,Cyient Ltd,Information Technology,Small Cap,4.1
+ICICIPRU_TECH,INE214T01019,LTIM,LTIMindtree Ltd,Information Technology,Mid Cap,4.0
+ICICIPRU_TECH,INE0JR201011,LATENTVIEW,LatentView Analytics Ltd,Information Technology,Small Cap,3.1
+ICICIPRU_TECH,INE935N01020,DIXON,Dixon Technologies (India) Ltd,Consumer Durables,Mid Cap,2.7
+ICICIPRU_TECH,INE918Z01012,KAYNES,Kaynes Technology India Ltd,Capital Goods / Electronics,Small Cap,2.3
+SBI_PHARMA,INE044A01036,SUNPHARMA,Sun Pharmaceutical Industries Ltd,Healthcare,Large Cap,17.8
+SBI_PHARMA,INE059A01026,CIPLA,Cipla Ltd,Healthcare,Large Cap,1.6
+SBI_PHARMA,INE089A01023,DRREDDY,Dr. Reddy's Laboratories Ltd,Healthcare,Large Cap,10.4
+SBI_PHARMA,INE361B01024,DIVISLAB,Divi's Laboratories Ltd,Healthcare,Large Cap,9.6
+SBI_PHARMA,INE326A01037,LUPIN,Lupin Ltd,Healthcare,Mid Cap,8.0
+SBI_PHARMA,INE406A01037,AUROPHARMA,Aurobindo Pharma Ltd,Healthcare,Mid Cap,7.2
+SBI_PHARMA,INE685A01028,TORNTPHARM,Torrent Pharmaceuticals Ltd,Healthcare,Mid Cap,6.4
+SBI_PHARMA,INE437A01024,APOLLOHOSP,Apollo Hospitals Enterprise Ltd,Healthcare,Large Cap,5.6
+SBI_PHARMA,INE027H01010,MAXHEALTH,Max Healthcare Institute Ltd,Healthcare,Mid Cap,5.1
+SBI_PHARMA,INE061F01013,FORTIS,Fortis Healthcare Ltd,Healthcare,Mid Cap,4.5
+SBI_PHARMA,INE406M01024,ERIS,Eris Lifesciences Ltd,Healthcare,Small Cap,3.9
+SBI_PHARMA,INE068V01023,GLAND,Gland Pharma Ltd,Healthcare,Small Cap,3.3
+SBI_PHARMA,INE572A01028,JBCHEPHARM,J.B. Chemicals & Pharmaceuticals Ltd,Healthcare,Small Cap,2.7
+SBI_PHARMA,INE474S01017,MEDANTA,Global Health Ltd (Medanta),Healthcare,Small Cap,2.2
+NIPPON_BANKING,INE040A01034,HDFCBANK,HDFC Bank Ltd,Financial Services,Large Cap,21.8
+NIPPON_BANKING,INE090A01021,ICICIBANK,ICICI Bank Ltd,Financial Services,Large Cap,19.4
+NIPPON_BANKING,INE238A01034,AXISBANK,Axis Bank Ltd,Financial Services,Large Cap,12.8
+NIPPON_BANKING,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,11.2
+NIPPON_BANKING,INE237A01028,KOTAKBANK,Kotak Mahindra Bank Ltd,Financial Services,Large Cap,9.8
+NIPPON_BANKING,INE296A01024,BAJFINANCE,Bajaj Finance Ltd,Financial Services,Large Cap,7.4
+NIPPON_BANKING,INE095A01012,INDUSINDBK,IndusInd Bank Ltd,Financial Services,Large Cap,5.6
+NIPPON_BANKING,INE171A01029,FEDERALBNK,Federal Bank Ltd,Financial Services,Mid Cap,4.8
+NIPPON_BANKING,INE092T01019,IDFCFIRSTB,IDFC First Bank Ltd,Financial Services,Mid Cap,4.0
+NIPPON_BANKING,INE036D01028,KARURVYSYA,Karur Vysya Bank Ltd,Financial Services,Small Cap,3.1
+NIPPON_BANKING,INE414G01012,MUTHOOTFIN,Muthoot Finance Ltd,Financial Services,Mid Cap,2.6
+NIPPON_BANKING,INE121A01024,CHOLAFIN,Cholamandalam Investment & Finance,Financial Services,Mid Cap,2.2
+NIPPON_BANKING,INE918I01026,BAJAJFINSV,Bajaj Finserv Ltd,Financial Services,Large Cap,1.8
+NIPPON_BANKING,INE769G01020,CREDITACC,CreditAccess Grameen Ltd,Financial Services,Small Cap,1.4
+NIPPON_BANKING,INE477A01020,CANFINHOME,Can Fin Homes Ltd,Financial Services,Small Cap,1.0
+ICICI_INFRA,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,15.8
+ICICI_INFRA,INE742F01042,ADANIPORTS,Adani Ports and SEZ Ltd,Services / Infrastructure,Large Cap,12.8
+ICICI_INFRA,INE752E01010,POWERGRID,Power Grid Corporation of India Ltd,Power / Utilities,Large Cap,11.4
+ICICI_INFRA,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,10.2
+ICICI_INFRA,INE522F01014,COALINDIA,Coal India Ltd,Metals & Mining,Large Cap,8.8
+ICICI_INFRA,INE111A01025,CONCOR,Container Corporation of India Ltd,Services / Logistics,Mid Cap,7.2
+ICICI_INFRA,INE455K01017,POLYCAB,Polycab India Ltd,Capital Goods,Mid Cap,5.9
+ICICI_INFRA,INE702C01027,APLAPOLLO,APL Apollo Tubes Ltd,Metals & Mining,Mid Cap,5.2
+ICICI_INFRA,INE205B01023,ELECON,Elecon Engineering Company Ltd,Capital Goods,Small Cap,4.6
+ICICI_INFRA,INE019A01038,JSWSTEEL,JSW Steel Ltd,Metals & Mining,Large Cap,4.0
+ICICI_INFRA,INE038A01020,HINDALCO,Hindalco Industries Ltd,Metals & Mining,Large Cap,3.4
+ICICI_INFRA,INE081A01020,TATASTEEL,Tata Steel Ltd,Metals & Mining,Large Cap,2.8
+ICICI_INFRA,INE578A01017,SUPREMEIND,Supreme Industries Ltd,Capital Goods,Mid Cap,2.2
+ICICI_INFRA,INE372A01015,APARINDS,Apar Industries Ltd,Capital Goods,Small Cap,1.8
+ICICI_INFRA,INE163B01018,PRAJIND,Praj Industries Ltd,Capital Goods / Energy,Small Cap,1.4
+QUANT_PSU,INE213A01029,ONGC,Oil & Natural Gas Corporation Ltd,Energy / Oil & Gas,Large Cap,17.8
+QUANT_PSU,INE522F01014,COALINDIA,Coal India Ltd,Metals & Mining,Large Cap,16.4
+QUANT_PSU,INE733E01010,NTPC,NTPC Ltd,Power / Utilities,Large Cap,13.8
+QUANT_PSU,INE752E01010,POWERGRID,Power Grid Corporation of India Ltd,Power / Utilities,Large Cap,12.2
+QUANT_PSU,INE062A01020,SBIN,State Bank of India,Financial Services,Large Cap,10.6
+QUANT_PSU,INE029A01011,BPCL,Bharat Petroleum Corporation Ltd,Energy / Oil & Gas,Large Cap,9.0
+QUANT_PSU,INE111A01025,CONCOR,Container Corporation of India Ltd,Services / Logistics,Mid Cap,7.2
+QUANT_PSU,INE742F01042,ADANIPORTS,Adani Ports and SEZ Ltd,Services / Infrastructure,Large Cap,5.6
+QUANT_PSU,INE018A01030,LT,Larsen & Toubro Ltd,Capital Goods,Large Cap,5.0
