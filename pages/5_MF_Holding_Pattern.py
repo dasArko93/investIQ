@@ -14,7 +14,6 @@ import pandas as pd
 import streamlit as st
 
 from utils.page_utils import merged_holdings, render_sidebar, require_auth
-from services.mf_holding_service import MFHoldingService
 from services.mf_disclosure_service import MFDisclosureService
 from engines.mf_consensus_engine import MFConsensusEngine
 
@@ -141,76 +140,71 @@ st.markdown(
 # USER GUIDE: Interactive Executive Instructions & Methodology
 # ─────────────────────────────────────────────────────────────────────────────
 with st.expander("📖 User Guide: Architecture, Workflow & Metric Interpretation", expanded=False):
-    st.markdown(
-        """
-        <div class="guide-box">
-            <h3 style="margin-top:0; color:#4338ca; font-size:1.25rem;">🚀 How to Use the Mutual Fund Ingestion & Benchmarking Engine</h3>
-            
-            <div class="guide-step">
-                <div class="guide-badge">1</div>
-                <div>
-                    <strong>Data Ingestion & Local Archiving:</strong><br/>
-                    Click <em>"Fetch Latest Disclosures"</em> to download official portfolio spreadsheets across top Indian AMCs 
-                    (HDFC, SBI, ICICI Prudential, Kotak, Axis, Nippon India, Parag Parikh, Mirae Asset). 
-                    Raw files are stored in <code>data/raw_disclosures/YYYY_MM/</code> for historical auditing. You can also upload any custom AMC spreadsheet (<code>.xlsx</code> / <code>.csv</code>).
-                </div>
-            </div>
+    guide_html = """<div class="guide-box">
+<h3 style="margin-top:0; color:#4338ca; font-size:1.25rem;">🚀 How to Use the Mutual Fund Ingestion & Benchmarking Engine</h3>
+<div class="guide-step">
+<div class="guide-badge">1</div>
+<div>
+<strong>Data Ingestion & Local Archiving:</strong><br/>
+Click <em>"Fetch Latest Disclosures"</em> to download official portfolio spreadsheets across top Indian AMCs 
+(HDFC, SBI, ICICI Prudential, Kotak, Axis, Nippon India, Parag Parikh, Mirae Asset). 
+Raw files are stored in <code>data/raw_disclosures/YYYY_MM/</code> for historical auditing. You can also upload any custom AMC spreadsheet (<code>.xlsx</code> / <code>.csv</code>).
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-badge">2</div>
+<div>
+<strong>Institutional Consensus & Hierarchy (Market Cap → Sector → Stock):</strong><br/>
+Explore institutional conviction across Large Cap, Mid Cap, Small Cap, and Flexi Cap schemes. 
+Stocks are normalized via <strong>ISIN</strong> with two key weight metrics:
+<ul style="margin:6px 0 0 16px; padding:0;">
+<li><strong>Confidence Score (C<sub>s</sub>):</strong> Percentage of active mutual funds holding the stock in that category.</li>
+<li><strong>Average Across All Funds:</strong> Mean weight across all schemes (including 0% for non-holders).</li>
+<li><strong>Conviction Weight:</strong> Mean allocation only among schemes that actively hold the stock.</li>
+</ul>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-badge">3</div>
+<div>
+<strong>Month-over-Month Delta Tracking (Sentiment Engine):</strong><br/>
+Tracks how professional fund managers shifted allocations between <code>T<sub>0</sub></code> (March 2026) and <code>T<sub>-1</sub></code> (February 2026):
+<ul style="margin:6px 0 0 16px; padding:0;">
+<li><span class="pill-green">🚀 Aggressive Accumulation:</span> Weight change <strong>&Delta;W &gt; +0.5%</strong> AND Confidence change <strong>&Delta;C &gt; +10%</strong>.</li>
+<li><span class="pill-green">🟢 Modest Buying:</span> Weight change <strong>&Delta;W &gt; 0%</strong> AND Confidence change <strong>&Delta;C &ge; 0%</strong>.</li>
+<li><span class="pill-amber">🟡 Profit Booking / Trimming:</span> Weight change <strong>&Delta;W &lt; 0%</strong>.</li>
+<li><span class="pill-red">🔴 Complete Exit:</span> Confidence dropped to 0% from a prior non-zero holding.</li>
+</ul>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-badge">4</div>
+<div>
+<strong>Portfolio Gap & Misalignment Engine:</strong><br/>
+Compares your personal stock portfolio against mutual fund market consensus:
+<ul style="margin:6px 0 0 16px; padding:0;">
+<li><span class="pill-green">Consensus Aligned:</span> Stocks you hold that also enjoy high mutual fund conviction.</li>
+<li><span class="pill-amber">Institutional Misses (Gaps):</span> High institutional confidence (&ge; 50-60%) across top funds, but <strong>0% in your portfolio</strong>.</li>
+<li><span class="pill-red">Unbacked Bets:</span> Stocks where you hold high exposure (&gt; 3-5%), but institutional confidence is under 10-15%.</li>
+<li><strong>Active Weight Diff:</strong> <code>Your Weight % &minus; MF Consensus Weight %</code> (Overweight &gt; +5%, Underweight &lt; -3%).</li>
+</ul>
+</div>
+</div>
+<div class="guide-step">
+<div class="guide-badge">5</div>
+<div>
+<strong>Interactive Rebalancing Simulator:</strong><br/>
+Use the interactive slider to model rebalancing your portfolio towards institutional consensus. 
+Real-time formulas calculate the reduction in <strong>Single-Stock Concentration Risk (Herfindahl-Hirschman Index / Top 5 Weight)</strong>, 
+<strong>Active Variance reduction</strong>, and precise rupee capital shifts (Buy ₹ / Sell ₹).
+</div>
+</div>
+</div>"""
 
-            <div class="guide-step">
-                <div class="guide-badge">2</div>
-                <div>
-                    <strong>Institutional Consensus & Hierarchy (Market Cap → Sector → Stock):</strong><br/>
-                    Explore institutional conviction across Large Cap, Mid Cap, Small Cap, and Flexi Cap schemes. 
-                    Stocks are normalized via <strong>ISIN</strong> with two key weight metrics:
-                    <ul>
-                        <li><strong>Confidence Score (C<sub>s</sub>):</strong> Percentage of active mutual funds holding the stock in that category.</li>
-                        <li><strong>Average Across All Funds:</strong> Mean weight across all schemes (including 0% for non-holders).</li>
-                        <li><strong>Conviction Weight:</strong> Mean allocation only among schemes that actively hold the stock.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-step">
-                <div class="guide-badge">3</div>
-                <div>
-                    <strong>Month-over-Month Delta Tracking (Sentiment Engine):</strong><br/>
-                    Tracks how professional fund managers shifted allocations between <code>T<sub>0</sub></code> (March 2026) and <code>T<sub>-1</sub></code> (February 2026):
-                    <ul>
-                        <li><span class="pill-green">🚀 Aggressive Accumulation:</span> Weight change <strong>&Delta;W > +0.5%</strong> AND Confidence change <strong>&Delta;C > +10%</strong>.</li>
-                        <li><span class="pill-green">🟢 Modest Buying:</span> Weight change <strong>&Delta;W > 0%</strong> AND Confidence change <strong>&Delta;C &ge; 0%</strong>.</li>
-                        <li><span class="pill-amber">🟡 Profit Booking / Trimming:</span> Weight change <strong>&Delta;W < 0%</strong>.</li>
-                        <li><span class="pill-red">🔴 Complete Exit:</span> Confidence dropped to 0% from a prior non-zero holding.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-step">
-                <div class="guide-badge">4</div>
-                <div>
-                    <strong>Portfolio Gap & Misalignment Engine:</strong><br/>
-                    Compares your personal stock portfolio against mutual fund market consensus:
-                    <ul>
-                        <li><span class="pill-green">Consensus Aligned:</span> Stocks you hold that also enjoy high mutual fund conviction.</li>
-                        <li><span class="pill-amber">Institutional Misses (Gaps):</span> High institutional confidence (&ge; 50-60%) across top funds, but <strong>0% in your portfolio</strong>.</li>
-                        <li><span class="pill-red">Unbacked Bets:</span> Stocks where you hold high exposure (> 3-5%), but institutional confidence is under 10-15%.</li>
-                        <li><strong>Active Weight Diff:</strong> <code>Your Weight % &minus; MF Consensus Weight %</code> (Overweight > +5%, Underweight < -3%).</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="guide-step">
-                <div class="guide-badge">5</div>
-                <div>
-                    <strong>Interactive Rebalancing Simulator:</strong><br/>
-                    Use the interactive slider to model rebalancing your portfolio towards institutional consensus. 
-                    Real-time formulas calculate the reduction in <strong>Single-Stock Concentration Risk (Herfindahl-Hirschman Index / Top 5 Weight)</strong>, 
-                    <strong>Active Variance reduction</strong>, and precise rupee capital shifts (Buy ₹ / Sell ₹).
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    if hasattr(st, "html"):
+        st.html(guide_html)
+    else:
+        st.markdown(guide_html, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Step 1: Adhoc Trigger & Data Ingestion Bar
@@ -378,15 +372,14 @@ for col, (val, lbl) in zip([k1, k2, k3, k4, k5], kpi_strip):
 st.write("")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6 INTERACTIVE TABS
+# 5 INTERACTIVE TABS
 # ─────────────────────────────────────────────────────────────────────────────
-tab_consensus, tab_delta, tab_gap, tab_nba, tab_sim, tab_legacy = st.tabs([
+tab_consensus, tab_delta, tab_gap, tab_nba, tab_sim = st.tabs([
     "🏛️ Institutional Consensus & Hierarchy",
     "⏱️ Month-over-Month Delta (Sentiment)",
     "🎯 Portfolio Gap & Alignment",
     "⚡ Next Best Actions (Recommendations)",
-    "🎛️ Rebalancing Simulator",
-    "📁 Legacy Sector Patterns"
+    "🎛️ Rebalancing Simulator"
 ])
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -832,49 +825,3 @@ with tab_sim:
             }
         )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TAB 6: Legacy Sector Patterns (Backward Compatibility)
-# ─────────────────────────────────────────────────────────────────────────────
-with tab_legacy:
-    st.markdown('<div class="section-hdr">📁 Tickertape Sector Holding Patterns & Multi-Fund Comparison</div>', unsafe_allow_html=True)
-    st.caption("Maintains full backward compatibility for uploading and tracking historical sector pattern spreadsheets from Tickertape.")
-
-    st.session_state["mf_holdings"] = MFHoldingService.load_from_db()
-    legacy_mf_data = st.session_state.get("mf_holdings", {})
-
-    with st.expander("📂 Upload Tickertape CSV / ZIP Files", expanded=not bool(legacy_mf_data)):
-        uploaded_tt = st.file_uploader(
-            "Upload Tickertape Sector CSVs",
-            type=["csv", "txt", "zip"],
-            accept_multiple_files=True,
-            key="tt_uploader"
-        )
-        if uploaded_tt and st.button("⬆️ Parse & Load Tickertape Files", type="primary", key="btn_tt_load"):
-            loaded_tt = 0
-            for f in uploaded_tt:
-                fname = getattr(f, "name", "")
-                if fname.lower().endswith(".zip"):
-                    zip_loaded, _ = MFHoldingService.process_zip_file(f)
-                    loaded_tt += zip_loaded
-                else:
-                    try:
-                        fname_parsed, df_p = MFHoldingService.parse_tickertape_file(f)
-                        MFHoldingService.save_to_db(fname_parsed, df_p)
-                        loaded_tt += 1
-                    except Exception as e:
-                        st.error(f"Error parsing {fname}: {e}")
-            if loaded_tt > 0:
-                st.session_state["mf_holdings"] = MFHoldingService.load_from_db()
-                st.success(f"✅ Loaded {loaded_tt} Tickertape sector file(s)!")
-                st.rerun()
-
-    if not legacy_mf_data:
-        st.info("No legacy Tickertape files loaded. You can continue using the institutional disclosure engine above.")
-    else:
-        legacy_funds = sorted(legacy_mf_data.keys())
-        st.markdown(f"**Loaded Tickertape Funds ({len(legacy_funds)}):** " + ", ".join(f"`{f}`" for f in legacy_funds))
-        
-        sel_legacy_fund = st.selectbox("Select Fund for Sector Allocation History", legacy_funds)
-        df_legacy_fund = legacy_mf_data[sel_legacy_fund]
-        
-        st.dataframe(df_legacy_fund, use_container_width=True, hide_index=True)

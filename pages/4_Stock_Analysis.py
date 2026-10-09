@@ -1330,46 +1330,22 @@ with st.expander("📖 Fundamental Analysis & Stock Selection Guide", expanded=F
     # Link to HTML user guide (opens in new tab) and PDF download
     html_path = "static/fundamental_analysis_guide.html"
     if os.path.exists(html_path):
-        st.markdown(
-            """
-            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-                <a href="/app/static/fundamental_analysis_guide.html" target="_blank" style="text-decoration: none;">
-                    <span style="
-                        display: inline-block;
-                        padding: 8px 16px;
-                        background-color: #20d3c2;
-                        color: #0f172a;
-                        font-weight: 700;
-                        font-size: 0.85rem;
-                        border-radius: 4px;
-                        text-align: center;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
-                        📖 Open Interactive User Guide (HTML)
-                    </span>
-                </a>
-                <a href="/app/static/fundamental_analysis_guide.pdf" download="fundamental_analysis_user_guide.pdf" style="text-decoration: none;">
-                    <span style="
-                        display: inline-block;
-                        padding: 8px 16px;
-                        background: transparent;
-                        border: 1px solid rgba(0, 0, 0, 0.15);
-                        color: #0f172a;
-                        font-weight: 700;
-                        font-size: 0.85rem;
-                        border-radius: 4px;
-                        text-align: center;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.backgroundColor='rgba(0,0,0,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
-                        📥 Download User Guide PDF
-                    </span>
-                </a>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        btn_html = """<div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
+<a href="/app/static/fundamental_analysis_guide.html" target="_blank" style="text-decoration: none;">
+<span style="display: inline-block; padding: 8px 16px; background-color: #20d3c2; color: #0f172a; font-weight: 700; font-size: 0.85rem; border-radius: 4px; text-align: center; cursor: pointer;">
+📖 Open Interactive User Guide (HTML)
+</span>
+</a>
+<a href="/app/static/fundamental_analysis_guide.pdf" download="fundamental_analysis_user_guide.pdf" style="text-decoration: none;">
+<span style="display: inline-block; padding: 8px 16px; background: transparent; border: 1px solid rgba(0, 0, 0, 0.15); color: #0f172a; font-weight: 700; font-size: 0.85rem; border-radius: 4px; text-align: center; cursor: pointer;">
+📥 Download User Guide PDF
+</span>
+</a>
+</div>"""
+        if hasattr(st, "html"):
+            st.html(btn_html)
+        else:
+            st.markdown(btn_html, unsafe_allow_html=True)
 
 universe = load_universe()
 
