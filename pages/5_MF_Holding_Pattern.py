@@ -146,9 +146,9 @@ with st.expander("📖 User Guide: Architecture, Workflow & Metric Interpretatio
 <div class="guide-badge">1</div>
 <div>
 <strong>Data Ingestion & Local Archiving:</strong><br/>
-Click <em>"Fetch Latest Disclosures"</em> to download official portfolio spreadsheets across top Indian AMCs 
-(HDFC, SBI, ICICI Prudential, Kotak, Axis, Nippon India, Parag Parikh, Mirae Asset). 
-Raw files are stored in <code>data/raw_disclosures/YYYY_MM/</code> for historical auditing. You can also upload any custom AMC spreadsheet (<code>.xlsx</code> / <code>.csv</code>).
+Click <em>"Download All Disclosures"</em> to automatically ingest official portfolio disclosures across 45+ equity schemes from top Indian AMCs 
+(HDFC, SBI, ICICI Prudential, Kotak, Axis, Nippon India, Parag Parikh, Quant, Mirae Asset, etc.). 
+Holdings data and consolidated disclosure CSVs are automatically archived in <code>data/raw_disclosures/YYYY_MM/</code> across the latest 3 monthly disclosure periods for seamless auditing and trend analysis.
 </div>
 </div>
 <div class="guide-step">
@@ -168,7 +168,7 @@ Stocks are normalized via <strong>ISIN</strong> with two key weight metrics:
 <div class="guide-badge">3</div>
 <div>
 <strong>Month-over-Month Delta Tracking (Sentiment Engine):</strong><br/>
-Tracks how professional fund managers shifted allocations between <code>T<sub>0</sub></code> (March 2026) and <code>T<sub>-1</sub></code> (February 2026):
+Tracks how professional fund managers shifted allocations between the selected snapshot month <code>T<sub>0</sub></code> and its prior month <code>T<sub>-1</sub></code> across the 3 latest disclosure months:
 <ul style="margin:6px 0 0 16px; padding:0;">
 <li><span class="pill-green">🚀 Aggressive Accumulation:</span> Weight change <strong>&Delta;W &gt; +0.5%</strong> AND Confidence change <strong>&Delta;C &gt; +10%</strong>.</li>
 <li><span class="pill-green">🟢 Modest Buying:</span> Weight change <strong>&Delta;W &gt; 0%</strong> AND Confidence change <strong>&Delta;C &ge; 0%</strong>.</li>
@@ -259,8 +259,28 @@ with ingest_col1:
 
 with ingest_col2:
     available_snaps = MFConsensusEngine.get_snapshots()
-    snap_options = [s["month_str"] for s in available_snaps] if available_snaps else ["2026-03", "2026-02"]
-    selected_snapshot = st.selectbox("📅 Snapshot Period", options=snap_options, index=0, help="Select disclosure month")
+    # Automatically ensure at least 3 latest months are seeded
+    if not available_snaps or len(available_snaps) < 3:
+        MFDisclosureService.seed_default_disclosures(overwrite=True)
+        available_snaps = MFConsensusEngine.get_snapshots()
+
+    latest_3_default = [s[1] for s in MFDisclosureService.get_latest_disclosure_months(3)]
+    snap_options = [s["month_str"] for s in available_snaps] if available_snaps else latest_3_default
+
+    def format_snap_label(s_str):
+        try:
+            dt = datetime.strptime(s_str, "%Y-%m")
+            return dt.strftime("%B %Y") + f" ({s_str})"
+        except Exception:
+            return s_str
+
+    selected_snapshot = st.selectbox(
+        "📅 Snapshot Period",
+        options=snap_options,
+        index=0,
+        format_func=format_snap_label,
+        help="Select disclosure month (Indian mutual funds disclose holdings monthly, e.g. September 2026)"
+    )
 
 with ingest_col3:
     categories = ["All", "Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
@@ -294,38 +314,7 @@ with st.expander("📊 AMFI Scheme Universe Browser (Live — All Indian MF Sche
     else:
         st.info("Click **'Refresh AMFI Scheme List'** above to fetch the live scheme master from AMFI.")
 
-# ─── Custom File Uploader ────────────────────────────────────────────────────
-with st.expander("📤 Upload Custom AMC Monthly Disclosure Spreadsheet (.xlsx, .xls, .csv)", expanded=False):
-    st.markdown(
-        "Upload any official monthly portfolio disclosure spreadsheet from an AMC (HDFC, SBI, ICICI Prudential, etc.). "
-        "The dynamic parser automatically extracts equity holdings, resolves ISINs, "
-        "normalizes company names, and strips cash/derivatives/debt instruments."
-    )
-    up_c1, up_c2, up_c3, up_c4 = st.columns(4)
-    with up_c1:
-        up_scheme_name = st.text_input("Scheme Name", value="HDFC Flexi Cap Fund")
-    with up_c2:
-        up_amc_name = st.text_input("AMC Name", value="HDFC Mutual Fund")
-    with up_c3:
-        up_cat = st.selectbox("SEBI Category", options=["Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral", "Hybrid"], index=3)
-    with up_c4:
-        up_date = st.date_input("Disclosure Date", value=datetime(2026, 3, 31))
 
-    custom_file = st.file_uploader("Select Spreadsheet", type=["xlsx", "xls", "csv"], key="custom_amc_upload")
-    if custom_file and st.button("⬆️ Parse & Store Disclosure", type="primary"):
-        with st.spinner("Executing dynamic spreadsheet parser and normalizer..."):
-            count, errs = MFDisclosureService.parse_uploaded_disclosure(
-                custom_file,
-                scheme_name=up_scheme_name,
-                amc_name=up_amc_name,
-                category=up_cat,
-                snapshot_date=datetime(up_date.year, up_date.month, up_date.day)
-            )
-            if count > 0:
-                st.success(f"✅ Successfully extracted and stored {count} equity positions for {up_scheme_name}!")
-                st.rerun()
-            for err in errs:
-                st.error(err)
 
 # Auto-seed if database is currently empty
 if not available_snaps:
@@ -340,7 +329,7 @@ consensus_df = MFConsensusEngine.get_consensus_metrics(
     snapshot_month=selected_snapshot,
     category_filter=selected_category
 )
-deltas_df = MFConsensusEngine.get_temporal_deltas()
+deltas_df = MFConsensusEngine.get_temporal_deltas(t0_month=selected_snapshot)
 gap_data = MFConsensusEngine.get_portfolio_gap_analysis()
 nba_actions = MFConsensusEngine.get_next_best_actions()
 
@@ -466,11 +455,15 @@ with tab_consensus:
 # TAB 2: Month-over-Month Delta (Sentiment Engine)
 # ─────────────────────────────────────────────────────────────────────────────
 with tab_delta:
-    st.markdown('<div class="section-hdr">Temporal Sentiment Engine: Month-over-Month Delta (T₀ vs T₋₁)</div>', unsafe_allow_html=True)
-    st.caption("Measures how fund manager sentiment changes month-over-month through Weight Delta (ΔW) and Confidence Delta (ΔC).")
+    t0_snap = deltas_df["T0_Month"].iloc[0] if not deltas_df.empty and "T0_Month" in deltas_df.columns else selected_snapshot
+    t1_snap = deltas_df["T1_Month"].iloc[0] if not deltas_df.empty and "T1_Month" in deltas_df.columns else "Prior Month"
+    t0_display = format_snap_label(t0_snap)
+    t1_display = format_snap_label(t1_snap)
+    st.markdown(f'<div class="section-hdr">Temporal Sentiment Engine: Month-over-Month Delta ({t0_display} vs {t1_display})</div>', unsafe_allow_html=True)
+    st.caption(f"Measures fund manager sentiment shift between {t0_display} and {t1_display} through Weight Delta (ΔW) and Confidence Delta (ΔC).")
 
     if deltas_df.empty:
-        st.info("At least two monthly disclosure snapshots are required for delta tracking. Click 'Fetch Latest Disclosures' to load T0 and T-1 data.")
+        st.info("At least two monthly disclosure snapshots are required for delta tracking. Click 'Fetch Latest Disclosures' to load disclosure data.")
     else:
         d_c1, d_c2 = st.columns([1.5, 2])
         with d_c1:
@@ -520,16 +513,16 @@ with tab_delta:
                         "Delta_Trend:N",
                         alt.Tooltip("Delta_Weight:Q", format="+.2f", title="ΔW Weight Change"),
                         alt.Tooltip("Delta_Confidence_Pct:Q", format="+.1f", title="ΔC Confidence Change %"),
-                        alt.Tooltip("Weight_T0:Q", format=".2f", title="Current Weight %"),
-                        alt.Tooltip("Weight_T1:Q", format=".2f", title="Prior Weight %")
+                        alt.Tooltip("Weight_T0:Q", format=".2f", title=f"{t0_snap} Wt %"),
+                        alt.Tooltip("Weight_T1:Q", format=".2f", title=f"{t1_snap} Wt %")
                     ]
                 )
-                .properties(height=max(280, len(top_deltas) * 22), title="Month-over-Month Allocation Shift (ΔW)")
+                .properties(height=max(280, len(top_deltas) * 22), title=f"Allocation Shift: {t0_snap} vs {t1_snap} (ΔW)")
             )
             st.altair_chart(delta_chart, use_container_width=True)
 
         # Styled Table with Sentiment Icons
-        st.markdown("**Period-over-Period Delta & Sentiment Table:**")
+        st.markdown(f"**Period-over-Period Delta & Sentiment Table ({t0_snap} vs {t1_snap}):**")
         display_deltas = filtered_deltas[[
             "Sentiment_Icon", "Sentiment", "Ticker", "Stock Name", "Sector",
             "Delta_Weight", "Weight_T0", "Weight_T1", "Delta_Confidence_Pct", "Conf_T0", "Conf_T1"
@@ -543,9 +536,9 @@ with tab_delta:
                 "Sentiment_Icon": st.column_config.TextColumn("Signal", width="small"),
                 "Delta_Weight": st.column_config.NumberColumn("ΔW (pp)", format="%+.2f"),
                 "Delta_Confidence_Pct": st.column_config.NumberColumn("ΔC (%)", format="%+.1f%%"),
-                "Weight_T0": st.column_config.NumberColumn("Latest Wt %", format="%.2f%%"),
-                "Weight_T1": st.column_config.NumberColumn("Prior Wt %", format="%.2f%%"),
-                "Conf_T0": st.column_config.ProgressColumn("Latest Conf", format="%.0f%%", min_value=0, max_value=1),
+                "Weight_T0": st.column_config.NumberColumn(f"{t0_snap} Wt %", format="%.2f%%"),
+                "Weight_T1": st.column_config.NumberColumn(f"{t1_snap} Wt %", format="%.2f%%"),
+                "Conf_T0": st.column_config.ProgressColumn(f"{t0_snap} Conf", format="%.0f%%", min_value=0, max_value=1),
             }
         )
 
