@@ -154,10 +154,10 @@ class MFConsensusEngine:
             db.close()
 
     @classmethod
-    def get_temporal_deltas(cls) -> pd.DataFrame:
+    def get_temporal_deltas(cls, t0_month: str = None, t1_month: str = None) -> pd.DataFrame:
         """
         Step 3: Delta Tracking Engine (Temporal Analysis).
-        Compares latest month (T0) vs previous month (T-1):
+        Compares selected month (T0) vs preceding month (T-1):
           - ΔW = Average Weight(T0) - Average Weight(T-1)
           - ΔC = Confidence(T0) - Confidence(T-1)
         Sentiment Rules:
@@ -170,8 +170,19 @@ class MFConsensusEngine:
         if len(snaps) < 2:
             return pd.DataFrame()
 
-        t0_month = snaps[0]["month_str"]
-        t1_month = snaps[1]["month_str"]
+        snap_months = [s["month_str"] for s in snaps]
+
+        if not t0_month or t0_month not in snap_months:
+            t0_month = snap_months[0]
+
+        if not t1_month or t1_month not in snap_months:
+            idx = snap_months.index(t0_month)
+            if idx + 1 < len(snap_months):
+                t1_month = snap_months[idx + 1]
+            elif idx > 0:
+                t1_month = snap_months[idx - 1]
+            else:
+                t1_month = snap_months[1]
 
         df_t0 = cls.get_consensus_metrics(snapshot_month=t0_month)
         df_t1 = cls.get_consensus_metrics(snapshot_month=t1_month)
@@ -187,6 +198,9 @@ class MFConsensusEngine:
             how="outer",
             suffixes=("_T0", "_T1")
         )
+
+        merged["T0_Month"] = t0_month
+        merged["T1_Month"] = t1_month
 
         # Fill metadata
         merged["Ticker"] = merged["Ticker_T0"].combine_first(merged["Ticker_T1"])
@@ -240,7 +254,8 @@ class MFConsensusEngine:
             "Conf_T0", "Conf_T1", "Delta_Confidence", "Delta_Confidence_Pct",
             "Conviction_T0", "Conviction_T1",
             "Holding_Schemes_T0", "Holding_Schemes_T1",
-            "Sentiment", "Sentiment_Icon", "Sentiment_Rank"
+            "Sentiment", "Sentiment_Icon", "Sentiment_Rank",
+            "T0_Month", "T1_Month"
         ]
         return merged[out_cols].sort_values(by=["Delta_Weight", "Delta_Confidence"], ascending=[False, False])
 

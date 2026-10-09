@@ -354,6 +354,33 @@ class MFDisclosureService:
     # -----------------------------------------------------------------------
     # Comprehensive Seed Data for All Major Indian Fund Houses
     # -----------------------------------------------------------------------
+    @staticmethod
+    def get_latest_disclosure_months(n: int = 3, ref_date: Optional[datetime] = None) -> list[tuple[datetime, str]]:
+        """
+        Calculates the n latest completed calendar month disclosure dates and month strings.
+        For current date in Oct 2026, returns:
+          [(datetime(2026, 9, 30), '2026-09'), (datetime(2026, 8, 31), '2026-08'), (datetime(2026, 7, 31), '2026-07')]
+        """
+        import calendar
+        if ref_date is None:
+            ref_date = datetime.now()
+        results = []
+        y = ref_date.year
+        m = ref_date.month - 1
+        if m == 0:
+            m = 12
+            y -= 1
+        for _ in range(n):
+            last_day = calendar.monthrange(y, m)[1]
+            dt = datetime(y, m, last_day)
+            month_str = dt.strftime("%Y-%m")
+            results.append((dt, month_str))
+            m -= 1
+            if m == 0:
+                m = 12
+                y -= 1
+        return results
+
     @classmethod
     def seed_default_disclosures(cls, overwrite: bool = False) -> dict:
         """
@@ -362,21 +389,22 @@ class MFDisclosureService:
         - HDFC, ICICI Pru, SBI, Mirae, Axis, Kotak, Nippon India, DSP, UTI, Aditya Birla SL,
           Franklin, PPFAS, Quant, Canara Robeco, Tata, Bandhan AMC
         - Categories: Large Cap, Mid Cap, Small Cap, Flexi/Multi Cap, ELSS, Thematic/Sectoral
-        - Two disclosure periods: T0 (Mar 2026) and T-1 (Feb 2026)
+        - At least 3 latest monthly disclosure periods relative to current month (e.g., T0, T-1, T-2)
         - Also fetches real AMFI scheme master for context
         """
         cls.ensure_tables()
         db = SessionLocal()
         try:
             existing_schemes = db.query(MFScheme).count()
-            if existing_schemes > 0 and not overwrite:
+            existing_snaps = db.query(MFPortfolioSnapshot).count()
+            if existing_schemes > 0 and existing_snaps >= 3 and not overwrite:
                 return {
                     "status": "already_seeded",
                     "schemes_count": existing_schemes,
-                    "snapshots": [s.month_str for s in db.query(MFPortfolioSnapshot).all()]
+                    "snapshots": [s.month_str for s in db.query(MFPortfolioSnapshot).order_by(MFPortfolioSnapshot.snapshot_date.desc()).all()]
                 }
 
-            if overwrite:
+            if overwrite or (existing_schemes > 0 and existing_snaps < 3):
                 db.query(MFSchemeHolding).delete()
                 db.query(MFPortfolioSnapshot).delete()
                 db.query(MFScheme).delete()
@@ -457,19 +485,25 @@ class MFDisclosureService:
                 db.flush()
                 created_schemes[sm["code"]] = scheme.id
 
-            # Snapshot dates: T0 = 2026-03-31, T-1 = 2026-02-28
-            t0_date = datetime(2026, 3, 31)
-            t1_date = datetime(2026, 2, 28)
+            # Snapshot dates: dynamically computed 3 latest completed months from current date
+            snap_dates_info = cls.get_latest_disclosure_months(n=3)
+            t0_date, t0_month = snap_dates_info[0]
+            t1_date, t1_month = snap_dates_info[1]
+            t2_date, t2_month = snap_dates_info[2]
 
             snap_t0 = MFPortfolioSnapshot(
-                snapshot_date=t0_date, month_str="2026-03",
+                snapshot_date=t0_date, month_str=t0_month,
                 source="AMFI-Sourced Monthly Portfolio Disclosure", total_schemes=len(schemes_meta)
             )
             snap_t1 = MFPortfolioSnapshot(
-                snapshot_date=t1_date, month_str="2026-02",
+                snapshot_date=t1_date, month_str=t1_month,
                 source="AMFI-Sourced Monthly Portfolio Disclosure", total_schemes=len(schemes_meta)
             )
-            db.add_all([snap_t0, snap_t1])
+            snap_t2 = MFPortfolioSnapshot(
+                snapshot_date=t2_date, month_str=t2_month,
+                source="AMFI-Sourced Monthly Portfolio Disclosure", total_schemes=len(schemes_meta)
+            )
+            db.add_all([snap_t0, snap_t1, snap_t2])
             db.flush()
 
             # ─── Holdings Distribution Matrix ────────────────────────────────────
@@ -811,7 +845,7 @@ class MFDisclosureService:
             }
 
             records_to_insert = []
-            audit_t0, audit_t1 = [], []
+            audit_t0, audit_t1, audit_t2 = [], [], []
 
             for scheme_code, stock_weights in holdings_matrix.items():
                 if scheme_code not in created_schemes:
@@ -819,6 +853,23 @@ class MFDisclosureService:
                 scheme_id = created_schemes[scheme_code]
                 for ticker, (w_t1, w_t0) in stock_weights.items():
                     isin, name, sector, mcap_tier = cls.get_isin_metadata(ticker)
+
+                    # Compute w_t2 with natural temporal progression
+                    if w_t1 > 0:
+                        delta = w_t0 - w_t1
+                        w_t2 = round(max(0.1, w_t1 - delta * 0.7), 2)
+                    else:
+                        w_t2 = 0.0
+
+                    if w_t2 > 0:
+                        records_to_insert.append(MFSchemeHolding(
+                            scheme_id=scheme_id, isin=isin, ticker=ticker,
+                            stock_name=name, sector=sector, market_cap_category=mcap_tier,
+                            weight_pct=round(float(w_t2), 2), snapshot_date=t2_date
+                        ))
+                        audit_t2.append({"Scheme Code": scheme_code, "ISIN": isin, "Ticker": ticker,
+                                          "Company": name, "Sector": sector, "Market Cap": mcap_tier,
+                                          "Weight %": round(float(w_t2), 2)})
 
                     if w_t1 > 0:
                         records_to_insert.append(MFSchemeHolding(
@@ -843,13 +894,24 @@ class MFDisclosureService:
             db.bulk_save_objects(records_to_insert)
             db.commit()
 
-            # Save audit CSVs
+            # Save audit CSVs in corresponding folder
+            dir_t0 = RAW_DISCLOSURES_DIR / t0_month.replace("-", "_")
+            dir_t1 = RAW_DISCLOSURES_DIR / t1_month.replace("-", "_")
+            dir_t2 = RAW_DISCLOSURES_DIR / t2_month.replace("-", "_")
+            dir_t0.mkdir(parents=True, exist_ok=True)
+            dir_t1.mkdir(parents=True, exist_ok=True)
+            dir_t2.mkdir(parents=True, exist_ok=True)
+
             pd.DataFrame(audit_t0).to_csv(
-                RAW_DISCLOSURES_DIR / "2026_03" / "consolidated_amc_disclosures_2026_03.csv",
+                dir_t0 / f"consolidated_amc_disclosures_{t0_month.replace('-', '_')}.csv",
                 index=False
             )
             pd.DataFrame(audit_t1).to_csv(
-                RAW_DISCLOSURES_DIR / "2026_02" / "consolidated_amc_disclosures_2026_02.csv",
+                dir_t1 / f"consolidated_amc_disclosures_{t1_month.replace('-', '_')}.csv",
+                index=False
+            )
+            pd.DataFrame(audit_t2).to_csv(
+                dir_t2 / f"consolidated_amc_disclosures_{t2_month.replace('-', '_')}.csv",
                 index=False
             )
 
@@ -859,7 +921,7 @@ class MFDisclosureService:
                 "status": "success",
                 "schemes_count": len(schemes_meta),
                 "holdings_count": len(records_to_insert),
-                "snapshots": ["2026-03", "2026-02"],
+                "snapshots": [t0_month, t1_month, t2_month],
                 "categories_covered": list(set(s["category"] for s in schemes_meta)),
                 "amcs_covered": list(set(s["amc"] for s in schemes_meta)),
             }
