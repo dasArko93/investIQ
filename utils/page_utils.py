@@ -364,14 +364,11 @@ def render_sidebar():
             st.divider()
             
             st.caption("🔍 Research")
-            st.page_link("pages/2_Stock_Universe.py", label="Stock Universe")
-            st.page_link("pages/4_Stock_Analysis.py", label="Fundamental Analysis")
+            st.page_link("pages/2_Stock_Universe.py", label="Stock Universe & Screening", icon="🌐")
+            st.page_link("pages/4_Stock_Analysis.py", label="Fundamental Analysis", icon="📈")
             st.page_link("pages/5_MF_Holding_Pattern.py", label="MF Holding Pattern", icon="📊")
             st.caption("🤖 Advisor")
-            st.page_link("pages/9_Recommendations.py", label="Recommendations")
             st.page_link("pages/12_Gemini_AI.py", label="Gemini AI Chat", icon="💬")
-            st.caption("⚡ Actions")
-            st.page_link("pages/8_Rebalance.py", label="Rebalance")
             st.caption("🧹 Database Operations")
             st.page_link("pages/18_Clear_Data.py", label="Database Admin", icon="⚙️")
             
