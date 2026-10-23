@@ -99,7 +99,7 @@ st.write(
     "A unified portfolio view that combines holdings details, allocation insights, health metrics, and executive summary report generation."
 )
 
-upload_tab1, upload_tab2 = st.tabs(["📁 Upload File", "📋 Paste CSV (Mobile Friendly)"])
+upload_tab1, upload_tab2, upload_tab3 = st.tabs(["📁 Upload File", "📋 Paste CSV (Mobile Friendly)", "☁️ Google Drive Sync"])
 
 with upload_tab1:
     col_opt1, col_opt2 = st.columns([3, 2])
@@ -150,6 +150,12 @@ with upload_tab1:
 
         if total_uploaded > 0:
             st.success(f"Successfully uploaded {total_uploaded} holdings from {len(uploaded_files) - len(errors)} file(s)!")
+            try:
+                from services.google_drive_service import GoogleDriveService
+                if GoogleDriveService.is_configured():
+                    st.toast("☁️ Database snapshot automatically backed up to Google Drive (investiq_backup.db)", icon="☁️")
+            except Exception:
+                pass
         for err in errors:
             st.error(err)
 
@@ -169,11 +175,66 @@ with upload_tab2:
                 rows = HoldingsService.upload(pasted_csv.strip())
                 if rows > 0:
                     st.success(f"Successfully loaded {rows} holdings from pasted data!")
+                    try:
+                        from services.google_drive_service import GoogleDriveService
+                        if GoogleDriveService.is_configured():
+                            st.toast("☁️ Database snapshot automatically backed up to Google Drive (investiq_backup.db)", icon="☁️")
+                    except Exception:
+                        pass
                     st.rerun()
                 else:
                     st.error("No valid holdings recognized. Please make sure the header row includes 'Security' and 'Quantity'/'Qty'.")
             except Exception as e:
                 st.error(f"Failed to process pasted holdings: {e}")
+
+with upload_tab3:
+    st.markdown("#### ☁️ Automated Google Drive Cloud Sync")
+    st.caption("InvestIQ automatically saves `investiq_backup.db` to your Google Drive when new holdings are uploaded, and automatically restores it when a new session starts.")
+
+    from services.google_drive_service import GoogleDriveService
+    gdrive_status = GoogleDriveService.test_connection()
+
+    if gdrive_status.get("status") == "connected":
+        st.success(f"🟢 **Connected to Google Drive Folder:** `{gdrive_status.get('folder_name')}`")
+        gd_col1, gd_col2 = st.columns(2)
+        with gd_col1:
+            if gdrive_status.get("backup_found"):
+                b_meta = gdrive_status["backup_meta"]
+                st.info(f"💾 **Cloud Backup Available:** `investiq_backup.db`\n\n*Modified: {b_meta.get('modifiedTime', 'N/A')}*")
+            else:
+                st.info("ℹ️ No remote `investiq_backup.db` found in folder yet. Click below to create the first backup.")
+        with gd_col2:
+            st.caption("Manual Sync Controls:")
+            sync_c1, sync_c2 = st.columns(2)
+            with sync_c1:
+                if st.button("🔄 Sync from Drive", width="stretch", help="Restore database from Google Drive"):
+                    with st.spinner("Downloading and restoring database from Google Drive..."):
+                        res = GoogleDriveService.auto_restore_db(force=True)
+                        if res.get("status") == "restored":
+                            st.success(res.get("message"))
+                            st.rerun()
+                        elif res.get("status") == "error":
+                            st.error(f"Sync failed: {res.get('message')}")
+                        else:
+                            st.info(res.get("message", "Already up to date."))
+            with sync_c2:
+                if st.button("☁️ Backup to Drive", type="primary", width="stretch", help="Force immediate database backup to Google Drive"):
+                    with st.spinner("Uploading database snapshot to Google Drive..."):
+                        res = GoogleDriveService.auto_backup_db()
+                        if res.get("status") == "success":
+                            st.success(f"✅ Successfully backed up {res.get('size_kb')} KB to Google Drive!")
+                        else:
+                            st.error(f"Backup failed: {res.get('message')}")
+    else:
+        st.warning("⚪ **Google Drive Not Configured Yet**")
+        st.markdown(
+            "To enable automatic cloud backup and startup restoration:\n"
+            "1. Go to **Database Admin** (Page 18) or configure `.streamlit/secrets.toml`.\n"
+            "2. Provide your Google Drive **Folder ID** and **Service Account JSON key**.\n"
+            "3. Share your Google Drive folder with the service account email."
+        )
+        if st.button("⚙️ Open Google Drive Setup in Database Admin", type="primary"):
+            st.switch_page("pages/18_Clear_Data.py")
 
 holdings = load_holdings()
 universe = load_universe()

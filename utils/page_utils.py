@@ -388,6 +388,17 @@ def safe_get_secret(key, default=""):
 def require_auth():
     # Check if authenticated
     if st.session_state.get("authenticated", False):
+        # Auto-fetch database from Google Drive on new session startup
+        if not st.session_state.get("gdrive_startup_checked", False):
+            st.session_state["gdrive_startup_checked"] = True
+            try:
+                from services.google_drive_service import GoogleDriveService
+                if GoogleDriveService.is_configured():
+                    res = GoogleDriveService.auto_restore_db()
+                    if res.get("status") == "restored":
+                        st.toast(f"☁️ Auto-restored database from Google Drive ({round(res.get('size_bytes', 0)/1024, 1)} KB)", icon="☁️")
+            except Exception:
+                pass
         return True
 
     # Render custom styled login page

@@ -120,9 +120,8 @@ with tab_status:
     st.subheader("📅 Holdings Snapshots Summary")
     db = SessionLocal()
     try:
-        from sqlalchemy import distinct, func
         snapshots = db.query(
-            distinct(Holding.snapshot_date).label('date'),
+            Holding.snapshot_date.label('date'),
             func.count(Holding.id).label('count')
         ).group_by(Holding.snapshot_date).order_by(Holding.snapshot_date.desc()).all()
         
@@ -149,11 +148,118 @@ with tab_backup:
     else:
         st.info(
             "💡 **Active Database Type:** Local File-Based SQLite\n\n"
-            "InvestIQ is currently using a local temporary SQLite file (`data/investiq.db`). "
-            "If this application is deployed on Streamlit Cloud, the file is ephemeral and resets after inactivity. "
-            "Download a backup of your database below to restore it the next time you access the app."
+            "InvestIQ is currently using a local SQLite file (`data/investiq.db`). "
+            "To prevent data loss on restarts or across devices, enable **Automated Google Drive Cloud Sync** below."
         )
-        
+
+        # ── Automated Google Drive Cloud Sync ─────────────────────────────────
+        st.markdown("### ☁️ Automated Google Drive Cloud Sync (`investiq_backup.db`)")
+        st.caption(
+            "Automatically saves `investiq_backup.db` to your Google Drive whenever new holdings are uploaded, "
+            "and automatically fetches the latest database when a new session starts."
+        )
+
+        from services.google_drive_service import GoogleDriveService
+        gdrive_cfg = GoogleDriveService.get_config()
+        gdrive_conn = GoogleDriveService.test_connection()
+
+        if gdrive_conn.get("status") == "connected":
+            st.success(f"🟢 **Google Drive Sync Active:** Connected to folder `{gdrive_conn.get('folder_name')}` (ID: `{gdrive_conn.get('folder_id')}`)")
+            gd_stat_c1, gd_stat_c2, gd_stat_c3 = st.columns([1.5, 1.2, 1.3])
+            with gd_stat_c1:
+                if gdrive_conn.get("backup_found"):
+                    b_meta = gdrive_conn["backup_meta"]
+                    b_size = round(int(b_meta.get("size", 0)) / 1024, 1)
+                    st.info(f"💾 **Cloud Backup Available:** `investiq_backup.db` ({b_size} KB)\n\n*Modified: {b_meta.get('modifiedTime', 'N/A')}*")
+                else:
+                    st.info("ℹ️ No `investiq_backup.db` found in folder yet. Click below to push your current database.")
+            with gd_stat_c2:
+                if st.button("☁️ Push Backup to Drive Now", type="primary", width="stretch", key="gdrive_admin_backup_btn"):
+                    with st.spinner("Uploading investiq_backup.db to Google Drive..."):
+                        b_res = GoogleDriveService.auto_backup_db()
+                        if b_res.get("status") == "success":
+                            st.success(f"✅ Successfully backed up {b_res.get('size_kb')} KB to Drive!")
+                            st.rerun()
+                        else:
+                            st.error(f"Backup failed: {b_res.get('message')}")
+            with gd_stat_c3:
+                if st.button("🔄 Restore from Drive Now", width="stretch", key="gdrive_admin_restore_btn"):
+                    with st.spinner("Fetching and restoring investiq_backup.db from Google Drive..."):
+                        r_res = GoogleDriveService.auto_restore_db(force=True)
+                        if r_res.get("status") == "restored":
+                            st.success(r_res.get("message"))
+                            st.rerun()
+                        elif r_res.get("status") == "error":
+                            st.error(f"Restore failed: {r_res.get('message')}")
+                        else:
+                            st.info(r_res.get("message", "Already up to date."))
+        else:
+            st.warning("⚪ **Google Drive Auto-Sync: Not Configured**")
+            st.caption(gdrive_conn.get("message", "Credentials or Folder ID missing."))
+
+        with st.expander("⚙️ Configure Google Drive Cloud Sync Settings", expanded=(gdrive_conn.get("status") != "connected")):
+            st.markdown(
+                "**Setup Instructions:**\n"
+                "1. Create a free **Google Cloud Service Account** at [console.cloud.google.com](https://console.cloud.google.com/) and enable the **Google Drive API**.\n"
+                "2. Create and download a **JSON Key** for the Service Account.\n"
+                "3. In Google Drive, create a folder (e.g. `InvestIQ_Data`) and **share it with the Service Account email** (giving *Editor* permission).\n"
+                "4. Enter the **Folder ID** (the long string at the end of the folder URL) and upload the JSON key below."
+            )
+            cfg_c1, cfg_c2 = st.columns(2)
+            with cfg_c1:
+                gdrive_folder_id = st.text_input(
+                    "Google Drive Folder ID",
+                    value=gdrive_cfg.get("folder_id", ""),
+                    placeholder="e.g. 1a2b3c4d5e6f7g8h9...",
+                    key="gdrive_folder_id_input"
+                )
+                auto_backup_chk = st.checkbox(
+                    "Auto-backup DB when new holdings are uploaded",
+                    value=gdrive_cfg.get("auto_backup_enabled", True),
+                    key="gdrive_auto_backup_chk"
+                )
+                auto_restore_chk = st.checkbox(
+                    "Auto-restore DB on new session startup",
+                    value=gdrive_cfg.get("auto_restore_enabled", True),
+                    key="gdrive_auto_restore_chk"
+                )
+            with cfg_c2:
+                uploaded_sa_file = st.file_uploader(
+                    "Upload Service Account JSON Key",
+                    type=["json"],
+                    key="gdrive_sa_uploader"
+                )
+                sa_paste = st.text_area(
+                    "Or Paste Service Account JSON Key",
+                    height=100,
+                    placeholder='{"type": "service_account", "project_id": "...", "client_email": "..."}',
+                    key="gdrive_sa_paste"
+                )
+
+            if st.button("💾 Save Google Drive Settings", type="primary", width="stretch", key="save_gdrive_settings_btn"):
+                if uploaded_sa_file is not None:
+                    json_str = uploaded_sa_file.getvalue().decode("utf-8")
+                    ok, msg = GoogleDriveService.save_service_account_json(json_str)
+                    if not ok:
+                        st.error(msg)
+                elif sa_paste.strip():
+                    ok, msg = GoogleDriveService.save_service_account_json(sa_paste.strip())
+                    if not ok:
+                        st.error(msg)
+                
+                saved = GoogleDriveService.save_config(
+                    folder_id=gdrive_folder_id,
+                    auto_backup=auto_backup_chk,
+                    auto_restore=auto_restore_chk
+                )
+                if saved:
+                    st.success("✅ Google Drive settings saved successfully!")
+                    st.rerun()
+                else:
+                    st.error("Failed to save settings.")
+
+        st.divider()
+        st.markdown("### 📥 Manual File Download & Restore")
         col_back, col_rest, col_email = st.columns(3)
         
         with col_back:

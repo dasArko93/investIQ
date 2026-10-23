@@ -106,7 +106,7 @@ class TrendAnalysisService:
         db = SessionLocal()
         try:
             if not snapshot_dates:
-                snapshot_dates = db.query(func.distinct(Holding.snapshot_date)).all()
+                snapshot_dates = db.query(Holding.snapshot_date).distinct().all()
                 snapshot_dates = [s[0] for s in snapshot_dates]
             
             trend = []

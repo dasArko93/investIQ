@@ -580,7 +580,10 @@ def allocation_figure(merged):
         values = sector.iloc[:5].tolist()
         
         port_total_all = merged["Current Value Rs"].sum()
-        port_values = [v / port_total_all for v in values]
+        if port_total_all > 0:
+            port_values = [v / port_total_all for v in values]
+        else:
+            port_values = [0.0 for _ in values]
         port_values.append(max(0.0, 1.0 - sum(port_values)))
         
         labels_all = labels + ["Others"]
