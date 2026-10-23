@@ -370,7 +370,7 @@ else:
                 if "show_sector_premiums" not in st.session_state:
                     st.session_state.show_sector_premiums = False
                     
-                if st.button("View Sector Premiums", key="view_sector_premiums_btn", use_container_width=True):
+                if st.button("View Sector Premiums", key="view_sector_premiums_btn", width="stretch"):
                     st.session_state.show_sector_premiums = not st.session_state.show_sector_premiums
                     st.session_state.show_sector_multiples = False
                     st.rerun()
@@ -407,7 +407,7 @@ else:
                 if "show_sector_multiples" not in st.session_state:
                     st.session_state.show_sector_multiples = False
                     
-                if st.button("View Sector Multiples", key="view_sector_multiples_btn", use_container_width=True):
+                if st.button("View Sector Multiples", key="view_sector_multiples_btn", width="stretch"):
                     st.session_state.show_sector_multiples = not st.session_state.show_sector_multiples
                     st.session_state.show_sector_premiums = False
                     st.rerun()

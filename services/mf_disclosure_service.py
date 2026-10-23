@@ -40,122 +40,45 @@ RAW_DISCLOSURES_DIR.mkdir(parents=True, exist_ok=True)
 AMFI_NAV_ALL_URL = "https://www.amfiindia.com/spages/NAVAll.txt"
 AMFI_SCHEME_LIST_CACHE = Path(__file__).resolve().parent.parent / "data" / "amfi_scheme_master.json"
 
-# ---------------------------------------------------------------------------
-# ISIN Master — Maps NSE ticker → (ISIN, Full Name, Sector, Market Cap Category)
-# ---------------------------------------------------------------------------
-ISIN_LOOKUP = {
-    # Nifty 50 / Large Cap
-    "RELIANCE":     ("INE002A01018", "Reliance Industries Ltd",               "Energy / Oil & Gas",          "Large Cap"),
-    "HDFCBANK":     ("INE040A01034", "HDFC Bank Ltd",                         "Financial Services",          "Large Cap"),
-    "ICICIBANK":    ("INE090A01021", "ICICI Bank Ltd",                        "Financial Services",          "Large Cap"),
-    "INFY":         ("INE009A01021", "Infosys Ltd",                           "Information Technology",      "Large Cap"),
-    "TCS":          ("INE467B01029", "Tata Consultancy Services Ltd",         "Information Technology",      "Large Cap"),
-    "BHARTIARTL":   ("INE397D01024", "Bharti Airtel Ltd",                     "Telecommunication",           "Large Cap"),
-    "ITC":          ("INE154A01025", "ITC Ltd",                               "Fast Moving Consumer Goods",  "Large Cap"),
-    "LT":           ("INE018A01030", "Larsen & Toubro Ltd",                   "Capital Goods",               "Large Cap"),
-    "SBIN":         ("INE062A01020", "State Bank of India",                   "Financial Services",          "Large Cap"),
-    "KOTAKBANK":    ("INE237A01028", "Kotak Mahindra Bank Ltd",               "Financial Services",          "Large Cap"),
-    "AXISBANK":     ("INE238A01034", "Axis Bank Ltd",                         "Financial Services",          "Large Cap"),
-    "HINDUNILVR":   ("INE030A01027", "Hindustan Unilever Ltd",                "Fast Moving Consumer Goods",  "Large Cap"),
-    "BAJFINANCE":   ("INE296A01024", "Bajaj Finance Ltd",                     "Financial Services",          "Large Cap"),
-    "M&M":          ("INE101A01026", "Mahindra & Mahindra Ltd",               "Automobile",                  "Large Cap"),
-    "TATAMOTORS":   ("INE155A01022", "Tata Motors Ltd",                       "Automobile",                  "Large Cap"),
-    "SUNPHARMA":    ("INE044A01036", "Sun Pharmaceutical Industries Ltd",     "Healthcare",                  "Large Cap"),
-    "TITAN":        ("INE280A01028", "Titan Company Ltd",                     "Consumer Durables",           "Large Cap"),
-    "MARUTI":       ("INE585B01010", "Maruti Suzuki India Ltd",               "Automobile",                  "Large Cap"),
-    "NTPC":         ("INE733E01010", "NTPC Ltd",                              "Power / Utilities",           "Large Cap"),
-    "ONGC":         ("INE213A01029", "Oil & Natural Gas Corporation Ltd",     "Energy / Oil & Gas",          "Large Cap"),
-    "POWERGRID":    ("INE752E01010", "Power Grid Corporation of India Ltd",   "Power / Utilities",           "Large Cap"),
-    "ADANIPORTS":   ("INE742F01042", "Adani Ports and SEZ Ltd",               "Services / Infrastructure",   "Large Cap"),
-    "TATASTEEL":    ("INE081A01020", "Tata Steel Ltd",                        "Metals & Mining",             "Large Cap"),
-    "ASIANPAINT":   ("INE021A01026", "Asian Paints Ltd",                      "Consumer Durables",           "Large Cap"),
-    "ULTRACEMCO":   ("INE481G01011", "UltraTech Cement Ltd",                  "Materials / Cement",          "Large Cap"),
-    "COALINDIA":    ("INE522F01014", "Coal India Ltd",                        "Metals & Mining",             "Large Cap"),
-    "BAJAJFINSV":   ("INE918I01026", "Bajaj Finserv Ltd",                     "Financial Services",          "Large Cap"),
-    "NESTLEIND":    ("INE239A01024", "Nestle India Ltd",                      "Fast Moving Consumer Goods",  "Large Cap"),
-    "HCLTECH":      ("INE860A01027", "HCL Technologies Ltd",                  "Information Technology",      "Large Cap"),
-    "WIPRO":        ("INE075A01022", "Wipro Ltd",                             "Information Technology",      "Large Cap"),
-    "JSWSTEEL":     ("INE019A01038", "JSW Steel Ltd",                         "Metals & Mining",             "Large Cap"),
-    "HINDALCO":     ("INE038A01020", "Hindalco Industries Ltd",               "Metals & Mining",             "Large Cap"),
-    "GRASIM":       ("INE047A01021", "Grasim Industries Ltd",                 "Materials / Cement",          "Large Cap"),
-    "TECHM":        ("INE669C01036", "Tech Mahindra Ltd",                     "Information Technology",      "Large Cap"),
-    "INDUSINDBK":   ("INE095A01012", "IndusInd Bank Ltd",                     "Financial Services",          "Large Cap"),
-    "BPCL":         ("INE029A01011", "Bharat Petroleum Corporation Ltd",      "Energy / Oil & Gas",          "Large Cap"),
-    "SHREECEM":     ("INE070A01015", "Shree Cement Ltd",                      "Materials / Cement",          "Large Cap"),
-    "DRREDDY":      ("INE089A01023", "Dr. Reddy's Laboratories Ltd",          "Healthcare",                  "Large Cap"),
-    "CIPLA":        ("INE059A01026", "Cipla Ltd",                             "Healthcare",                  "Large Cap"),
-    "DIVISLAB":     ("INE361B01024", "Divi's Laboratories Ltd",               "Healthcare",                  "Large Cap"),
-    "ADANIENT":     ("INE423A01024", "Adani Enterprises Ltd",                 "Conglomerates",               "Large Cap"),
-    "BAJAJ-AUTO":   ("INE917I01010", "Bajaj Auto Ltd",                        "Automobile",                  "Large Cap"),
-    "EICHERMOT":    ("INE066A01021", "Eicher Motors Ltd",                     "Automobile",                  "Large Cap"),
-    "HEROMOTOCO":   ("INE158A01026", "Hero MotoCorp Ltd",                     "Automobile",                  "Large Cap"),
-    "TATACONSUM":   ("INE192A01025", "Tata Consumer Products Ltd",            "Fast Moving Consumer Goods",  "Large Cap"),
-    "BRITANNIA":    ("INE216A01030", "Britannia Industries Ltd",              "Fast Moving Consumer Goods",  "Large Cap"),
-    "APOLLOHOSP":   ("INE437A01024", "Apollo Hospitals Enterprise Ltd",       "Healthcare",                  "Large Cap"),
-    "SBILIFE":      ("INE123W01016", "SBI Life Insurance Company Ltd",        "Financial Services",          "Large Cap"),
-    "HDFCLIFE":     ("INE795G01014", "HDFC Life Insurance Company Ltd",       "Financial Services",          "Large Cap"),
-    "ICICIPRULI":   ("INE726G01019", "ICICI Prudential Life Insurance Co Ltd","Financial Services",          "Large Cap"),
-    # Mid Cap
-    "POLYCAB":      ("INE455K01017", "Polycab India Ltd",                     "Capital Goods",               "Mid Cap"),
-    "TRENT":        ("INE849A01020", "Trent Ltd",                             "Consumer Services / Retail",  "Mid Cap"),
-    "SUPREMEIND":   ("INE578A01017", "Supreme Industries Ltd",                "Capital Goods",               "Mid Cap"),
-    "APLAPOLLO":    ("INE702C01027", "APL Apollo Tubes Ltd",                  "Metals & Mining",             "Mid Cap"),
-    "PERSISTENT":   ("INE262H01013", "Persistent Systems Ltd",                "Information Technology",      "Mid Cap"),
-    "COFORGE":      ("INE591G01017", "Coforge Ltd",                           "Information Technology",      "Mid Cap"),
-    "MPHASIS":      ("INE356A01018", "Mphasis Ltd",                           "Information Technology",      "Mid Cap"),
-    "ASTRAL":       ("INE006I01046", "Astral Ltd",                            "Building Materials",          "Mid Cap"),
-    "DIXON":        ("INE935N01020", "Dixon Technologies (India) Ltd",        "Consumer Durables",           "Mid Cap"),
-    "VOLTAS":       ("INE226A01021", "Voltas Ltd",                            "Consumer Durables",           "Mid Cap"),
-    "SUNDARMFIN":   ("INE660A01013", "Sundaram Finance Ltd",                  "Financial Services",          "Mid Cap"),
-    "MAXHEALTH":    ("INE027H01010", "Max Healthcare Institute Ltd",          "Healthcare",                  "Mid Cap"),
-    "FEDERALBNK":   ("INE171A01029", "Federal Bank Ltd",                      "Financial Services",          "Mid Cap"),
-    "IDFCFIRSTB":   ("INE092T01019", "IDFC First Bank Ltd",                   "Financial Services",          "Mid Cap"),
-    "AUROPHARMA":   ("INE406A01037", "Aurobindo Pharma Ltd",                  "Healthcare",                  "Mid Cap"),
-    "LUPIN":        ("INE326A01037", "Lupin Ltd",                             "Healthcare",                  "Mid Cap"),
-    "FORTIS":       ("INE061F01013", "Fortis Healthcare Ltd",                 "Healthcare",                  "Mid Cap"),
-    "ABCAPITAL":    ("INE674K01013", "Aditya Birla Capital Ltd",              "Financial Services",          "Mid Cap"),
-    "ASHOKLEY":     ("INE214T01019", "Ashok Leyland Ltd",                     "Automobile",                  "Mid Cap"),
-    "BATAINDIA":    ("INE176A01028", "Bata India Ltd",                        "Consumer Discretionary",      "Mid Cap"),
-    "OBEROIRLTY":   ("INE093I01010", "Oberoi Realty Ltd",                     "Real Estate",                 "Mid Cap"),
-    "MUTHOOTFIN":   ("INE414G01012", "Muthoot Finance Ltd",                   "Financial Services",          "Mid Cap"),
-    "PIIND":        ("INE603J01030", "PI Industries Ltd",                     "Chemicals / Agro",            "Mid Cap"),
-    "LTIM":         ("INE214T01019", "LTIMindtree Ltd",                       "Information Technology",      "Mid Cap"),
-    "SCHAEFFLER":   ("INE513C01012", "Schaeffler India Ltd",                  "Capital Goods",               "Mid Cap"),
-    "CHOLAFIN":     ("INE121A01024", "Cholamandalam Investment & Finance",    "Financial Services",          "Mid Cap"),
-    "TORNTPHARM":   ("INE685A01028", "Torrent Pharmaceuticals Ltd",           "Healthcare",                  "Mid Cap"),
-    "KAJARIACER":   ("INE217B01036", "Kajaria Ceramics Ltd",                  "Building Materials",          "Mid Cap"),
-    "CONCOR":       ("INE111A01025", "Container Corporation of India Ltd",    "Services / Logistics",        "Mid Cap"),
-    "MARICO":       ("INE196A01026", "Marico Ltd",                            "Fast Moving Consumer Goods",  "Mid Cap"),
-    "COLPAL":       ("INE259A01022", "Colgate-Palmolive (India) Ltd",         "Fast Moving Consumer Goods",  "Mid Cap"),
-    "PAGEIND":      ("INE761H01022", "Page Industries Ltd",                   "Consumer Discretionary",      "Mid Cap"),
-    # Small Cap
-    "KAYNES":       ("INE918Z01012", "Kaynes Technology India Ltd",           "Capital Goods / Electronics", "Small Cap"),
-    "ELECON":       ("INE205B01023", "Elecon Engineering Company Ltd",        "Capital Goods",               "Small Cap"),
-    "CERA":         ("INE739E01017", "Cera Sanitaryware Ltd",                 "Consumer Durables",           "Small Cap"),
-    "KPITTECH":     ("INE04I401011", "KPIT Technologies Ltd",                 "Information Technology",      "Small Cap"),
-    "CYIENT":       ("INE136B01020", "Cyient Ltd",                            "Information Technology",      "Small Cap"),
-    "SONACOMS":     ("INE643N01012", "Sona BLW Precision Forgings Ltd",       "Automobile",                  "Small Cap"),
-    "KARURVYSYA":   ("INE036D01028", "Karur Vysya Bank Ltd",                  "Financial Services",          "Small Cap"),
-    "CREDITACC":    ("INE769G01020", "CreditAccess Grameen Ltd",              "Financial Services",          "Small Cap"),
-    "CANFINHOME":   ("INE477A01020", "Can Fin Homes Ltd",                     "Financial Services",          "Small Cap"),
-    "ERIS":         ("INE406M01024", "Eris Lifesciences Ltd",                 "Healthcare",                  "Small Cap"),
-    "PRAJIND":      ("INE163B01018", "Praj Industries Ltd",                   "Capital Goods / Energy",      "Small Cap"),
-    "TEJASNET":     ("INE010J01012", "Tejas Networks Ltd",                    "Telecommunication",           "Small Cap"),
-    "SAFARI":       ("INE429E01023", "Safari Industries (India) Ltd",         "Consumer Durables",           "Small Cap"),
-    "JBCHEPHARM":   ("INE572A01028", "J.B. Chemicals & Pharmaceuticals Ltd",  "Healthcare",                  "Small Cap"),
-    "ANANDRATHI":   ("INE463V01026", "Anand Rathi Wealth Ltd",                "Financial Services",          "Small Cap"),
-    "MEDANTA":      ("INE474S01017", "Global Health Ltd (Medanta)",           "Healthcare",                  "Small Cap"),
-    "APARINDS":     ("INE372A01015", "Apar Industries Ltd",                   "Capital Goods",               "Small Cap"),
-    "JYOTHYLAB":    ("INE668F01031", "Jyothy Labs Ltd",                       "Fast Moving Consumer Goods",  "Small Cap"),
-    "GPIL":         ("INE177H01002", "Godawari Power & Ispat Ltd",            "Metals & Mining",             "Small Cap"),
-    "ABSLAMC":      ("INE404N01024", "Aditya Birla Sun Life AMC Ltd",         "Financial Services",          "Small Cap"),
-    "GLAND":        ("INE068V01023", "Gland Pharma Ltd",                      "Healthcare",                  "Small Cap"),
-    "CLEAN":        ("INE0N0801024", "Clean Science and Technology Ltd",      "Chemicals / Agro",            "Small Cap"),
-    "LATENTVIEW":   ("INE0JR201011", "LatentView Analytics Ltd",              "Information Technology",      "Small Cap"),
-    "BIKAJI":       ("INE0J9401016", "Bikaji Foods International Ltd",        "Fast Moving Consumer Goods",  "Small Cap"),
-}
+from services.securities_master_service import SecuritiesMasterService
 
-TICKER_BY_ISIN = {isin: ticker for ticker, (isin, _, _, _) in ISIN_LOOKUP.items()}
+# ---------------------------------------------------------------------------
+# Dynamic Securities & ISIN Master (Covers 5,900+ listed NSE/BSE securities)
+# ---------------------------------------------------------------------------
+class _DynamicISINLookupProxy(dict):
+    """Dynamic proxy delegating to SecuritiesMasterService for zero-hardcoding."""
+    def __getitem__(self, key):
+        isin, name, sector, cap = SecuritiesMasterService.resolve(key)
+        return (isin, name, sector, cap)
+
+    def __contains__(self, key):
+        return SecuritiesMasterService.get_security(key) is not None
+
+    def get(self, key, default=None):
+        sec = SecuritiesMasterService.get_security(key)
+        if sec:
+            return (sec["isin"], sec["name"], sec["sector"], sec["market_cap_tier"])
+        return default
+
+class _DynamicTickerByISINProxy(dict):
+    """Dynamic proxy mapping ISIN -> Ticker for backward compatibility."""
+    def __getitem__(self, isin):
+        sec = SecuritiesMasterService.get_security(isin)
+        if sec:
+            return sec["ticker"]
+        raise KeyError(isin)
+
+    def __contains__(self, isin):
+        return SecuritiesMasterService.get_security(isin) is not None
+
+    def get(self, isin, default=None):
+        sec = SecuritiesMasterService.get_security(isin)
+        if sec:
+            return sec["ticker"]
+        return default
+
+ISIN_LOOKUP = _DynamicISINLookupProxy()
+TICKER_BY_ISIN = _DynamicTickerByISINProxy()
 
 # ---------------------------------------------------------------------------
 # SEBI Category mapping keywords
@@ -185,30 +108,12 @@ class MFDisclosureService:
 
     @classmethod
     def get_isin_metadata(cls, identifier: str) -> tuple:
-        """Resolves identifier (Ticker, Name, or ISIN) into (ISIN, Name, Sector, MarketCapCategory)."""
-        clean_id = str(identifier).strip().upper()
-        if clean_id in ISIN_LOOKUP:
-            isin, name, sector, cap = ISIN_LOOKUP[clean_id]
-            return isin, name, sector, cap
-        if clean_id in TICKER_BY_ISIN:
-            ticker = TICKER_BY_ISIN[clean_id]
-            isin, name, sector, cap = ISIN_LOOKUP[ticker]
-            return isin, name, sector, cap
-        # DB lookup
-        db = SessionLocal()
-        try:
-            stock = db.query(StockMaster).filter(
-                (StockMaster.ticker == clean_id) | (func.upper(StockMaster.name) == clean_id)
-            ).first()
-            if stock:
-                mcap = stock.market_cap or 0
-                cap_cat = "Large Cap" if mcap > 50000 else ("Mid Cap" if mcap > 15000 else "Small Cap")
-                isin_gen = f"INE{abs(hash(stock.ticker)) % 900000000 + 100000000}A01"
-                return isin_gen, stock.name or stock.ticker, stock.sub_sector or "General", cap_cat
-        finally:
-            db.close()
-        isin_gen = f"INE{abs(hash(clean_id)) % 900000000 + 100000000}A01"
-        return isin_gen, identifier, "Diversified", "Mid Cap"
+        """
+        Dynamically resolves identifier (Ticker, Name, or ISIN) into:
+          (ISIN, Name, Sector, MarketCapCategory)
+        Seamlessly covers the entire NSE/BSE universe (~5,900+ stocks) with zero hardcoding.
+        """
+        return SecuritiesMasterService.resolve(identifier)
 
     @classmethod
     def save_raw_disclosure_file(cls, month_str: str, filename: str, content) -> Path:
@@ -470,6 +375,14 @@ class MFDisclosureService:
                 {"code": "NIPPON_BANKING",      "name": "Nippon India Banking & PSU Fund",         "amc": "Nippon Life India AMC",        "category": "Thematic/Sectoral","aum": 7100.0,   "amfi": 100387},
                 {"code": "ICICI_INFRA",         "name": "ICICI Prudential Infrastructure Fund",    "amc": "ICICI Prudential AMC",         "category": "Thematic/Sectoral","aum": 8400.0,   "amfi": 100354},
                 {"code": "QUANT_PSU",           "name": "Quant PSU Fund",                          "amc": "Quant AMC",                    "category": "Thematic/Sectoral","aum": 4200.0,   "amfi": 100176},
+
+                # ── ADDITIONAL FLAGSHIP HIGH-AUM SCHEMES (FOR TOP 50 COHORT EXPANSION) ──
+                {"code": "ICICI_VALUE_DISC",    "name": "ICICI Prudential Value Discovery Fund",   "amc": "ICICI Prudential AMC",         "category": "Flexi/Multi Cap", "aum": 48900.0,  "amfi": 100366},
+                {"code": "SBI_CONTRA",          "name": "SBI Contra Fund",                         "amc": "SBI Funds Management",         "category": "Flexi/Multi Cap", "aum": 38600.0,  "amfi": 100642},
+                {"code": "INVESCO_CONTRA",      "name": "Invesco India Contra Fund",               "amc": "Invesco AMC",                  "category": "Flexi/Multi Cap", "aum": 18200.0,  "amfi": 106093},
+                {"code": "TATA_LARGECAP",       "name": "Tata Large Cap Fund",                     "amc": "Tata Mutual Fund",             "category": "Large Cap",       "aum": 16500.0,  "amfi": 100416},
+                {"code": "EDELWEISS_MIDCAP",    "name": "Edelweiss Mid Cap Fund",                  "amc": "Edelweiss AMC",                "category": "Mid Cap",         "aum": 9400.0,   "amfi": 120152},
+                {"code": "BANDHAN_SMALLCAP",    "name": "Bandhan Small Cap Fund",                  "amc": "Bandhan AMC",                  "category": "Small Cap",       "aum": 7800.0,   "amfi": 147572},
             ]
 
             created_schemes = {}
@@ -512,146 +425,156 @@ class MFDisclosureService:
             holdings_matrix = {
                 # ══ LARGE CAP SCHEMES ══════════════════════════════════════════════
                 "HDFC_TOP100": {
-                    "ICICIBANK": (8.8, 9.4), "HDFCBANK": (9.2, 9.0), "RELIANCE": (7.5, 8.2),
-                    "INFY": (6.1, 5.2), "BHARTIARTL": (4.5, 5.1), "LT": (4.2, 4.4),
-                    "ITC": (3.8, 3.5), "TCS": (3.4, 3.2), "NTPC": (2.8, 3.4),
-                    "AXISBANK": (3.2, 3.6), "SBIN": (3.5, 3.8), "KOTAKBANK": (2.9, 3.1),
-                    "SUNPHARMA": (2.4, 2.6), "BAJFINANCE": (2.8, 2.5), "HINDALCO": (1.9, 2.1),
+                    "RELIANCE": (11.5, 9.2, 8.2), "ICICIBANK": (8.0, 10.4, 9.4), "HDFCBANK": (6.8, 8.5, 9.8),
+                    "INFY": (6.1, 5.8, 5.2), "BEL": (2.8, 3.2, 3.8), "HAL": (2.0, 2.3, 2.7),
+                    "BHARTIARTL": (4.4, 4.8, 5.1), "LT": (4.1, 4.3, 4.4), "ITC": (3.8, 3.6, 3.5),
+                    "TCS": (3.4, 3.3, 3.2), "NTPC": (2.6, 3.0, 3.4), "AXISBANK": (3.1, 3.4, 3.6),
+                    "SBIN": (3.4, 3.6, 3.8), "KOTAKBANK": (2.8, 3.0, 3.1), "SUNPHARMA": (2.3, 2.5, 2.6),
+                    "BAJFINANCE": (2.8, 2.6, 2.5), "HINDALCO": (1.8, 2.0, 2.1),
                 },
                 "ICICI_PRU_BLUECHIP": {
-                    "ICICIBANK": (9.1, 9.7), "RELIANCE": (8.0, 8.6), "INFY": (6.8, 5.9),
-                    "BHARTIARTL": (5.0, 5.6), "HDFCBANK": (8.5, 8.3), "LT": (5.1, 5.3),
-                    "MARUTI": (3.6, 3.9), "TITAN": (2.8, 2.5), "ULTRACEMCO": (2.9, 3.1),
-                    "BAJFINANCE": (3.2, 3.0), "SBIN": (4.1, 4.5), "WIPRO": (2.2, 1.8),
-                    "ADANIPORTS": (2.4, 2.7), "SUNPHARMA": (2.6, 2.4), "ASIANPAINT": (1.8, 2.0),
+                    "RELIANCE": (11.8, 9.4, 8.6), "ICICIBANK": (8.2, 10.8, 9.7), "HDFCBANK": (6.5, 8.0, 9.3),
+                    "INFY": (6.8, 6.3, 5.9), "BEL": (2.4, 2.9, 3.4), "HAL": (1.8, 2.2, 2.6),
+                    "BHARTIARTL": (4.8, 5.2, 5.6), "LT": (4.9, 5.1, 5.3), "MARUTI": (3.4, 3.7, 3.9),
+                    "TITAN": (2.8, 2.6, 2.5), "ULTRACEMCO": (2.8, 3.0, 3.1), "BAJFINANCE": (3.2, 3.1, 3.0),
+                    "SBIN": (3.9, 4.2, 4.5), "WIPRO": (2.2, 2.0, 1.8), "ADANIPORTS": (2.2, 2.5, 2.7),
+                    "SUNPHARMA": (2.6, 2.5, 2.4), "ASIANPAINT": (1.8, 1.9, 2.0),
                 },
                 "SBI_BLUECHIP": {
-                    "HDFCBANK": (8.9, 8.6), "ICICIBANK": (7.8, 8.5), "RELIANCE": (7.1, 7.8),
-                    "INFY": (5.5, 4.8), "ITC": (4.2, 3.9), "LT": (4.0, 4.3),
-                    "BHARTIARTL": (4.1, 4.7), "BAJFINANCE": (3.2, 3.0), "POWERGRID": (2.7, 2.9),
-                    "COALINDIA": (2.1, 2.4), "SBIN": (3.8, 4.2), "NTPC": (2.6, 2.8),
-                    "HCLTECH": (2.2, 1.9), "TATAMOTORS": (1.8, 2.1), "CIPLA": (1.5, 1.7),
+                    "RELIANCE": (11.2, 8.8, 7.8), "ICICIBANK": (7.4, 9.8, 8.5), "HDFCBANK": (6.4, 7.9, 8.9),
+                    "BEL": (2.2, 2.7, 3.1), "HAL": (1.6, 2.0, 2.4), "INFY": (5.6, 5.2, 4.8),
+                    "ITC": (4.2, 4.0, 3.9), "LT": (3.9, 4.1, 4.3), "BHARTIARTL": (4.0, 4.4, 4.7),
+                    "BAJFINANCE": (3.3, 3.1, 3.0), "POWERGRID": (2.6, 2.8, 2.9), "COALINDIA": (2.0, 2.2, 2.4),
+                    "SBIN": (3.6, 3.9, 4.2), "NTPC": (2.5, 2.7, 2.8), "HCLTECH": (2.2, 2.0, 1.9),
+                    "TATAMOTORS": (1.7, 1.9, 2.1), "CIPLA": (1.4, 1.6, 1.7),
                 },
                 "MIRAELARGE": {
-                    "HDFCBANK": (9.4, 9.1), "ICICIBANK": (8.5, 9.2), "RELIANCE": (7.8, 8.4),
-                    "INFY": (6.2, 5.4), "TCS": (4.1, 3.8), "BHARTIARTL": (4.3, 4.9),
-                    "AXISBANK": (3.8, 4.1), "TATAMOTORS": (2.9, 3.3), "SUNPHARMA": (3.0, 3.2),
-                    "LT": (3.5, 3.7), "BAJFINANCE": (3.2, 3.4), "MARUTI": (2.8, 3.0),
-                    "WIPRO": (1.9, 1.6), "EICHERMOT": (2.1, 2.3), "NESTLEIND": (1.6, 1.8),
+                    "RELIANCE": (11.4, 9.0, 8.4), "ICICIBANK": (8.0, 10.5, 9.2), "HDFCBANK": (6.7, 8.4, 9.5),
+                    "BEL": (2.0, 2.4, 2.9), "INFY": (6.4, 5.8, 5.4), "TCS": (4.2, 4.0, 3.8),
+                    "BHARTIARTL": (4.1, 4.5, 4.9), "AXISBANK": (3.6, 3.9, 4.1), "TATAMOTORS": (2.8, 3.1, 3.3),
+                    "SUNPHARMA": (2.9, 3.1, 3.2), "LT": (3.4, 3.6, 3.7), "BAJFINANCE": (3.1, 3.3, 3.4),
+                    "MARUTI": (2.7, 2.9, 3.0), "WIPRO": (1.9, 1.7, 1.6), "EICHERMOT": (2.0, 2.2, 2.3),
+                    "NESTLEIND": (1.5, 1.7, 1.8),
                 },
                 "AXIS_BLUECHIP": {
-                    "INFY": (8.2, 7.6), "HDFCBANK": (8.9, 9.3), "ICICIBANK": (7.4, 8.0),
-                    "TCS": (5.8, 5.2), "BHARTIARTL": (4.6, 5.0), "LT": (3.9, 4.2),
-                    "BAJFINANCE": (4.1, 3.8), "KOTAKBANK": (3.5, 3.8), "TITAN": (3.2, 2.9),
-                    "AXISBANK": (2.8, 3.1), "ASIANPAINT": (2.5, 2.7), "SBIN": (3.0, 3.4),
-                    "DRREDDY": (1.9, 2.1), "APOLLOHOSP": (1.7, 1.9), "HCLTECH": (2.1, 1.8),
+                    "INFY": (8.5, 8.0, 7.6), "ICICIBANK": (7.0, 9.5, 8.0), "HDFCBANK": (6.5, 8.0, 9.6),
+                    "BEL": (1.8, 2.3, 2.8), "TCS": (5.8, 5.5, 5.2), "BHARTIARTL": (4.4, 4.7, 5.0),
+                    "LT": (3.8, 4.0, 4.2), "BAJFINANCE": (4.2, 4.0, 3.8), "KOTAKBANK": (3.4, 3.6, 3.8),
+                    "TITAN": (3.3, 3.1, 2.9), "AXISBANK": (2.7, 2.9, 3.1), "ASIANPAINT": (2.4, 2.6, 2.7),
+                    "SBIN": (2.8, 3.1, 3.4), "DRREDDY": (1.8, 2.0, 2.1), "APOLLOHOSP": (1.6, 1.8, 1.9),
+                    "HCLTECH": (2.1, 1.9, 1.8),
                 },
                 "NIPPON_LARGECAP": {
-                    "RELIANCE": (8.6, 9.2), "HDFCBANK": (8.1, 8.5), "ICICIBANK": (7.5, 8.0),
-                    "INFY": (5.8, 5.0), "ITC": (4.5, 4.2), "LT": (4.0, 4.3),
-                    "BHARTIARTL": (4.2, 4.7), "ONGC": (3.1, 3.4), "COALINDIA": (2.8, 3.0),
-                    "SBIN": (3.5, 3.8), "TCS": (3.2, 2.9), "BPCL": (2.1, 2.4),
-                    "JSWSTEEL": (2.0, 2.2), "NTPC": (2.4, 2.6), "BAJAJ-AUTO": (1.8, 2.0),
+                    "RELIANCE": (12.2, 10.0, 9.2), "ICICIBANK": (7.2, 9.4, 8.0), "HDFCBANK": (6.5, 7.8, 8.8),
+                    "BEL": (2.5, 3.0, 3.5), "INFY": (5.9, 5.4, 5.0), "ITC": (4.6, 4.4, 4.2),
+                    "LT": (3.9, 4.1, 4.3), "BHARTIARTL": (4.0, 4.4, 4.7), "ONGC": (3.0, 3.2, 3.4),
+                    "COALINDIA": (2.7, 2.9, 3.0), "SBIN": (3.4, 3.6, 3.8), "TCS": (3.3, 3.1, 2.9),
+                    "BPCL": (2.0, 2.2, 2.4), "JSWSTEEL": (1.9, 2.1, 2.2), "NTPC": (2.3, 2.5, 2.6),
+                    "BAJAJ-AUTO": (1.7, 1.9, 2.0),
                 },
                 "UTI_NIFTY50": {
-                    "HDFCBANK": (13.2, 13.1), "RELIANCE": (9.8, 10.2), "ICICIBANK": (8.4, 8.8),
-                    "INFY": (6.1, 5.8), "TCS": (4.3, 4.1), "LT": (3.8, 3.9),
-                    "BHARTIARTL": (3.5, 3.7), "KOTAKBANK": (3.2, 3.4), "ITC": (2.9, 2.8),
-                    "AXISBANK": (2.7, 2.8), "SBIN": (2.5, 2.6), "BAJFINANCE": (2.3, 2.4),
-                    "M&M": (2.1, 2.1), "HCLTECH": (2.0, 1.9), "TITAN": (1.8, 1.8),
+                    "RELIANCE": (12.6, 10.8, 10.2), "ICICIBANK": (8.0, 10.2, 8.8), "HDFCBANK": (7.5, 9.8, 13.5),
+                    "BEL": (1.8, 2.1, 2.4), "INFY": (6.2, 6.0, 5.8), "TCS": (4.4, 4.2, 4.1),
+                    "LT": (3.7, 3.8, 3.9), "BHARTIARTL": (3.4, 3.6, 3.7), "KOTAKBANK": (3.1, 3.3, 3.4),
+                    "ITC": (3.0, 2.9, 2.8), "AXISBANK": (2.6, 2.7, 2.8), "SBIN": (2.4, 2.5, 2.6),
+                    "BAJFINANCE": (2.2, 2.3, 2.4), "M&M": (2.0, 2.1, 2.1), "HCLTECH": (2.0, 1.9, 1.9),
+                    "TITAN": (1.7, 1.8, 1.8),
                 },
                 "ABSLLARGECAP": {
-                    "HDFCBANK": (9.8, 10.2), "ICICIBANK": (8.4, 9.0), "RELIANCE": (7.9, 8.5),
-                    "INFY": (6.0, 5.3), "BHARTIARTL": (4.7, 5.2), "ITC": (4.1, 3.8),
-                    "LT": (3.6, 3.9), "TCS": (3.4, 3.1), "AXISBANK": (3.1, 3.4),
-                    "BAJFINANCE": (2.9, 2.7), "KOTAKBANK": (2.7, 2.9), "SBIN": (3.2, 3.5),
-                    "NTPC": (2.4, 2.6), "TATAMOTORS": (2.0, 2.2), "TITAN": (1.8, 2.0),
+                    "RELIANCE": (11.6, 9.4, 8.5), "ICICIBANK": (7.8, 10.4, 9.0), "HDFCBANK": (7.0, 8.8, 10.6),
+                    "BEL": (2.0, 2.5, 2.9), "INFY": (6.2, 5.7, 5.3), "BHARTIARTL": (4.5, 4.9, 5.2),
+                    "ITC": (4.2, 4.0, 3.8), "LT": (3.5, 3.7, 3.9), "TCS": (3.5, 3.3, 3.1),
+                    "AXISBANK": (3.0, 3.2, 3.4), "BAJFINANCE": (3.0, 2.8, 2.7), "KOTAKBANK": (2.6, 2.8, 2.9),
+                    "SBIN": (3.0, 3.3, 3.5), "NTPC": (2.3, 2.5, 2.6), "TATAMOTORS": (1.9, 2.1, 2.2),
+                    "TITAN": (1.7, 1.9, 2.0),
                 },
                 "DSPTOPP100": {
-                    "RELIANCE": (9.1, 9.7), "HDFCBANK": (8.5, 8.9), "ICICIBANK": (7.8, 8.3),
-                    "INFY": (5.7, 5.0), "BHARTIARTL": (4.8, 5.3), "LT": (4.2, 4.5),
-                    "ITC": (3.9, 3.6), "SBIN": (3.5, 3.8), "TCS": (3.2, 2.9),
-                    "AXISBANK": (2.9, 3.2), "BAJFINANCE": (2.7, 2.5), "POWERGRID": (2.4, 2.6),
-                    "ONGC": (2.1, 2.3), "HINDALCO": (1.9, 2.1), "M&M": (2.2, 2.4),
+                    "RELIANCE": (12.5, 10.2, 9.7), "ICICIBANK": (7.4, 9.8, 8.3), "HDFCBANK": (6.6, 8.0, 9.2),
+                    "BEL": (2.3, 2.8, 3.3), "INFY": (5.9, 5.4, 5.0), "BHARTIARTL": (4.6, 5.0, 5.3),
+                    "LT": (4.0, 4.3, 4.5), "ITC": (4.0, 3.8, 3.6), "SBIN": (3.4, 3.6, 3.8),
+                    "TCS": (3.3, 3.1, 2.9), "AXISBANK": (2.8, 3.0, 3.2), "BAJFINANCE": (2.8, 2.6, 2.5),
+                    "POWERGRID": (2.3, 2.5, 2.6), "ONGC": (2.0, 2.2, 2.3), "HINDALCO": (1.8, 2.0, 2.1),
+                    "M&M": (2.1, 2.3, 2.4),
                 },
                 "CANROBLARGER": {
-                    "HDFCBANK": (10.2, 10.5), "ICICIBANK": (8.8, 9.4), "INFY": (7.1, 6.4),
-                    "RELIANCE": (7.4, 8.0), "TCS": (5.2, 4.8), "BHARTIARTL": (4.0, 4.5),
-                    "AXISBANK": (3.5, 3.8), "BAJFINANCE": (3.1, 2.9), "ITC": (2.8, 2.6),
-                    "KOTAKBANK": (2.9, 3.1), "TITAN": (2.4, 2.6), "APOLLOHOSP": (2.0, 2.2),
-                    "DRREDDY": (1.8, 2.0), "SBIN": (2.6, 2.8), "ASIANPAINT": (1.5, 1.7),
+                    "RELIANCE": (11.0, 8.8, 8.0), "ICICIBANK": (8.2, 10.8, 9.4), "HDFCBANK": (7.2, 9.0, 10.8),
+                    "BEL": (1.8, 2.2, 2.6), "INFY": (7.3, 6.8, 6.4), "TCS": (5.3, 5.0, 4.8),
+                    "BHARTIARTL": (3.8, 4.2, 4.5), "AXISBANK": (3.4, 3.6, 3.8), "BAJFINANCE": (3.2, 3.0, 2.9),
+                    "ITC": (2.9, 2.7, 2.6), "KOTAKBANK": (2.8, 3.0, 3.1), "TITAN": (2.3, 2.5, 2.6),
+                    "APOLLOHOSP": (1.9, 2.1, 2.2), "DRREDDY": (1.7, 1.9, 2.0), "SBIN": (2.5, 2.7, 2.8),
+                    "ASIANPAINT": (1.4, 1.6, 1.7),
                 },
 
                 # ══ MID CAP SCHEMES ════════════════════════════════════════════════
                 "HDFC_MIDCAP": {
                     "POLYCAB": (4.2, 4.9), "TRENT": (3.8, 4.6), "FEDERALBNK": (4.0, 4.1),
-                    "ASTRAL": (3.5, 3.1), "COFORGE": (3.2, 3.8), "MAXHEALTH": (3.6, 4.2),
-                    "DIXON": (2.8, 3.5), "SUNDARMFIN": (3.0, 2.9), "APLAPOLLO": (2.9, 3.1),
-                    "LUPIN": (2.4, 3.2), "PERSISTENT": (3.8, 3.5), "IDFCFIRSTB": (2.5, 2.8),
-                    "MPHASIS": (2.9, 2.6), "ABCAPITAL": (2.4, 2.6), "PIIND": (2.2, 2.4),
+                    "BEL": (3.4, 3.8, 4.4), "ASTRAL": (3.5, 3.1), "COFORGE": (3.2, 3.8),
+                    "MAXHEALTH": (3.6, 4.2), "DIXON": (2.8, 3.5), "SUNDARMFIN": (3.0, 2.9),
+                    "APLAPOLLO": (2.9, 3.1), "LUPIN": (2.4, 3.2), "PERSISTENT": (3.8, 3.5),
+                    "IDFCFIRSTB": (2.5, 2.8), "MPHASIS": (2.9, 2.6), "ABCAPITAL": (2.4, 2.6),
                 },
                 "KOTAK_EMERGING": {
                     "SUPREMEIND": (4.1, 4.3), "POLYCAB": (3.9, 4.5), "TRENT": (3.4, 4.1),
-                    "PERSISTENT": (3.8, 3.6), "MAXHEALTH": (3.2, 3.9), "MPHASIS": (2.9, 2.7),
-                    "FORTIS": (2.8, 3.2), "VOLTAS": (3.1, 2.8), "IDFCFIRSTB": (2.5, 2.9),
-                    "LUPIN": (2.1, 2.8), "COFORGE": (3.4, 3.1), "CHOLAFIN": (2.8, 2.6),
-                    "TORNTPHARM": (2.5, 2.7), "OBEROIRLTY": (2.2, 2.4), "PIIND": (2.0, 2.2),
+                    "BEL": (3.1, 3.5, 4.0), "PERSISTENT": (3.8, 3.6), "MAXHEALTH": (3.2, 3.9),
+                    "MPHASIS": (2.9, 2.7), "FORTIS": (2.8, 3.2), "VOLTAS": (3.1, 2.8),
+                    "IDFCFIRSTB": (2.5, 2.9), "LUPIN": (2.1, 2.8), "COFORGE": (3.4, 3.1),
+                    "CHOLAFIN": (2.8, 2.6), "TORNTPHARM": (2.5, 2.7), "OBEROIRLTY": (2.2, 2.4),
                 },
                 "AXIS_MIDCAP": {
                     "ASTRAL": (4.2, 3.8), "TRENT": (3.9, 4.7), "POLYCAB": (3.5, 4.1),
-                    "COFORGE": (3.4, 3.9), "DIXON": (3.1, 3.7), "PERSISTENT": (3.2, 3.0),
-                    "BATAINDIA": (2.5, 2.1), "FEDERALBNK": (3.1, 3.3), "MAXHEALTH": (2.8, 3.4),
-                    "SUPREMEIND": (2.6, 2.8), "MUTHOOTFIN": (2.4, 2.6), "LUPIN": (2.2, 2.8),
-                    "CHOLAFIN": (2.6, 2.4), "CONCOR": (2.0, 2.2), "MARICO": (1.8, 2.0),
+                    "BEL": (2.6, 3.0, 3.5), "COFORGE": (3.4, 3.9), "DIXON": (3.1, 3.7),
+                    "PERSISTENT": (3.2, 3.0), "BATAINDIA": (2.5, 2.1), "FEDERALBNK": (3.1, 3.3),
+                    "MAXHEALTH": (2.8, 3.4), "SUPREMEIND": (2.6, 2.8), "MUTHOOTFIN": (2.4, 2.6),
+                    "LUPIN": (2.2, 2.8), "CHOLAFIN": (2.6, 2.4), "CONCOR": (2.0, 2.2),
                 },
                 "SBI_MAGNUM_MID": {
                     "DIXON": (4.5, 5.0), "POLYCAB": (4.2, 4.8), "TRENT": (3.9, 4.5),
-                    "MAXHEALTH": (3.6, 4.1), "PERSISTENT": (3.4, 3.1), "COFORGE": (3.1, 3.6),
-                    "VOLTAS": (2.9, 3.1), "APLAPOLLO": (2.8, 3.0), "FORTIS": (2.6, 2.9),
-                    "FEDERALBNK": (2.5, 2.7), "SUNDARMFIN": (2.4, 2.6), "LUPIN": (2.2, 2.8),
-                    "IDFCFIRSTB": (2.1, 2.4), "OBEROIRLTY": (1.9, 2.1), "ABCAPITAL": (2.0, 2.2),
+                    "BEL": (2.7, 3.1, 3.6), "MAXHEALTH": (3.6, 4.1), "PERSISTENT": (3.4, 3.1),
+                    "COFORGE": (3.1, 3.6), "VOLTAS": (2.9, 3.1), "APLAPOLLO": (2.8, 3.0),
+                    "FORTIS": (2.6, 2.9), "FEDERALBNK": (2.5, 2.7), "SUNDARMFIN": (2.4, 2.6),
+                    "LUPIN": (2.2, 2.8), "IDFCFIRSTB": (2.1, 2.4), "OBEROIRLTY": (1.9, 2.1),
                 },
                 "NIPPON_MIDCAP": {
                     "POLYCAB": (4.8, 5.3), "COFORGE": (4.2, 4.7), "DIXON": (3.9, 4.4),
-                    "TRENT": (3.6, 4.1), "PERSISTENT": (3.5, 3.2), "MAXHEALTH": (3.3, 3.8),
-                    "VOLTAS": (3.0, 3.3), "ASTRAL": (2.8, 3.0), "MPHASIS": (2.6, 2.4),
-                    "FEDERALBNK": (2.5, 2.7), "APLAPOLLO": (2.4, 2.6), "LUPIN": (2.2, 2.7),
-                    "SUNDARMFIN": (2.1, 2.3), "IDFCFIRSTB": (2.0, 2.3), "PIIND": (1.9, 2.1),
+                    "BEL": (2.9, 3.4, 4.0), "TRENT": (3.6, 4.1), "PERSISTENT": (3.5, 3.2),
+                    "MAXHEALTH": (3.3, 3.8), "VOLTAS": (3.0, 3.3), "ASTRAL": (2.8, 3.0),
+                    "MPHASIS": (2.6, 2.4), "FEDERALBNK": (2.5, 2.7), "APLAPOLLO": (2.4, 2.6),
+                    "LUPIN": (2.2, 2.7), "SUNDARMFIN": (2.1, 2.3), "IDFCFIRSTB": (2.0, 2.3),
                 },
                 "DSP_MIDCAP": {
                     "TRENT": (4.4, 5.0), "POLYCAB": (4.1, 4.7), "COFORGE": (3.8, 4.3),
-                    "PERSISTENT": (3.6, 3.3), "DIXON": (3.4, 3.9), "MAXHEALTH": (3.2, 3.7),
-                    "VOLTAS": (2.9, 3.2), "FEDERALBNK": (2.7, 2.9), "ASTRAL": (2.5, 2.7),
-                    "APLAPOLLO": (2.4, 2.6), "ABCAPITAL": (2.2, 2.4), "CHOLAFIN": (2.0, 2.2),
-                    "MUTHOOTFIN": (1.9, 2.1), "TORNTPHARM": (1.8, 2.0), "CONCOR": (1.7, 1.9),
+                    "BEL": (2.6, 3.1, 3.6), "PERSISTENT": (3.6, 3.3), "DIXON": (3.4, 3.9),
+                    "MAXHEALTH": (3.2, 3.7), "VOLTAS": (2.9, 3.2), "FEDERALBNK": (2.7, 2.9),
+                    "ASTRAL": (2.5, 2.7), "APLAPOLLO": (2.4, 2.6), "ABCAPITAL": (2.2, 2.4),
+                    "CHOLAFIN": (2.0, 2.2), "MUTHOOTFIN": (1.9, 2.1), "TORNTPHARM": (1.8, 2.0),
                 },
                 "ABSLLMIDCAP": {
                     "DIXON": (4.8, 5.4), "POLYCAB": (4.3, 4.9), "TRENT": (3.9, 4.5),
-                    "COFORGE": (3.6, 4.1), "MAXHEALTH": (3.4, 3.9), "PERSISTENT": (3.2, 2.9),
-                    "VOLTAS": (3.0, 3.2), "APLAPOLLO": (2.8, 3.0), "IDFCFIRSTB": (2.6, 2.9),
-                    "FORTIS": (2.4, 2.7), "BATAINDIA": (2.2, 2.0), "LUPIN": (2.0, 2.5),
-                    "PIIND": (1.9, 2.1), "OBEROIRLTY": (1.8, 2.0), "CONCOR": (1.7, 1.9),
+                    "BEL": (2.3, 2.7, 3.2), "COFORGE": (3.6, 4.1), "MAXHEALTH": (3.4, 3.9),
+                    "PERSISTENT": (3.2, 2.9), "VOLTAS": (3.0, 3.2), "APLAPOLLO": (2.8, 3.0),
+                    "IDFCFIRSTB": (2.6, 2.9), "FORTIS": (2.4, 2.7), "BATAINDIA": (2.2, 2.0),
+                    "LUPIN": (2.0, 2.5), "PIIND": (1.9, 2.1), "OBEROIRLTY": (1.8, 2.0),
                 },
                 "TATA_MIDCAP": {
                     "COFORGE": (4.6, 5.1), "POLYCAB": (4.2, 4.7), "PERSISTENT": (3.9, 3.6),
-                    "TRENT": (3.7, 4.2), "MAXHEALTH": (3.4, 3.9), "DIXON": (3.2, 3.7),
-                    "VOLTAS": (2.9, 3.1), "FEDERALBNK": (2.7, 2.9), "MPHASIS": (2.5, 2.3),
-                    "ASTRAL": (2.4, 2.6), "CHOLAFIN": (2.2, 2.4), "IDFCFIRSTB": (2.0, 2.3),
-                    "SUPREMEIND": (1.9, 2.1), "ABCAPITAL": (1.8, 2.0), "LUPIN": (1.7, 2.2),
+                    "BEL": (2.5, 3.0, 3.6), "TRENT": (3.7, 4.2), "MAXHEALTH": (3.4, 3.9),
+                    "DIXON": (3.2, 3.7), "VOLTAS": (2.9, 3.1), "FEDERALBNK": (2.7, 2.9),
+                    "MPHASIS": (2.5, 2.3), "ASTRAL": (2.4, 2.6), "CHOLAFIN": (2.2, 2.4),
+                    "IDFCFIRSTB": (2.0, 2.3), "SUPREMEIND": (1.9, 2.1), "ABCAPITAL": (1.8, 2.0),
                 },
                 "MOTILAL_MID": {
                     "POLYCAB": (5.2, 5.8), "COFORGE": (4.8, 5.4), "PERSISTENT": (4.5, 4.2),
-                    "DIXON": (4.2, 4.8), "TRENT": (3.9, 4.5), "MAXHEALTH": (3.6, 4.1),
-                    "KPITTECH": (3.4, 3.1), "VOLTAS": (3.1, 3.3), "APLAPOLLO": (2.9, 3.1),
-                    "FEDERALBNK": (2.7, 2.9), "MPHASIS": (2.5, 2.3), "ASTRAL": (2.3, 2.5),
-                    "LUPIN": (2.1, 2.6), "CHOLAFIN": (1.9, 2.1), "CONCOR": (1.8, 2.0),
+                    "BEL": (2.7, 3.2, 3.8), "DIXON": (4.2, 4.8), "TRENT": (3.9, 4.5),
+                    "MAXHEALTH": (3.6, 4.1), "KPITTECH": (3.4, 3.1), "VOLTAS": (3.1, 3.3),
+                    "APLAPOLLO": (2.9, 3.1), "FEDERALBNK": (2.7, 2.9), "MPHASIS": (2.5, 2.3),
+                    "ASTRAL": (2.3, 2.5), "LUPIN": (2.1, 2.6), "CHOLAFIN": (1.9, 2.1),
                 },
                 "QUANT_MIDCAP": {
                     "POLYCAB": (5.5, 6.0), "DIXON": (5.1, 5.7), "COFORGE": (4.7, 5.3),
-                    "PERSISTENT": (4.4, 4.1), "TRENT": (4.1, 4.7), "KPITTECH": (3.8, 3.5),
-                    "MAXHEALTH": (3.5, 4.0), "VOLTAS": (3.2, 3.4), "APLAPOLLO": (3.0, 3.2),
-                    "FEDERALBNK": (2.8, 3.0), "FORTIS": (2.6, 2.9), "IDFCFIRSTB": (2.4, 2.7),
-                    "MPHASIS": (2.2, 2.0), "ASTRAL": (2.0, 2.2), "LUPIN": (1.8, 2.3),
+                    "BEL": (3.5, 4.2, 4.9), "PERSISTENT": (4.4, 4.1), "TRENT": (4.1, 4.7),
+                    "KPITTECH": (3.8, 3.5), "MAXHEALTH": (3.5, 4.0), "VOLTAS": (3.2, 3.4),
+                    "APLAPOLLO": (3.0, 3.2), "FEDERALBNK": (2.8, 3.0), "FORTIS": (2.6, 2.9),
+                    "IDFCFIRSTB": (2.4, 2.7), "MPHASIS": (2.2, 2.0), "ASTRAL": (2.0, 2.2),
                 },
 
                 # ══ SMALL CAP SCHEMES ══════════════════════════════════════════════
@@ -714,97 +637,97 @@ class MFDisclosureService:
 
                 # ══ FLEXI / MULTI CAP SCHEMES ══════════════════════════════════════
                 "PPFAS_FLEXICAP": {
-                    "HDFCBANK": (8.2, 7.9), "ICICIBANK": (7.4, 8.1), "BAJFINANCE": (6.8, 6.5),
-                    "ITC": (5.9, 5.5), "COALINDIA": (4.8, 5.1), "POWERGRID": (4.2, 4.4),
-                    "POLYCAB": (2.8, 3.4), "TRENT": (2.4, 3.1), "PERSISTENT": (3.5, 3.2),
-                    "TCS": (3.1, 2.8), "INFY": (2.9, 2.6), "AXISBANK": (2.6, 2.9),
-                    "M&M": (2.4, 2.6), "SUNPHARMA": (2.1, 2.3), "COFORGE": (1.9, 2.2),
+                    "RELIANCE": (10.8, 8.8, 8.0), "ICICIBANK": (7.4, 9.6, 8.1), "HDFCBANK": (6.5, 7.5, 8.2),
+                    "BAJFINANCE": (6.8, 6.5), "ITC": (5.9, 5.5), "COALINDIA": (4.8, 5.1),
+                    "BEL": (2.1, 2.6, 3.1), "POWERGRID": (4.2, 4.4), "POLYCAB": (2.8, 3.4),
+                    "TRENT": (2.4, 3.1), "PERSISTENT": (3.5, 3.2), "TCS": (3.1, 2.8),
+                    "INFY": (2.9, 2.6), "AXISBANK": (2.6, 2.9), "M&M": (2.4, 2.6),
                 },
                 "HDFC_FLEXICAP": {
-                    "HDFCBANK": (7.8, 8.2), "ICICIBANK": (7.1, 7.8), "RELIANCE": (6.4, 7.0),
-                    "INFY": (5.2, 4.6), "LT": (4.5, 4.8), "ITC": (3.8, 3.5),
-                    "TCS": (3.4, 3.1), "BHARTIARTL": (3.6, 4.1), "BAJFINANCE": (3.2, 3.0),
-                    "POLYCAB": (2.8, 3.4), "TRENT": (2.6, 3.2), "MAXHEALTH": (2.4, 2.8),
-                    "SBIN": (2.9, 3.2), "AXISBANK": (2.5, 2.8), "COFORGE": (2.1, 2.5),
+                    "RELIANCE": (10.6, 8.2, 7.0), "ICICIBANK": (7.1, 9.2, 7.8), "HDFCBANK": (6.2, 7.5, 8.6),
+                    "BEL": (2.5, 3.1, 3.7), "INFY": (5.2, 4.6), "LT": (4.5, 4.8),
+                    "ITC": (3.8, 3.5), "TCS": (3.4, 3.1), "BHARTIARTL": (3.6, 4.1),
+                    "BAJFINANCE": (3.2, 3.0), "POLYCAB": (2.8, 3.4), "TRENT": (2.6, 3.2),
+                    "MAXHEALTH": (2.4, 2.8), "SBIN": (2.9, 3.2), "AXISBANK": (2.5, 2.8),
                 },
                 "KOTAK_FLEXICAP": {
-                    "HDFCBANK": (8.5, 8.9), "ICICIBANK": (7.4, 8.0), "RELIANCE": (6.8, 7.4),
-                    "INFY": (5.5, 4.9), "TCS": (4.2, 3.9), "LT": (4.0, 4.3),
-                    "BHARTIARTL": (3.8, 4.3), "AXISBANK": (3.2, 3.5), "SBIN": (3.0, 3.3),
-                    "BAJFINANCE": (2.8, 2.6), "POLYCAB": (2.5, 3.1), "TRENT": (2.3, 2.9),
-                    "KOTAKBANK": (2.6, 2.8), "COFORGE": (2.0, 2.4), "PERSISTENT": (1.9, 1.7),
+                    "RELIANCE": (10.5, 8.2, 7.4), "ICICIBANK": (7.4, 9.4, 8.0), "HDFCBANK": (6.6, 8.0, 9.2),
+                    "BEL": (2.2, 2.8, 3.4), "INFY": (5.5, 4.9), "TCS": (4.2, 3.9),
+                    "LT": (4.0, 4.3), "BHARTIARTL": (3.8, 4.3), "AXISBANK": (3.2, 3.5),
+                    "SBIN": (3.0, 3.3), "BAJFINANCE": (2.8, 2.6), "POLYCAB": (2.5, 3.1),
+                    "TRENT": (2.3, 2.9), "KOTAKBANK": (2.6, 2.8), "COFORGE": (2.0, 2.4),
                 },
                 "UTI_FLEXICAP": {
-                    "HDFCBANK": (9.1, 9.5), "INFY": (8.2, 7.6), "ICICIBANK": (7.5, 8.1),
-                    "TCS": (5.8, 5.4), "BHARTIARTL": (4.5, 5.0), "LT": (4.1, 4.4),
-                    "BAJFINANCE": (3.5, 3.3), "AXISBANK": (3.2, 3.5), "KOTAKBANK": (3.0, 3.2),
-                    "TITAN": (2.8, 3.0), "ITC": (2.5, 2.3), "RELIANCE": (4.8, 5.2),
-                    "TRENT": (2.2, 2.8), "COFORGE": (1.9, 2.3), "ASIANPAINT": (1.7, 1.9),
+                    "RELIANCE": (10.2, 7.5, 5.2), "ICICIBANK": (7.2, 9.5, 8.1), "HDFCBANK": (6.8, 8.2, 9.8),
+                    "BEL": (2.0, 2.5, 3.1), "INFY": (8.2, 7.6), "TCS": (5.8, 5.4),
+                    "BHARTIARTL": (4.5, 5.0), "LT": (4.1, 4.4), "BAJFINANCE": (3.5, 3.3),
+                    "AXISBANK": (3.2, 3.5), "KOTAKBANK": (3.0, 3.2), "TITAN": (2.8, 3.0),
+                    "ITC": (2.5, 2.3), "TRENT": (2.2, 2.8), "COFORGE": (1.9, 2.3),
                 },
                 "SBI_FLEXICAP": {
-                    "RELIANCE": (8.2, 8.8), "HDFCBANK": (7.8, 8.2), "ICICIBANK": (7.0, 7.6),
-                    "INFY": (5.4, 4.8), "ITC": (4.6, 4.3), "LT": (4.0, 4.3),
-                    "BHARTIARTL": (3.8, 4.3), "SBIN": (3.5, 3.8), "TCS": (3.2, 2.9),
-                    "BAJFINANCE": (2.9, 2.7), "AXISBANK": (2.7, 3.0), "COALINDIA": (2.5, 2.7),
-                    "POLYCAB": (2.2, 2.8), "TRENT": (2.0, 2.6), "NTPC": (2.3, 2.5),
+                    "RELIANCE": (11.4, 9.2, 8.8), "ICICIBANK": (7.0, 9.2, 7.6), "HDFCBANK": (6.2, 7.4, 8.6),
+                    "BEL": (2.3, 2.9, 3.5), "INFY": (5.4, 4.8), "ITC": (4.6, 4.3),
+                    "LT": (4.0, 4.3), "BHARTIARTL": (3.8, 4.3), "SBIN": (3.5, 3.8),
+                    "TCS": (3.2, 2.9), "BAJFINANCE": (2.9, 2.7), "AXISBANK": (2.7, 3.0),
+                    "COALINDIA": (2.5, 2.7), "POLYCAB": (2.2, 2.8), "TRENT": (2.0, 2.6),
                 },
                 "MOTILAL_MULTI": {
                     "POLYCAB": (4.8, 5.4), "COFORGE": (4.5, 5.1), "PERSISTENT": (4.2, 3.9),
-                    "DIXON": (3.9, 4.5), "TRENT": (3.6, 4.2), "KPITTECH": (3.3, 3.0),
-                    "INFY": (3.0, 2.7), "HDFCBANK": (6.8, 7.2), "ICICIBANK": (6.1, 6.7),
-                    "TCS": (2.8, 2.5), "RELIANCE": (4.2, 4.8), "MAXHEALTH": (2.6, 3.1),
-                    "KAYNES": (2.4, 2.8), "BHARTIARTL": (2.2, 2.6), "BAJFINANCE": (2.0, 1.8),
+                    "BEL": (2.1, 2.6, 3.2), "DIXON": (3.9, 4.5), "TRENT": (3.6, 4.2),
+                    "KPITTECH": (3.3, 3.0), "INFY": (3.0, 2.7), "HDFCBANK": (5.8, 6.8, 7.6),
+                    "ICICIBANK": (5.8, 7.2, 6.7), "TCS": (2.8, 2.5), "RELIANCE": (7.2, 5.8, 4.8),
+                    "MAXHEALTH": (2.6, 3.1), "KAYNES": (2.4, 2.8), "BHARTIARTL": (2.2, 2.6),
                 },
                 "QUANT_FLEXICAP": {
                     "POLYCAB": (5.8, 6.4), "COFORGE": (5.4, 6.0), "KAYNES": (5.0, 5.7),
-                    "DIXON": (4.7, 5.3), "PERSISTENT": (4.4, 4.1), "KPITTECH": (4.0, 3.7),
-                    "RELIANCE": (6.5, 7.1), "HDFCBANK": (7.2, 7.6), "ICICIBANK": (6.4, 7.0),
-                    "TRENT": (3.7, 4.3), "INFY": (3.4, 3.1), "TCS": (3.1, 2.8),
-                    "MAXHEALTH": (2.8, 3.3), "LT": (2.5, 2.8), "BHARTIARTL": (2.2, 2.5),
+                    "BEL": (3.0, 3.7, 4.4), "DIXON": (4.7, 5.3), "PERSISTENT": (4.4, 4.1),
+                    "KPITTECH": (4.0, 3.7), "RELIANCE": (8.5, 7.6, 7.1), "HDFCBANK": (5.8, 7.0, 7.6),
+                    "ICICIBANK": (6.4, 7.8, 7.0), "TRENT": (3.7, 4.3), "INFY": (3.4, 3.1),
+                    "TCS": (3.1, 2.8), "MAXHEALTH": (2.8, 3.3), "LT": (2.5, 2.8),
                 },
                 "FRANKLIN_FLEXICAP": {
-                    "HDFCBANK": (8.4, 8.8), "ICICIBANK": (7.6, 8.2), "RELIANCE": (7.0, 7.6),
-                    "INFY": (5.8, 5.2), "TCS": (4.4, 4.1), "LT": (4.0, 4.3),
-                    "ITC": (3.6, 3.3), "BHARTIARTL": (3.4, 3.9), "AXISBANK": (3.1, 3.4),
-                    "BAJFINANCE": (2.9, 2.7), "SBIN": (2.7, 3.0), "POLYCAB": (2.4, 3.0),
-                    "TITAN": (2.2, 2.4), "KOTAKBANK": (2.5, 2.7), "SUNPHARMA": (1.9, 2.1),
+                    "RELIANCE": (11.0, 8.8, 7.6), "ICICIBANK": (7.4, 9.6, 8.2), "HDFCBANK": (6.4, 8.0, 9.0),
+                    "BEL": (2.2, 2.8, 3.4), "INFY": (5.8, 5.2), "TCS": (4.4, 4.1),
+                    "LT": (4.0, 4.3), "ITC": (3.6, 3.3), "BHARTIARTL": (3.4, 3.9),
+                    "AXISBANK": (3.1, 3.4), "BAJFINANCE": (2.9, 2.7), "SBIN": (2.7, 3.0),
+                    "POLYCAB": (2.4, 3.0), "TITAN": (2.2, 2.4), "KOTAKBANK": (2.5, 2.7),
                 },
 
                 # ══ ELSS SCHEMES ═══════════════════════════════════════════════════
                 "AXIS_ELSS": {
-                    "INFY": (8.5, 7.9), "HDFCBANK": (8.0, 8.4), "ICICIBANK": (7.2, 7.8),
-                    "TCS": (5.9, 5.5), "BHARTIARTL": (4.6, 5.1), "TITAN": (4.2, 3.9),
-                    "BAJFINANCE": (3.8, 3.5), "AXISBANK": (3.4, 3.7), "KOTAKBANK": (3.1, 3.3),
-                    "DRREDDY": (2.8, 3.0), "APOLLOHOSP": (2.5, 2.7), "LT": (3.5, 3.8),
-                    "COFORGE": (2.2, 2.6), "PERSISTENT": (2.0, 1.8), "ASIANPAINT": (1.8, 2.0),
+                    "INFY": (8.5, 7.9), "HDFCBANK": (6.5, 7.8, 8.8), "ICICIBANK": (7.2, 8.8, 7.8),
+                    "BEL": (2.1, 2.6, 3.1), "TCS": (5.9, 5.5), "BHARTIARTL": (4.6, 5.1),
+                    "TITAN": (4.2, 3.9), "BAJFINANCE": (3.8, 3.5), "AXISBANK": (3.4, 3.7),
+                    "KOTAKBANK": (3.1, 3.3), "DRREDDY": (2.8, 3.0), "APOLLOHOSP": (2.5, 2.7),
+                    "LT": (3.5, 3.8), "COFORGE": (2.2, 2.6), "PERSISTENT": (2.0, 1.8),
                 },
                 "MIRAE_ELSS": {
-                    "HDFCBANK": (9.2, 9.6), "ICICIBANK": (8.4, 9.0), "RELIANCE": (7.8, 8.4),
-                    "INFY": (6.4, 5.8), "TCS": (4.8, 4.5), "BHARTIARTL": (4.2, 4.7),
-                    "AXISBANK": (3.8, 4.1), "BAJFINANCE": (3.4, 3.2), "LT": (3.1, 3.3),
-                    "KOTAKBANK": (2.9, 3.1), "SBIN": (2.7, 2.9), "SUNPHARMA": (2.5, 2.7),
-                    "TITAN": (2.3, 2.5), "TATAMOTORS": (2.1, 2.3), "POLYCAB": (1.9, 2.4),
+                    "RELIANCE": (11.2, 9.0, 8.4), "ICICIBANK": (8.0, 10.4, 9.0), "HDFCBANK": (6.8, 8.4, 9.8),
+                    "BEL": (2.0, 2.5, 3.0), "INFY": (6.4, 5.8), "TCS": (4.8, 4.5),
+                    "BHARTIARTL": (4.2, 4.7), "AXISBANK": (3.8, 4.1), "BAJFINANCE": (3.4, 3.2),
+                    "LT": (3.1, 3.3), "KOTAKBANK": (2.9, 3.1), "SBIN": (2.7, 2.9),
+                    "SUNPHARMA": (2.5, 2.7), "TITAN": (2.3, 2.5), "TATAMOTORS": (2.1, 2.3),
                 },
                 "SBI_LONGTERM": {
-                    "RELIANCE": (8.0, 8.6), "HDFCBANK": (7.6, 8.0), "ICICIBANK": (6.8, 7.4),
-                    "INFY": (5.2, 4.6), "ITC": (4.4, 4.1), "LT": (4.0, 4.3),
-                    "BHARTIARTL": (3.8, 4.3), "SBIN": (3.5, 3.8), "TCS": (3.2, 2.9),
-                    "COALINDIA": (2.8, 3.1), "AXISBANK": (2.6, 2.9), "POLYCAB": (2.3, 2.9),
-                    "NTPC": (2.5, 2.7), "BAJFINANCE": (2.1, 1.9), "TATAMOTORS": (1.9, 2.1),
+                    "RELIANCE": (11.4, 9.2, 8.6), "ICICIBANK": (6.8, 8.8, 7.4), "HDFCBANK": (6.0, 7.2, 8.4),
+                    "BEL": (2.3, 2.8, 3.4), "INFY": (5.2, 4.6), "ITC": (4.4, 4.1),
+                    "LT": (4.0, 4.3), "BHARTIARTL": (3.8, 4.3), "SBIN": (3.5, 3.8),
+                    "TCS": (3.2, 2.9), "COALINDIA": (2.8, 3.1), "AXISBANK": (2.6, 2.9),
+                    "POLYCAB": (2.3, 2.9), "NTPC": (2.5, 2.7), "BAJFINANCE": (2.1, 1.9),
                 },
                 "HDFC_TAXSAVER": {
-                    "HDFCBANK": (8.8, 9.2), "ICICIBANK": (7.9, 8.5), "RELIANCE": (7.2, 7.8),
-                    "INFY": (5.6, 5.0), "LT": (4.4, 4.7), "ITC": (3.9, 3.6),
-                    "TCS": (3.5, 3.2), "BHARTIARTL": (3.6, 4.1), "SBIN": (3.3, 3.6),
-                    "BAJFINANCE": (3.0, 2.8), "AXISBANK": (2.8, 3.1), "POLYCAB": (2.5, 3.1),
-                    "TRENT": (2.3, 2.9), "MAXHEALTH": (2.1, 2.5), "COFORGE": (1.9, 2.3),
+                    "RELIANCE": (10.8, 8.4, 7.8), "ICICIBANK": (7.9, 9.8, 8.5), "HDFCBANK": (6.8, 8.2, 9.5),
+                    "BEL": (2.4, 3.0, 3.6), "INFY": (5.6, 5.0), "LT": (4.4, 4.7),
+                    "ITC": (3.9, 3.6), "TCS": (3.5, 3.2), "BHARTIARTL": (3.6, 4.1),
+                    "SBIN": (3.3, 3.6), "BAJFINANCE": (3.0, 2.8), "AXISBANK": (2.8, 3.1),
+                    "POLYCAB": (2.5, 3.1), "TRENT": (2.3, 2.9), "MAXHEALTH": (2.1, 2.5),
                 },
                 "QUANT_ELSS": {
                     "POLYCAB": (5.6, 6.2), "COFORGE": (5.2, 5.8), "KAYNES": (4.8, 5.5),
-                    "PERSISTENT": (4.5, 4.2), "HDFCBANK": (7.4, 7.8), "ICICIBANK": (6.6, 7.2),
-                    "RELIANCE": (6.2, 6.8), "INFY": (4.2, 3.9), "TCS": (3.8, 3.5),
-                    "DIXON": (3.5, 4.0), "TRENT": (3.2, 3.8), "KPITTECH": (2.9, 2.6),
-                    "BHARTIARTL": (2.6, 3.0), "MAXHEALTH": (2.4, 2.8), "LT": (2.1, 2.4),
+                    "BEL": (2.8, 3.4, 4.0), "PERSISTENT": (4.5, 4.2), "HDFCBANK": (5.8, 7.0, 7.8),
+                    "ICICIBANK": (6.5, 8.0, 7.2), "RELIANCE": (8.8, 7.2, 6.8), "INFY": (4.2, 3.9),
+                    "TCS": (3.8, 3.5), "DIXON": (3.5, 4.0), "TRENT": (3.2, 3.8),
+                    "KPITTECH": (2.9, 2.6), "BHARTIARTL": (2.6, 3.0), "MAXHEALTH": (2.4, 2.8),
                 },
 
                 # ══ THEMATIC / SECTORAL SCHEMES ════════════════════════════════════
@@ -813,34 +736,64 @@ class MFDisclosureService:
                     "WIPRO": (8.6, 8.2), "TECHM": (7.2, 7.6), "PERSISTENT": (6.4, 5.8),
                     "COFORGE": (5.8, 6.2), "MPHASIS": (5.2, 4.8), "KPITTECH": (4.6, 4.2),
                     "CYIENT": (3.8, 4.1), "LTIM": (4.4, 4.0), "LATENTVIEW": (2.8, 3.1),
-                    "DIXON": (2.4, 2.7), "KAYNES": (2.0, 2.3), "COFORGE": (1.8, 2.0),
+                    "DIXON": (2.4, 2.7), "KAYNES": (2.0, 2.3),
                 },
                 "SBI_PHARMA": {
                     "SUNPHARMA": (18.2, 17.8), "CIPLA": (12.4, 12.0), "DRREDDY": (10.8, 10.4),
                     "DIVISLAB": (9.2, 9.6), "LUPIN": (8.4, 8.0), "AUROPHARMA": (7.6, 7.2),
                     "TORNTPHARM": (6.8, 6.4), "APOLLOHOSP": (5.2, 5.6), "MAXHEALTH": (4.8, 5.1),
                     "FORTIS": (4.2, 4.5), "ERIS": (3.6, 3.9), "GLAND": (3.0, 3.3),
-                    "JBCHEPHARM": (2.4, 2.7), "MEDANTA": (2.0, 2.2), "CIPLA": (1.4, 1.6),
+                    "JBCHEPHARM": (2.4, 2.7), "MEDANTA": (2.0, 2.2),
                 },
                 "NIPPON_BANKING": {
-                    "HDFCBANK": (22.4, 21.8), "ICICIBANK": (18.8, 19.4), "AXISBANK": (12.2, 12.8),
+                    "ICICIBANK": (19.5, 23.4, 20.2), "HDFCBANK": (15.2, 18.6, 22.8), "AXISBANK": (12.2, 12.8, 13.0),
                     "SBIN": (10.6, 11.2), "KOTAKBANK": (9.4, 9.8), "BAJFINANCE": (7.8, 7.4),
                     "INDUSINDBK": (5.2, 5.6), "FEDERALBNK": (4.4, 4.8), "IDFCFIRSTB": (3.6, 4.0),
                     "KARURVYSYA": (2.8, 3.1), "MUTHOOTFIN": (2.4, 2.6), "CHOLAFIN": (2.0, 2.2),
                     "BAJAJFINSV": (1.6, 1.8), "CREDITACC": (1.2, 1.4), "CANFINHOME": (0.8, 1.0),
                 },
                 "ICICI_INFRA": {
-                    "LT": (16.4, 15.8), "ADANIPORTS": (12.2, 12.8), "POWERGRID": (10.8, 11.4),
-                    "NTPC": (9.6, 10.2), "COALINDIA": (8.2, 8.8), "CONCOR": (6.8, 7.2),
-                    "POLYCAB": (5.4, 5.9), "APLAPOLLO": (4.8, 5.2), "ELECON": (4.2, 4.6),
-                    "JSWSTEEL": (3.6, 4.0), "HINDALCO": (3.0, 3.4), "TATASTEEL": (2.4, 2.8),
-                    "SUPREMEIND": (2.0, 2.2), "APARINDS": (1.6, 1.8), "PRAJIND": (1.2, 1.4),
+                    "LT": (16.4, 15.8), "BEL": (4.8, 5.6, 6.4), "HAL": (4.0, 4.8, 5.5),
+                    "ADANIPORTS": (12.2, 12.8), "POWERGRID": (10.8, 11.4), "NTPC": (9.6, 10.2),
+                    "COALINDIA": (8.2, 8.8), "CONCOR": (6.8, 7.2), "POLYCAB": (5.4, 5.9),
+                    "APLAPOLLO": (4.8, 5.2), "ELECON": (4.2, 4.6), "JSWSTEEL": (3.6, 4.0),
+                    "HINDALCO": (3.0, 3.4), "TATASTEEL": (2.4, 2.8), "SUPREMEIND": (2.0, 2.2),
                 },
                 "QUANT_PSU": {
+                    "BEL": (7.6, 8.6, 9.6), "HAL": (6.2, 7.2, 8.1),
                     "ONGC": (18.4, 17.8), "COALINDIA": (15.8, 16.4), "NTPC": (13.2, 13.8),
                     "POWERGRID": (11.6, 12.2), "SBIN": (10.0, 10.6), "BPCL": (8.4, 9.0),
                     "CONCOR": (6.8, 7.2), "ADANIPORTS": (5.2, 5.6), "LT": (4.6, 5.0),
-                    "HDFCBANK": (0.0, 0.0), "ICICIBANK": (0.0, 0.0),
+                },
+                "ICICI_VALUE_DISC": {
+                    "ICICIBANK": (8.8, 9.2, 9.6), "INFY": (7.2, 7.5, 7.8), "BHARTIARTL": (5.4, 5.8, 6.2),
+                    "LT": (4.8, 5.1, 5.4), "NTPC": (4.2, 4.5, 4.8), "ONGC": (3.6, 3.9, 4.1),
+                    "SUNPHARMA": (3.2, 3.4, 3.6), "HDFCBANK": (5.0, 5.5, 6.0), "RELIANCE": (4.5, 4.8, 5.2), "ITC": (3.0, 3.2, 3.4),
+                },
+                "SBI_CONTRA": {
+                    "GAIL": (3.8, 4.1, 4.4), "COALINDIA": (4.2, 4.5, 4.8), "ONGC": (4.0, 4.3, 4.6),
+                    "SBIN": (4.8, 5.1, 5.4), "ICICIBANK": (5.2, 5.6, 6.0), "HDFCBANK": (4.5, 4.9, 5.2),
+                    "NTPC": (3.6, 3.9, 4.2), "BEL": (2.8, 3.2, 3.6), "HAL": (2.2, 2.6, 3.0), "RELIANCE": (4.0, 4.2, 4.5),
+                },
+                "INVESCO_CONTRA": {
+                    "RELIANCE": (6.5, 6.8, 7.2), "ICICIBANK": (7.4, 7.8, 8.2), "HDFCBANK": (6.8, 7.2, 7.6),
+                    "INFY": (5.2, 5.0, 4.8), "BHARTIARTL": (3.8, 4.2, 4.5), "LT": (3.6, 3.8, 4.0),
+                    "BEL": (2.4, 2.8, 3.2), "NTPC": (2.8, 3.1, 3.3), "COALINDIA": (2.6, 2.8, 3.0), "SBIN": (3.2, 3.5, 3.7),
+                },
+                "TATA_LARGECAP": {
+                    "HDFCBANK": (9.2, 9.6, 10.0), "ICICIBANK": (8.4, 8.8, 9.2), "RELIANCE": (8.0, 8.4, 8.8),
+                    "INFY": (6.4, 6.2, 6.0), "TCS": (5.2, 5.0, 4.8), "LT": (4.4, 4.6, 4.8),
+                    "BHARTIARTL": (4.2, 4.5, 4.8), "ITC": (3.6, 3.5, 3.4), "KOTAKBANK": (3.2, 3.4, 3.6), "TITAN": (3.0, 3.2, 3.4),
+                },
+                "EDELWEISS_MIDCAP": {
+                    "PERSISTENT": (4.2, 4.5, 4.8), "COFORGE": (3.8, 4.1, 4.4), "POLYCAB": (3.6, 4.0, 4.3),
+                    "TRENT": (3.2, 3.6, 4.0), "MAXHEALTH": (3.0, 3.3, 3.6), "DIXON": (2.8, 3.1, 3.4),
+                    "FEDERALBNK": (2.6, 2.9, 3.2), "ASTRAL": (2.4, 2.7, 3.0), "MPHASIS": (2.2, 2.5, 2.8), "CHOLAFIN": (2.0, 2.3, 2.6),
+                },
+                "BANDHAN_SMALLCAP": {
+                    "SUZLON": (3.2, 3.6, 4.1), "KAYNES": (3.5, 3.9, 4.3), "ELECON": (2.8, 3.2, 3.5),
+                    "RADICO": (2.5, 2.8, 3.1), "APLAPOLLO": (2.4, 2.7, 3.0), "CERA": (2.0, 2.3, 2.5),
+                    "SONACOMS": (2.2, 2.5, 2.8), "DIXON": (2.6, 3.0, 3.4), "CONCOR": (2.1, 2.4, 2.7), "PVRINOX": (1.8, 2.0, 2.2),
                 },
             }
 
@@ -851,15 +804,15 @@ class MFDisclosureService:
                 if scheme_code not in created_schemes:
                     continue
                 scheme_id = created_schemes[scheme_code]
-                for ticker, (w_t1, w_t0) in stock_weights.items():
+                for ticker, weights in stock_weights.items():
                     isin, name, sector, mcap_tier = cls.get_isin_metadata(ticker)
 
-                    # Compute w_t2 with natural temporal progression
-                    if w_t1 > 0:
-                        delta = w_t0 - w_t1
-                        w_t2 = round(max(0.1, w_t1 - delta * 0.7), 2)
+                    if isinstance(weights, (list, tuple)) and len(weights) == 3:
+                        w_t2, w_t1, w_t0 = weights
                     else:
-                        w_t2 = 0.0
+                        w_t1, w_t0 = weights
+                        delta = w_t0 - w_t1
+                        w_t2 = round(max(0.1, w_t1 - delta * 0.7), 2) if w_t1 > 0 else 0.0
 
                     if w_t2 > 0:
                         records_to_insert.append(MFSchemeHolding(

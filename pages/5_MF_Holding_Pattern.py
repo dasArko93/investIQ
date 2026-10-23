@@ -141,64 +141,87 @@ st.markdown(
 # ─────────────────────────────────────────────────────────────────────────────
 with st.expander("📖 User Guide: Architecture, Workflow & Metric Interpretation", expanded=False):
     guide_html = """<div class="guide-box">
-<h3 style="margin-top:0; color:#4338ca; font-size:1.25rem;">🚀 How to Use the Mutual Fund Ingestion & Benchmarking Engine</h3>
+<h3 style="margin-top:0; color:#4338ca; font-size:1.25rem;">🚀 How to Use the Mutual Fund Ingestion, Benchmarking & Rebalancing Engine</h3>
+
 <div class="guide-step">
 <div class="guide-badge">1</div>
 <div>
 <strong>Data Ingestion & Local Archiving:</strong><br/>
-Click <em>"Download All Disclosures"</em> to automatically ingest official portfolio disclosures across 45+ equity schemes from top Indian AMCs 
-(HDFC, SBI, ICICI Prudential, Kotak, Axis, Nippon India, Parag Parikh, Quant, Mirae Asset, etc.). 
-Holdings data and consolidated disclosure CSVs are automatically archived in <code>data/raw_disclosures/YYYY_MM/</code> across the latest 3 monthly disclosure periods for seamless auditing and trend analysis.
+Click <em>"Download All Disclosures"</em> to automatically ingest official monthly portfolio disclosures across <strong>50+ flagship equity schemes</strong> from 19+ leading Indian AMCs 
+(HDFC, SBI, ICICI Prudential, Kotak, Axis, Nippon India, Parag Parikh, Quant, Mirae Asset, Invesco, Bandhan, Edelweiss, Tata, DSP, UTI, etc.).
+<ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
+<li><strong>Dynamic Rolling Disclosure Snapshots:</strong> Automatically generates the 3 latest completed disclosure periods (e.g., T<sub>0</sub>, T<sub>-1</sub>, T<sub>-2</sub>) dynamically based on the current calendar month with zero hardcoded dates.</li>
+<li><strong>Automated NSE/BSE Securities Master:</strong> Resolves 5,850+ listed stocks and ETFs via live-cached official NSE security archives (<code>EQUITY_L.csv</code> and <code>eq_etfseclist.csv</code>) with dynamic SEBI Market Cap ranking (1–100 Large Cap, 101–250 Mid Cap, 251+ Small Cap) and 100% dynamic ISIN resolution.</li>
+<li><strong>Local Archival:</strong> Disclosure snapshots and audit CSVs are persisted under <code>data/raw_disclosures/YYYY_MM/</code> for full auditability.</li>
+</ul>
 </div>
 </div>
+
 <div class="guide-step">
 <div class="guide-badge">2</div>
 <div>
 <strong>Institutional Consensus & Hierarchy (Market Cap → Sector → Stock):</strong><br/>
-Explore institutional conviction across Large Cap, Mid Cap, Small Cap, and Flexi Cap schemes. 
-Stocks are normalized via <strong>ISIN</strong> with two key weight metrics:
-<ul style="margin:6px 0 0 16px; padding:0;">
-<li><strong>Confidence Score (C<sub>s</sub>):</strong> Percentage of active mutual funds holding the stock in that category.</li>
-<li><strong>Average Across All Funds:</strong> Mean weight across all schemes (including 0% for non-holders).</li>
-<li><strong>Conviction Weight:</strong> Mean allocation only among schemes that actively hold the stock.</li>
+Explore institutional conviction across Large Cap, Mid Cap, Small Cap, and Flexi/Multi Cap schemes. 
+Every stock is aggregated via <strong>ISIN</strong> with transparent conviction metrics:
+<ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
+<li><strong>Confidence Score (C<sub>s</sub>):</strong> Percentage of active mutual funds in the benchmark cohort holding the stock.</li>
+<li><strong>Average Across All Funds:</strong> Mean portfolio weight across all schemes in the cohort (including 0% for non-holders).</li>
+<li><strong>Conviction Weight:</strong> Mean allocation calculated strictly among schemes actively holding the stock.</li>
+<li><strong>Summary Deep-Dive Dashboard:</strong> Inspect individual scheme allocations for any stock via the <em>Scheme-Level Holding Inspector</em>, view top 10 holding funds in an interactive bar chart, audit scheme concentration tables, and evaluate sector/cap-tier distribution signals.</li>
 </ul>
 </div>
 </div>
+
 <div class="guide-step">
 <div class="guide-badge">3</div>
 <div>
 <strong>Month-over-Month Delta Tracking (Sentiment Engine):</strong><br/>
-Tracks how professional fund managers shifted allocations between the selected snapshot month <code>T<sub>0</sub></code> and its prior month <code>T<sub>-1</sub></code> across the 3 latest disclosure months:
-<ul style="margin:6px 0 0 16px; padding:0;">
+Audits period-over-period institutional capital flow between snapshot month <code>T<sub>0</sub></code> and previous month <code>T<sub>-1</sub></code>:
+<ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
 <li><span class="pill-green">🚀 Aggressive Accumulation:</span> Weight change <strong>&Delta;W &gt; +0.5%</strong> AND Confidence change <strong>&Delta;C &gt; +10%</strong>.</li>
 <li><span class="pill-green">🟢 Modest Buying:</span> Weight change <strong>&Delta;W &gt; 0%</strong> AND Confidence change <strong>&Delta;C &ge; 0%</strong>.</li>
-<li><span class="pill-amber">🟡 Profit Booking / Trimming:</span> Weight change <strong>&Delta;W &lt; 0%</strong>.</li>
-<li><span class="pill-red">🔴 Complete Exit:</span> Confidence dropped to 0% from a prior non-zero holding.</li>
+<li><span class="pill-amber">🟡 Profit Booking / Trimming:</span> Allocation scaled back (<strong>&Delta;W &lt; 0%</strong>).</li>
+<li><span class="pill-red">🔴 Complete Exit:</span> Position liquidated across all funds (Confidence drops to 0%).</li>
 </ul>
 </div>
 </div>
+
 <div class="guide-step">
 <div class="guide-badge">4</div>
 <div>
 <strong>Portfolio Gap & Misalignment Engine:</strong><br/>
-Compares your personal stock portfolio against mutual fund market consensus:
-<ul style="margin:6px 0 0 16px; padding:0;">
-<li><span class="pill-green">Consensus Aligned:</span> Stocks you hold that also enjoy high mutual fund conviction.</li>
-<li><span class="pill-amber">Institutional Misses (Gaps):</span> High institutional confidence (&ge; 50-60%) across top funds, but <strong>0% in your portfolio</strong>.</li>
-<li><span class="pill-red">Unbacked Bets:</span> Stocks where you hold high exposure (&gt; 3-5%), but institutional confidence is under 10-15%.</li>
-<li><strong>Active Weight Diff:</strong> <code>Your Weight % &minus; MF Consensus Weight %</code> (Overweight &gt; +5%, Underweight &lt; -3%).</li>
+Audits your personal holdings against institutional consensus using standard ISIN keys:
+<ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
+<li><span class="pill-green">Consensus Aligned:</span> Stocks you hold that also enjoy high institutional conviction (&ge; 30% confidence).</li>
+<li><span class="pill-amber">Institutional Misses (Gaps):</span> High institutional confidence (&ge; 50–60%) across peer funds, but <strong>0% in your portfolio</strong>.</li>
+<li><span class="pill-red">Unbacked Bets:</span> Stocks where your personal allocation is high (&gt; 3–5%), but institutional confidence is under 10–15%.</li>
+<li><strong>Active Weight Difference:</strong> <code>Your Weight % &minus; MF Consensus Weight %</code> (Overweight &gt; +5%, Underweight &lt; -3%).</li>
 </ul>
 </div>
 </div>
+
 <div class="guide-step">
 <div class="guide-badge">5</div>
 <div>
-<strong>Interactive Rebalancing Simulator:</strong><br/>
-Use the interactive slider to model rebalancing your portfolio towards institutional consensus. 
-Real-time formulas calculate the reduction in <strong>Single-Stock Concentration Risk (Herfindahl-Hirschman Index / Top 5 Weight)</strong>, 
-<strong>Active Variance reduction</strong>, and precise rupee capital shifts (Buy ₹ / Sell ₹).
+<strong>🎛️ Interactive Portfolio Rebalancing Simulator & Capital Engine:</strong><br/>
+Execute structured convergence of your personal portfolio towards institutional mutual fund standards:
+<ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
+<li><strong>Institutional AUM Cohort Filter:</strong> Benchmark dynamically against <strong>Top 10 Schemes by AUM (Mega-Whales)</strong>, <strong>Top 20 Schemes</strong>, <strong>Top 30 Schemes</strong>, <strong>Top 50 Schemes</strong>, or the full scheme universe. Consensus metrics update dynamically based on the selected cohort.</li>
+<li><strong>Target Alignment Intensity (%):</strong> Slide between <strong>10% to 100% convergence</strong> to specify the exact degree of institutional alignment.</li>
+<li><strong>Execution Strategies & Dynamic Capital Engine:</strong>
+  <ul style="margin:4px 0 0 16px; padding:0;">
+    <li><strong>💰 Fresh Capital Injection (Zero Selling — Pure Buy):</strong> Preserves 100% of your existing winning shares without a single trim. The system automatically computes and displays the exact fresh capital required to build consensus positions.</li>
+    <li><strong>💼 Self-Funding (Trim Overweights to Fund Buys):</strong> Systematically trims overweighted and unbacked stocks to generate cash, funding high-conviction buys across Large, Mid, and Small Cap. Displays trimming proceeds freed vs buy needs.</li>
+    <li><strong>⚖️ Hybrid:</strong> Deploy a custom cash amount; any remaining balance is covered through gentle trimming.</li>
+  </ul>
+</li>
+<li><strong>Financial Balance Strip:</strong> Instant visibility into <em>Current Portfolio Value</em>, <em>Trimming Capital Freed</em>, <em>Buy Capital Needed</em>, <em>Fresh Capital Needed</em>, and <em>New Portfolio Base</em>.</li>
+<li><strong>Market Cap Allocation Reallocation:</strong> Visual cards summarizing buy vs trim order totals across Large Cap, Mid Cap, and Small Cap tiers.</li>
+<li><strong>Actionable Trade Orders Table:</strong> Complete trade sheet displaying <code>Security</code>, <code>Stock Name</code>, <code>Market Cap Tier</code>, <code>Action</code> (BUY NEW, BUY MORE, TRIM, SELL ALL, HOLD), <code>Current Qty</code>, <code>Qty Change</code>, <code>Target Qty</code>, <code>LTP (₹)</code>, <code>Trade Amount (₹)</code>, and <code>Target Weight %</code>. Strict mathematical guarantee: <code>Current Qty + Qty Change = Target Qty</code>. Downloadable as CSV for one-click broker execution.</li>
+</ul>
 </div>
 </div>
+
 </div>"""
 
     if hasattr(st, "html"):
@@ -221,7 +244,7 @@ with ingest_col1:
     )
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     with btn_col1:
-        if st.button("⬇️ Download All Disclosures", type="primary", use_container_width=True,
+        if st.button("⬇️ Download All Disclosures", type="primary", width="stretch",
                      help="Ingest portfolio holdings for 45+ schemes across all SEBI categories (Large/Mid/Small/Flexi/ELSS/Sectoral) for T0 + T-1 periods"):
             with st.spinner("📡 Downloading AMFI scheme master & ingesting portfolio disclosures for all Indian AMCs..."):
                 res = MFDisclosureService.seed_default_disclosures(overwrite=True)
@@ -235,7 +258,7 @@ with ingest_col1:
                 st.rerun()
 
     with btn_col2:
-        if st.button("🔄 Sync My Portfolio", use_container_width=True,
+        if st.button("🔄 Sync My Portfolio", width="stretch",
                      help="Synchronize user holdings from Holdings page with ISIN mappings for gap analysis"):
             with st.spinner("Mapping user portfolio holdings to standard ISIN codes..."):
                 count = MFDisclosureService.sync_user_portfolio()
@@ -243,7 +266,7 @@ with ingest_col1:
                 st.rerun()
 
     with btn_col3:
-        if st.button("📋 Refresh AMFI Scheme List", use_container_width=True,
+        if st.button("📋 Refresh AMFI Scheme List", width="stretch",
                      help="Fetch fresh AMFI NAVAll.txt to update the complete scheme master (15,000+ schemes)"):
             with st.spinner("📡 Fetching AMFI scheme master from amfiindia.com..."):
                 # Force refresh cache
@@ -305,14 +328,65 @@ with st.expander("📊 AMFI Scheme Universe Browser (Live — All Indian MF Sche
 
         st.markdown("**Scheme Count by SEBI Category:**")
         cat_df = pd.DataFrame(list(amfi_summary["by_category"].items()), columns=["Category", "Scheme Count"]).sort_values("Scheme Count", ascending=False)
-        st.dataframe(cat_df, use_container_width=True, hide_index=True,
+        st.dataframe(cat_df, width="stretch", hide_index=True,
                      column_config={"Scheme Count": st.column_config.ProgressColumn("Scheme Count", format="%d", min_value=0, max_value=int(cat_df["Scheme Count"].max()))})
 
         st.markdown("**Top AMCs by Scheme Count:**")
         amc_df = pd.DataFrame(list(amfi_summary["by_amc"].items()), columns=["AMC", "Scheme Count"]).head(20)
-        st.dataframe(amc_df, use_container_width=True, hide_index=True)
+        st.dataframe(amc_df, width="stretch", hide_index=True)
     else:
         st.info("Click **'Refresh AMFI Scheme List'** above to fetch the live scheme master from AMFI.")
+
+# ─── Securities & ISIN Universe Browser ─────────────────────────────────────
+with st.expander("🌐 Complete NSE/BSE Securities Master (5,900+ Stocks & ETFs — Zero Hardcoding)", expanded=False):
+    from services.securities_master_service import SecuritiesMasterService
+    sec_summary = SecuritiesMasterService.get_universe_summary()
+    
+    col_s1, col_s2, col_s3, col_s4, col_s5 = st.columns(5)
+    col_s1.metric("Total Securities", f"{sec_summary.get('total', 0):,}")
+    col_s2.metric("NSE Equities", f"{sec_summary.get('nse_listed', 0):,}")
+    col_s3.metric("ETFs Tracked", f"{sec_summary.get('etfs', 0):,}")
+    col_s4.metric("Large Cap (Rank 1-100)", f"{sec_summary.get('large_cap', 0):,}")
+    col_s5.metric("Mid Cap (Rank 101-250)", f"{sec_summary.get('mid_cap', 0):,}")
+    
+    sec_search_col, sec_btn_col = st.columns([4, 1])
+    with sec_search_col:
+        sec_query = st.text_input("🔍 Search Any Stock, ISIN, or Company Name in Universe", placeholder="e.g. BEL, HAL, INE263A01024, Zomato, Reliance...", key="sec_master_search")
+    with sec_btn_col:
+        st.write("")
+        st.write("")
+        if st.button("🔄 Sync with NSE", key="sync_nse_btn", width="stretch"):
+            with st.spinner("Syncing latest EQUITY_L.csv and ETFs from NSE..."):
+                SecuritiesMasterService.fetch_and_cache_nse_lists(force=True)
+                SecuritiesMasterService.load_master(force_reload=True)
+            st.success("Successfully synced with NSE!")
+            st.rerun()
+
+    if sec_query.strip():
+        search_results = SecuritiesMasterService.search(sec_query.strip(), limit=25)
+        if search_results:
+            res_df = pd.DataFrame(search_results)
+            st.dataframe(
+                res_df[["ticker", "isin", "name", "sector", "market_cap_tier", "market_cap_cr", "ltp"]].rename(
+                    columns={
+                        "ticker": "Ticker",
+                        "isin": "ISIN",
+                        "name": "Legal Company Name",
+                        "sector": "Sector / Industry",
+                        "market_cap_tier": "SEBI Cap Tier",
+                        "market_cap_cr": "Market Cap (₹ Cr)",
+                        "ltp": "LTP (₹)"
+                    }
+                ),
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Market Cap (₹ Cr)": st.column_config.NumberColumn(format="₹%,.0f Cr"),
+                    "LTP (₹)": st.column_config.NumberColumn(format="₹%.2f")
+                }
+            )
+        else:
+            st.info(f"No securities matched '{sec_query.strip()}'.")
 
 
 
@@ -388,7 +462,7 @@ with tab_consensus:
             all_sec = sorted(consensus_df["Sector"].unique().tolist())
             sec_filter = st.selectbox("Filter Sector", ["All Sectors"] + all_sec, index=0)
         with c3:
-            search_stock = st.text_input("🔍 Search Stock or ISIN", placeholder="Type Reliance, HDFC, INE...", key="cons_search")
+            search_stock = st.text_input("🔍 Search Stock or ISIN", placeholder="Type Reliance, HDFC, BEL, INE...", key="cons_search")
 
         filtered_cons = consensus_df.copy()
         if tier_filter != "All Tiers":
@@ -402,15 +476,34 @@ with tab_consensus:
                 filtered_cons["Stock Name"].str.contains(q, case=False, na=False) |
                 filtered_cons["ISIN"].str.contains(q, case=False, na=False)
             ]
+            if filtered_cons.empty:
+                from database.db import SessionLocal
+                from database.models import StockMaster
+                db_s = SessionLocal()
+                try:
+                    matched_stock = db_s.query(StockMaster).filter(
+                        (StockMaster.ticker == q) | (StockMaster.name.ilike(f"%{q}%"))
+                    ).first()
+                finally:
+                    db_s.close()
+                if matched_stock:
+                    st.info(
+                        f"ℹ️ **{matched_stock.name} ({matched_stock.ticker})** is tracked in the Stock Universe "
+                        f"(Sector: {matched_stock.sub_sector or 'General'}, MCap: ₹{matched_stock.market_cap or 0:,.0f} Cr), "
+                        f"but has **0% holding** across tracked mutual fund schemes in the **{selected_category}** category for **{selected_snapshot}**."
+                    )
+                else:
+                    st.info(f"No mutual fund holdings or universe stocks matched: **{search_stock.strip()}**")
 
-        # Top 15 Holdings Chart
+        # Top 15 Holdings Chart with explicit rank ordering
         top15_cons = filtered_cons.head(15).copy()
         if not top15_cons.empty:
+            sorted_tickers = top15_cons["Ticker"].tolist()
             cons_chart = (
                 alt.Chart(top15_cons)
                 .mark_bar(cornerRadiusTopRight=5, cornerRadiusBottomRight=5)
                 .encode(
-                    y=alt.Y("Ticker:N", sort="-x", title="Stock Ticker"),
+                    y=alt.Y("Ticker:N", sort=sorted_tickers, title="Stock Ticker"),
                     x=alt.X("Avg Weight All Funds %:Q", title="Average Allocation Across All Funds (%)"),
                     color=alt.Color(
                         "Peer Confidence %:Q",
@@ -428,9 +521,9 @@ with tab_consensus:
                         "Schemes Holding:Q"
                     ]
                 )
-                .properties(height=380, title=f"Top Institutional Consensus Stocks — {selected_category} ({selected_snapshot})")
+                .properties(height=max(380, len(top15_cons) * 26), title=f"Top Institutional Consensus Stocks — {selected_category} ({selected_snapshot})")
             )
-            st.altair_chart(cons_chart, use_container_width=True)
+            st.altair_chart(cons_chart, width="stretch")
 
         # Consensus Dataframe with Styled Badges
         st.markdown("**Consolidated Institutional Consensus Table:**")
@@ -441,7 +534,7 @@ with tab_consensus:
 
         st.dataframe(
             display_cons,
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
             column_config={
                 "Peer Confidence %": st.column_config.ProgressColumn("Peer Confidence %", format="%.1f%%", min_value=0, max_value=100),
@@ -450,6 +543,260 @@ with tab_consensus:
                 "Schemes Holding": st.column_config.NumberColumn("Holding Funds", format="%d"),
             }
         )
+
+        # ─────────────────────────────────────────────────────────────────────
+        # SUMMARY DASHBOARD: EXPLORE MORE & INSTITUTIONAL DRILL-DOWN
+        # ─────────────────────────────────────────────────────────────────────
+        st.write("")
+        st.markdown("---")
+        st.markdown("### 📊 Institutional Consensus Explorer & Deep-Dive Dashboard")
+        st.caption("Inspect individual fund allocations, macro sector concentrations, and high-conviction institutional signals across all tracked schemes.")
+
+        # ─── PART 1: Stock-Specific Scheme Breakdown Explorer ────────────────
+        st.markdown("#### 🔍 Scheme-Level Holding Inspector")
+        all_consensus_tickers = display_cons["Ticker"].tolist()
+        
+        if all_consensus_tickers:
+            insp_c1, insp_c2 = st.columns([2.5, 1.5])
+            with insp_c1:
+                selected_inspect_ticker = st.selectbox(
+                    "Select a Security to Inspect Scheme Allocations",
+                    options=all_consensus_tickers,
+                    index=0,
+                    key="inspect_stock_selector",
+                    help="Choose any stock from the consensus table to inspect every mutual fund scheme holding it."
+                )
+            
+            stock_row = display_cons[display_cons["Ticker"] == selected_inspect_ticker].iloc[0]
+            
+            with insp_c2:
+                st.write("")
+                st.markdown(
+                    f"<div style='background:rgba(99,102,241,0.08); padding:8px 14px; border-radius:8px; border:1px solid rgba(99,102,241,0.2); margin-top:4px;'>"
+                    f"<span style='font-size:0.82rem; color:#6366f1; font-weight:600;'>SEBI TIER & SECTOR</span><br/>"
+                    f"<b>{stock_row['Market Cap Tier']}</b> • {stock_row['Sector']}"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
+
+            # Query database for schemes holding this specific stock
+            from database.db import SessionLocal
+            from database.models import MFScheme, MFSchemeHolding, MFPortfolioSnapshot
+
+            db_insp = SessionLocal()
+            scheme_rows = []
+            try:
+                target_snap = db_insp.query(MFPortfolioSnapshot).filter(MFPortfolioSnapshot.month_str == selected_snapshot).first()
+                if target_snap:
+                    q_res = db_insp.query(MFSchemeHolding, MFScheme).join(
+                        MFScheme, MFSchemeHolding.scheme_id == MFScheme.id
+                    ).filter(
+                        (MFSchemeHolding.ticker == selected_inspect_ticker) | (MFSchemeHolding.isin == stock_row["ISIN"]),
+                        MFSchemeHolding.snapshot_date == target_snap.snapshot_date
+                    ).order_by(MFSchemeHolding.weight_pct.desc()).all()
+                    
+                    for h, s in q_res:
+                        scheme_rows.append({
+                            "AMC": s.amc,
+                            "Scheme Name": s.scheme_name,
+                            "Category": s.category,
+                            "Weight in Scheme %": float(h.weight_pct or 0.0),
+                            "Shares Quantity": int(h.quantity or 0)
+                        })
+            finally:
+                db_insp.close()
+
+            df_schemes_holding = pd.DataFrame(scheme_rows)
+
+            if not df_schemes_holding.empty:
+                max_scheme = df_schemes_holding.iloc[0]
+                total_schemes_holding_cnt = len(df_schemes_holding)
+                avg_conviction_val = df_schemes_holding["Weight in Scheme %"].mean()
+                cats_covered_cnt = df_schemes_holding["Category"].nunique()
+
+                # Top Metrics Strip for Selected Stock
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Holding Mutual Funds", f"{total_schemes_holding_cnt} schemes", f"{(total_schemes_holding_cnt / stock_row['Total Schemes']) * 100:.0f}% coverage")
+                m2.metric("Average Conviction Weight", f"{avg_conviction_val:.2f}%", f"All Funds Avg: {stock_row['Avg Weight All Funds %']:.2f}%")
+                m3.metric("Highest Allocator", f"{max_scheme['Weight in Scheme %']:.2f}%", max_scheme['Scheme Name'][:24] + "...")
+                m4.metric("Category Spread", f"{cats_covered_cnt} Categories", f"{df_schemes_holding['AMC'].nunique()} AMCs")
+
+                st.write("")
+
+                # Two-column visual layout: Chart on Left, Granular Table on Right
+                drill_col1, drill_col2 = st.columns([1.2, 1.8])
+
+                with drill_col1:
+                    top_holding_schemes = df_schemes_holding.head(10).copy()
+                    sorted_scheme_names = top_holding_schemes["Scheme Name"].tolist()
+                    scheme_chart = (
+                        alt.Chart(top_holding_schemes)
+                        .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
+                        .encode(
+                            y=alt.Y("Scheme Name:N", sort=sorted_scheme_names, title="Fund Scheme"),
+                            x=alt.X("Weight in Scheme %:Q", title="Weight in Portfolio (%)"),
+                            color=alt.Color("Category:N", legend=alt.Legend(title="Category", orient="bottom")),
+                            tooltip=[
+                                "Scheme Name:N",
+                                "AMC:N",
+                                "Category:N",
+                                alt.Tooltip("Weight in Scheme %:Q", format=".2f", title="Weight %")
+                            ]
+                        )
+                        .properties(height=340, title=f"Top 10 Fund Allocations for {selected_inspect_ticker}")
+                    )
+                    st.altair_chart(scheme_chart, width="stretch")
+
+                with drill_col2:
+                    st.markdown(f"**All Schemes Holding `{selected_inspect_ticker}` ({total_schemes_holding_cnt} Funds):**")
+                    st.dataframe(
+                        df_schemes_holding,
+                        width="stretch",
+                        hide_index=True,
+                        column_config={
+                            "Weight in Scheme %": st.column_config.ProgressColumn(
+                                "Weight in Scheme %", format="%.2f%%", min_value=0, max_value=float(max_scheme["Weight in Scheme %"] * 1.1)
+                            ),
+                            "Shares Quantity": st.column_config.NumberColumn("Shares", format="%,d")
+                        }
+                    )
+            else:
+                st.info(f"No granular scheme disclosures recorded for **{selected_inspect_ticker}** in **{selected_snapshot}**.")
+
+        st.write("")
+        st.divider()
+
+        # ─── PART 2: Macro Analytics (Sector & Market Cap Breakdown) ─────────
+        st.markdown("#### 🌐 Institutional Capital Allocation: Sector & Market Cap Landscape")
+        
+        sec_col1, sec_col2 = st.columns([1.5, 1])
+
+        with sec_col1:
+            # Sector Aggregate Allocation
+            sector_agg = (
+                display_cons.groupby("Sector")
+                .agg({
+                    "Avg Weight All Funds %": "sum",
+                    "Ticker": "count",
+                    "Schemes Holding": "mean"
+                })
+                .reset_index()
+                .rename(columns={"Ticker": "Stock Count", "Schemes Holding": "Avg Schemes Holding"})
+                .sort_values(by="Avg Weight All Funds %", ascending=False)
+                .head(10)
+            )
+
+            sorted_sectors = sector_agg["Sector"].tolist()
+            sector_chart = (
+                alt.Chart(sector_agg)
+                .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4, color="#3b82f6")
+                .encode(
+                    y=alt.Y("Sector:N", sort=sorted_sectors, title="Sector"),
+                    x=alt.X("Avg Weight All Funds %:Q", title="Total Cumulative Allocation %"),
+                    tooltip=[
+                        "Sector:N",
+                        alt.Tooltip("Avg Weight All Funds %:Q", format=".2f", title="Total Weight %"),
+                        alt.Tooltip("Stock Count:Q", title="Stocks in Sector"),
+                        alt.Tooltip("Avg Schemes Holding:Q", format=".1f", title="Avg Schemes Holding")
+                    ]
+                )
+                .properties(height=320, title="Top 10 Sectors by Institutional Capital Deployment")
+            )
+            st.altair_chart(sector_chart, width="stretch")
+
+        with sec_col2:
+            # Market Cap Tier Aggregate Allocation
+            tier_agg = (
+                display_cons.groupby("Market Cap Tier")
+                .agg({
+                    "Avg Weight All Funds %": "sum",
+                    "Ticker": "count",
+                    "Conviction Weight %": "mean"
+                })
+                .reset_index()
+                .rename(columns={"Ticker": "Stock Count", "Conviction Weight %": "Avg Conviction %"})
+            )
+
+            tier_chart = (
+                alt.Chart(tier_agg)
+                .mark_arc(innerRadius=45, outerRadius=95)
+                .encode(
+                    theta=alt.Theta("Avg Weight All Funds %:Q", title="Weight %"),
+                    color=alt.Color(
+                        "Market Cap Tier:N",
+                        scale=alt.Scale(domain=["Large Cap", "Mid Cap", "Small Cap", "ETF"], range=["#2563eb", "#10b981", "#f59e0b", "#8b5cf6"]),
+                        legend=alt.Legend(title="SEBI Tier", orient="bottom")
+                    ),
+                    tooltip=[
+                        "Market Cap Tier:N",
+                        alt.Tooltip("Avg Weight All Funds %:Q", format=".2f", title="Total Weight %"),
+                        "Stock Count:Q",
+                        alt.Tooltip("Avg Conviction %:Q", format=".2f", title="Avg Conviction %")
+                    ]
+                )
+                .properties(height=320, title="Allocation by SEBI Market Cap Tier")
+            )
+            st.altair_chart(tier_chart, width="stretch")
+
+        st.write("")
+
+        # ─── PART 3: Curated Institutional Signals & Outliers ─────────────────
+        st.markdown("#### 💡 High-Conviction Institutional Signals & Outliers")
+        sig_c1, sig_c2, sig_c3 = st.columns(3)
+
+        # 1. Top Conviction Bets (Highest Conviction Weight % when held)
+        with sig_c1:
+            top_conviction = display_cons.sort_values(by="Conviction Weight %", ascending=False).head(4)
+            st.markdown(
+                "<div style='background:rgba(59,130,246,0.06); padding:12px; border-radius:10px; border:1px solid rgba(59,130,246,0.2); min-height:220px;'>"
+                "<h5 style='margin:0 0 8px 0; color:#2563eb;'>🚀 Highest Conviction Overweights</h5>"
+                "<span style='font-size:0.8rem; color:#64748b;'>Funds holding these take massive active bets (highest weight inside holding funds):</span><br/><br/>",
+                unsafe_allow_html=True
+            )
+            for _, r in top_conviction.iterrows():
+                st.markdown(
+                    f"**{r['Ticker']}** ({r['Stock Name'][:18]}): **{r['Conviction Weight %']:.2f}%** conviction "
+                    f"<span style='font-size:0.8rem; color:#64748b;'>({r['Schemes Holding']} funds)</span>",
+                    unsafe_allow_html=True
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # 2. Universal Institutional Anchors (Highest Holding Schemes count)
+        with sig_c2:
+            top_breadth = display_cons.sort_values(by="Schemes Holding", ascending=False).head(4)
+            st.markdown(
+                "<div style='background:rgba(16,185,129,0.06); padding:12px; border-radius:10px; border:1px solid rgba(16,185,129,0.2); min-height:220px;'>"
+                "<h5 style='margin:0 0 8px 0; color:#10b981;'>🛡️ Universal Bedrock Stocks</h5>"
+                "<span style='font-size:0.8rem; color:#64748b;'>Held across the widest array of mutual funds as core institutional foundation:</span><br/><br/>",
+                unsafe_allow_html=True
+            )
+            for _, r in top_breadth.iterrows():
+                st.markdown(
+                    f"**{r['Ticker']}** ({r['Stock Name'][:18]}): **{r['Schemes Holding']}** schemes "
+                    f"<span style='font-size:0.8rem; color:#10b981; font-weight:600;'>({r['Peer Confidence %']:.0f}% confidence)</span>",
+                    unsafe_allow_html=True
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # 3. High-Growth Mid/Small-Cap Favorites
+        with sig_c3:
+            mid_small_favs = display_cons[display_cons["Market Cap Tier"].isin(["Mid Cap", "Small Cap"])].sort_values(by="Peer Confidence %", ascending=False).head(4)
+            st.markdown(
+                "<div style='background:rgba(245,158,11,0.06); padding:12px; border-radius:10px; border:1px solid rgba(245,158,11,0.2); min-height:220px;'>"
+                "<h5 style='margin:0 0 8px 0; color:#d97706;'>⚡ High-Confidence Mid & Small Caps</h5>"
+                "<span style='font-size:0.8rem; color:#64748b;'>Non-large caps commanding the strongest institutional consensus:</span><br/><br/>",
+                unsafe_allow_html=True
+            )
+            if not mid_small_favs.empty:
+                for _, r in mid_small_favs.iterrows():
+                    st.markdown(
+                        f"**{r['Ticker']}** ({r['Sector'][:16]}): **{r['Peer Confidence %']:.0f}%** confidence "
+                        f"<span style='font-size:0.8rem; color:#d97706;'>({r['Avg Weight All Funds %']:.2f}% avg wt)</span>",
+                        unsafe_allow_html=True
+                    )
+            else:
+                st.write("No mid/small cap stocks meeting criteria.")
+            st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 2: Month-over-Month Delta (Sentiment Engine)
@@ -519,7 +866,7 @@ with tab_delta:
                 )
                 .properties(height=max(280, len(top_deltas) * 22), title=f"Allocation Shift: {t0_snap} vs {t1_snap} (ΔW)")
             )
-            st.altair_chart(delta_chart, use_container_width=True)
+            st.altair_chart(delta_chart, width="stretch")
 
         # Styled Table with Sentiment Icons
         st.markdown(f"**Period-over-Period Delta & Sentiment Table ({t0_snap} vs {t1_snap}):**")
@@ -530,7 +877,7 @@ with tab_delta:
 
         st.dataframe(
             display_deltas,
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
             column_config={
                 "Sentiment_Icon": st.column_config.TextColumn("Signal", width="small"),
@@ -585,7 +932,7 @@ with tab_gap:
                     "Ticker", "Stock Name", "Sector", "Effective_Confidence %",
                     "MF Consensus Weight %", "Conviction Weight %", "Delta_Weight", "Sentiment"
                 ]].head(12),
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
                 column_config={
                     "Effective_Confidence %": st.column_config.ProgressColumn("Peer Confidence %", format="%.0f%%", min_value=0, max_value=100),
@@ -609,7 +956,7 @@ with tab_gap:
                 unbacked_df[[
                     "Ticker", "Stock Name", "User Weight %", "Confidence %", "Active Weight Diff", "Current Value"
                 ]],
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
                 column_config={
                     "User Weight %": st.column_config.NumberColumn("My Weight %", format="%.2f%%"),
@@ -654,7 +1001,7 @@ with tab_gap:
                 )
                 .properties(height=max(260, len(owned_stocks) * 24), title="Active Concentration vs Institutional Consensus")
             )
-            st.altair_chart(active_chart, use_container_width=True)
+            st.altair_chart(active_chart, width="stretch")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 4: Next Best Actions (Recommendations)
@@ -729,44 +1076,203 @@ with tab_nba:
 # ─────────────────────────────────────────────────────────────────────────────
 with tab_sim:
     st.markdown('<div class="section-hdr">🎛️ Interactive Portfolio Rebalancing Simulator</div>', unsafe_allow_html=True)
-    st.caption("Simulate aligning your portfolio weights with institutional consensus to model concentration risk reduction and capital shifts.")
+    st.caption("Simulate aligning your personal portfolio with institutional mutual fund consensus across AUM cohorts, modeling capital injection, trimming, and actionable trade orders.")
 
-    sim_col1, sim_col2 = st.columns([1.5, 2.5])
+    # ── STEP 1 & 2: Top Controls Strip ──────────────────────────────────────
+    sim_col1, sim_col2 = st.columns([1.8, 2.2])
 
     with sim_col1:
-        st.markdown("**Simulation Parameters:**")
-        alignment_intensity = st.slider(
-            "Institutional Alignment Intensity",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.50,
-            step=0.05,
-            format="%.2f",
-            help="0.0 = Keep current portfolio unchanged | 1.0 = Full convergence to mutual fund consensus"
+        st.markdown("**1️⃣ Institutional Benchmark AUM Cohort:**")
+        cohort_options = [
+            "Top 10 Schemes by AUM (Mega-Whales)",
+            "Top 20 Schemes by AUM",
+            "Top 30 Schemes by AUM",
+            "Top 50 Schemes by AUM",
+            "All Schemes (Full Universe)"
+        ]
+        chosen_cohort = st.selectbox(
+            "Select AUM Cohort",
+            options=cohort_options,
+            index=0,
+            key="sim_aum_cohort_choice",
+            help="Select institutional fund universe by size. Top funds manage the largest pools of capital in India."
         )
-        st.caption(f"Modeling **{alignment_intensity * 100:.0f}% convergence** towards professional mutual fund consensus.")
 
-    sim_results = MFConsensusEngine.simulate_rebalance(alignment_intensity=alignment_intensity)
+        cohort_map = {
+            "Top 10 Schemes by AUM (Mega-Whales)": 10,
+            "Top 20 Schemes by AUM": 20,
+            "Top 30 Schemes by AUM": 30,
+            "Top 50 Schemes by AUM": 50,
+            "All Schemes (Full Universe)": None
+        }
+        selected_top_n = cohort_map[chosen_cohort]
+
+        st.markdown("**2️⃣ Target Institutional Alignment Intensity (%):**")
+        alignment_pct = st.slider(
+            "Target Alignment with Selected Cohort",
+            min_value=10,
+            max_value=100,
+            value=50,
+            step=5,
+            format="%d%%",
+            key="sim_alignment_intensity_slider",
+            help="What percentage of institutional consensus allocation to blend into your portfolio. 100% represents complete convergence."
+        )
+        alignment_intensity = float(alignment_pct) / 100.0
+        cohort_short_name = chosen_cohort.split('(')[0].strip()
+        st.caption(f"Modeling **{alignment_pct}% convergence** towards **{cohort_short_name}** consensus weights.")
+
+    # Probe baseline fresh capital required for Zero Selling / Pure Buy
+    probe_results = MFConsensusEngine.simulate_rebalance(
+        alignment_intensity=alignment_intensity,
+        rebalance_mode="fresh_injection",
+        snapshot_month=selected_snapshot,
+        top_n_aum=selected_top_n
+    )
+    rec_min_capital = probe_results.get("min_capital_for_zero_sell", 50000.0)
+
+    with sim_col2:
+        st.markdown("**3️⃣ Capital Deployment Strategy:**")
+        strat_options = [
+            "💰 Fresh Capital Injection (Zero Selling — Pure Buy)",
+            "💼 Self-Funding (Trim Overweights to Fund Buys)",
+            "⚖️ Hybrid (Inject Fresh Cash + Selective Trimming)"
+        ]
+        chosen_strat = st.radio(
+            "Select Rebalance Execution Mode",
+            options=strat_options,
+            index=0,
+            key="sim_rebalance_strategy_mode",
+            help="Fresh Capital Injection preserves 100% of existing holdings and buys institutional consensus using new capital. Self-funding trims overweighted or non-MF stocks to fund buys."
+        )
+
+        injected_capital_input = 0.0
+        mode_key = "self_funding"
+
+        if "Fresh Capital Injection" in chosen_strat:
+            mode_key = "fresh_injection"
+            st.info(
+                f"💡 **Fresh Capital Needed for {alignment_pct}% Alignment with {cohort_short_name}**: "
+                f"**₹{rec_min_capital:,.0f}**\n\n"
+                f"*Deploying this amount establishes consensus positions with **zero shares sold**.*"
+            )
+            injected_capital_input = st.number_input(
+                "💵 Fresh Capital to Deploy (₹)",
+                min_value=5000.0,
+                max_value=25000000.0,
+                value=float(rec_min_capital),
+                step=5000.0,
+                format="%.0f",
+                key="sim_fresh_capital_input"
+            )
+        elif "Hybrid" in chosen_strat:
+            mode_key = "hybrid"
+            injected_capital_input = st.number_input(
+                "💵 Custom Fresh Capital to Add (₹)",
+                min_value=0.0,
+                max_value=25000000.0,
+                value=float(round(rec_min_capital * 0.5, -3)),
+                step=5000.0,
+                format="%.0f",
+                key="sim_hybrid_capital_input"
+            )
+            st.caption(f"Trimming proceeds will cover any remaining balance beyond ₹{injected_capital_input:,.0f}.")
+        else:
+            mode_key = "self_funding"
+            st.info(
+                f"💡 **Self-Funding Strategy**: Overweighted and non-consensus stocks will be trimmed "
+                f"to fund high-conviction buys across Large, Mid, and Small Cap."
+            )
+
+    # ── Execute Rebalancing Simulation ───────────────────────────────────────
+    sim_results = MFConsensusEngine.simulate_rebalance(
+        alignment_intensity=alignment_intensity,
+        capital_to_deploy=injected_capital_input,
+        rebalance_mode=mode_key,
+        snapshot_month=selected_snapshot,
+        top_n_aum=selected_top_n
+    )
 
     if not sim_results or "simulated_df" not in sim_results:
         st.warning("Insufficient portfolio data to execute simulation. Please upload user holdings.")
     else:
-        with sim_col2:
-            # Impact KPI cards
-            m1, m2, m3, m4 = st.columns(4)
-            hhi_red = sim_results["hhi_reduction_pct"]
-            var_red = sim_results["variance_reduction_pct"]
-            
-            m1.metric("Concentration Risk (HHI)", f"{sim_results['hhi_after']:.0f}", delta=f"-{hhi_red:.1f}%", delta_color="inverse")
-            m2.metric("Top 5 Holdings %", f"{sim_results['top5_after']:.1f}%", delta=f"{sim_results['top5_after'] - sim_results['top5_before']:.1f}%", delta_color="inverse")
-            m3.metric("Active Variance", f"{sim_results['active_var_after']:.0f}", delta=f"-{var_red:.1f}%", delta_color="inverse")
-            m4.metric("Capital Reallocation", f"₹{sim_results['total_buy_inr']:,.0f}")
+        st.write("")
+        st.markdown("---")
+
+        # ── Financial Balance Strip ──────────────────────────────────────────
+        curr_port_val = sim_results.get("total_portfolio_value", 0.0)
+        trim_freed = sim_results.get("total_trim_freed", 0.0)
+        buy_required = sim_results.get("total_buy_required", 0.0)
+        net_cash_needed = sim_results.get("net_cash_needed", 0.0)
+        new_port_base = sim_results.get("effective_portfolio_base", 0.0)
+        orders_df = sim_results.get("trade_orders_df", pd.DataFrame())
+
+        num_trims = len(orders_df[orders_df["Action"].isin(["TRIM", "SELL ALL", "SELL"])]) if not orders_df.empty else 0
+        num_buys = len(orders_df[orders_df["Action"].str.startswith("BUY")]) if not orders_df.empty else 0
+
+        st.markdown(f"#### 💳 Financial Balance & Rebalance Summary ({cohort_short_name})")
+        fb1, fb2, fb3, fb4, fb5 = st.columns(5)
+        fb1.metric("Current Portfolio Value", f"₹{curr_port_val:,.0f}")
+        fb2.metric("Trimming Capital Freed", f"₹{trim_freed:,.0f}", f"{num_trims} Stocks Trimmed" if num_trims > 0 else "0 Sold")
+        fb3.metric("Buy Capital Needed", f"₹{buy_required:,.0f}", f"{num_buys} Stocks Bought")
+        
+        if mode_key == "fresh_injection":
+            fb4.metric("Fresh Capital Needed", f"₹{injected_capital_input:,.0f}", "Pure Cash Injection", delta_color="normal")
+        elif mode_key == "hybrid":
+            fb4.metric("Fresh Capital Needed", f"₹{injected_capital_input:,.0f}", f"Net Balance ₹{net_cash_needed:,.0f}")
+        else:
+            fb4.metric("Net Cash Required", f"₹{net_cash_needed:,.0f}", "Internally Funded" if net_cash_needed <= 0 else "Fresh Cash Gap")
+
+        fb5.metric(
+            "New Portfolio Base",
+            f"₹{new_port_base:,.0f}",
+            f"+₹{injected_capital_input:,.0f}" if injected_capital_input > 0 else "100% Preserved"
+        )
+
+        st.write("")
+
+        # ── Market Cap Rebalancing Allocation Strip ──────────────────────────
+        if not orders_df.empty:
+            st.markdown("##### 🏢 Reallocation Breakdown Across Market Cap Tiers")
+            mc1, mc2, mc3 = st.columns(3)
+            for col, tier, color, icon in [
+                (mc1, "Large Cap", "#3b82f6", "🏛️"),
+                (mc2, "Mid Cap", "#8b5cf6", "🚀"),
+                (mc3, "Small Cap", "#ec4899", "🌱")
+            ]:
+                with col:
+                    tier_sub = orders_df[orders_df["Market Cap Tier"] == tier]
+                    t_buys = tier_sub[tier_sub["Action"].str.startswith("BUY")]
+                    t_trims = tier_sub[tier_sub["Action"].isin(["TRIM", "SELL ALL", "SELL"])]
+                    tier_buy_amt = t_buys["Trade Amount (₹)"].apply(abs).sum()
+                    tier_trim_amt = t_trims["Trade Amount (₹)"].sum()
+                    st.markdown(
+                        f"""
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-top:3px solid {color}; border-radius:8px; padding:10px 14px; margin-bottom:12px;">
+                            <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">{icon} {tier} Reallocation</div>
+                            <div style="font-size:0.83rem; color:#64748b; margin-top:5px; line-height:1.6;">
+                                <strong style="color:#16a34a;">Buys:</strong> {len(t_buys)} orders (₹{tier_buy_amt:,.0f})<br/>
+                                <strong style="color:#d97706;">Trims:</strong> {len(t_trims)} orders (₹{tier_trim_amt:,.0f})
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+        # ── Risk & Concentration KPI Strip ───────────────────────────────────
+        hhi_red = sim_results.get("hhi_reduction_pct", 0.0)
+        var_red = sim_results.get("variance_reduction_pct", 0.0)
+        st.write("")
+        rk1, rk2, rk3, rk4 = st.columns(4)
+        rk1.metric("Concentration (HHI)", f"{sim_results.get('hhi_after', 0):.0f}", delta=f"-{hhi_red:.1f}%", delta_color="inverse")
+        rk2.metric("Top 5 Holdings %", f"{sim_results.get('top5_after', 0):.1f}%", delta=f"{sim_results.get('top5_after', 0) - sim_results.get('top5_before', 0):.1f}%", delta_color="inverse")
+        rk3.metric("Active Variance (Tracking Error)", f"{sim_results.get('active_var_after', 0):.0f}", delta=f"-{var_red:.1f}%", delta_color="inverse")
+        rk4.metric("Total Trade Turnover", f"₹{buy_required + trim_freed:,.0f}")
 
         st.divider()
 
+        # ── Before vs After Top Holdings Comparison Chart ────────────────────
         sim_df = sim_results["simulated_df"]
-
-        # Before vs After Top Holdings Comparison
         top_comp = sim_df.head(10).copy()
         melted_comp = pd.melt(
             top_comp,
@@ -777,7 +1283,7 @@ with tab_sim:
         )
         melted_comp["Allocation Type"] = melted_comp["Allocation Type"].replace({
             "User Weight %": "Current User Weight",
-            "Simulated_Weight %": "Simulated Rebalanced Weight"
+            "Simulated_Weight %": "Simulated Target Weight"
         })
 
         sim_chart = (
@@ -789,32 +1295,84 @@ with tab_sim:
                 x=alt.X("Weight %:Q", title="Portfolio Weight (%)"),
                 color=alt.Color(
                     "Allocation Type:N",
-                    scale=alt.Scale(domain=["Current User Weight", "Simulated Rebalanced Weight"], range=["#f59e0b", "#6366f1"]),
+                    scale=alt.Scale(domain=["Current User Weight", "Simulated Target Weight"], range=["#f59e0b", "#6366f1"]),
                     legend=alt.Legend(title="Portfolio Model", labelColor="#000", titleColor="#000")
                 ),
                 tooltip=["Ticker:N", "Stock Name:N", "Allocation Type:N", alt.Tooltip("Weight %:Q", format=".2f")]
             )
-            .properties(height=360, title="Current Portfolio vs Rebalanced Target Allocation")
+            .properties(height=360, title=f"Current Portfolio vs {alignment_pct}% {cohort_short_name} Target Allocation")
         )
-        st.altair_chart(sim_chart, use_container_width=True)
+        st.altair_chart(sim_chart, width="stretch")
 
-        # Actionable Trade Orders Table
-        st.markdown("**Actionable Rebalancing Orders Table (Execution Plan):**")
-        display_sim = sim_df[[
-            "Action", "Ticker", "Stock Name", "Sector", "User Weight %",
-            "Simulated_Weight %", "Weight Change (pp)", "Capital Shift ₹"
-        ]].copy()
+        # ── Actionable Trade Orders Table (Exact Specification) ──────────────
+        st.markdown("**📋 Actionable Rebalancing Orders & Execution Plan:**")
+        st.caption("Detailed trade execution orders specifying stocks to trim and buy across market caps. Note: `Current Qty + Qty Change = Target Qty`.")
 
-        st.dataframe(
-            display_sim,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Action": st.column_config.TextColumn("Trade", width="small"),
-                "User Weight %": st.column_config.NumberColumn("Current Wt %", format="%.2f%%"),
-                "Simulated_Weight %": st.column_config.NumberColumn("Target Wt %", format="%.2f%%"),
-                "Weight Change (pp)": st.column_config.NumberColumn("Δ Weight", format="%+.2f"),
-                "Capital Shift ₹": st.column_config.NumberColumn("Capital Shift (₹)", format="₹%+.0f"),
-            }
-        )
+        if not orders_df.empty:
+            exec_cols = [
+                "Security",
+                "Stock Name",
+                "Market Cap Tier",
+                "Action",
+                "Current Qty",
+                "Qty Change",
+                "Target Qty",
+                "LTP (₹)",
+                "Trade Amount (₹)",
+                "Target Weight %"
+            ]
+            display_exec = orders_df[exec_cols].copy()
+
+            # CSV Download Button
+            csv_data = display_exec.to_csv(index=False)
+            down_col1, down_col2 = st.columns([2.0, 3.0])
+            with down_col1:
+                st.download_button(
+                    label=f"📥 Download Execution Report ({cohort_short_name}) (CSV)",
+                    data=csv_data,
+                    file_name=f"investiq_rebalance_orders_{cohort_short_name.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                    mime="text/csv",
+                    width="stretch",
+                    type="primary"
+                )
+
+            st.dataframe(
+                display_exec,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Security": st.column_config.TextColumn("Security", width="small"),
+                    "Stock Name": st.column_config.TextColumn("Stock Name", width="medium"),
+                    "Market Cap Tier": st.column_config.TextColumn("Market Cap Tier", width="small"),
+                    "Action": st.column_config.TextColumn("Action", width="small"),
+                    "Current Qty": st.column_config.NumberColumn("Current Qty", format="%.2f"),
+                    "Qty Change": st.column_config.NumberColumn("Qty Change", format="%+.2f"),
+                    "Target Qty": st.column_config.NumberColumn("Target Qty", format="%.2f"),
+                    "LTP (₹)": st.column_config.NumberColumn("LTP (₹)", format="₹%.2f"),
+                    "Trade Amount (₹)": st.column_config.NumberColumn("Trade Amount (₹)", format="₹%+.2f"),
+                    "Target Weight %": st.column_config.NumberColumn("Target Weight %", format="%.2f%%"),
+                }
+            )
+
+        # ── Expandable Detailed Allocation & Capital Shift Analysis ──────────
+        with st.expander("🔍 View Detailed Portfolio Allocation & Capital Shift Breakdown", expanded=False):
+            display_sim = sim_df[[
+                "Action", "Ticker", "Stock Name", "Market Cap Tier", "Sector", "User Weight %",
+                "Simulated_Weight %", "Weight Change (pp)", "Capital Shift ₹"
+            ]].copy()
+
+            st.dataframe(
+                display_sim,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Action": st.column_config.TextColumn("Trade", width="small"),
+                    "Market Cap Tier": st.column_config.TextColumn("Market Cap", width="small"),
+                    "User Weight %": st.column_config.NumberColumn("Current Wt %", format="%.2f%%"),
+                    "Simulated_Weight %": st.column_config.NumberColumn("Target Wt %", format="%.2f%%"),
+                    "Weight Change (pp)": st.column_config.NumberColumn("Δ Weight", format="%+.2f"),
+                    "Capital Shift ₹": st.column_config.NumberColumn("Capital Shift (₹)", format="₹%+.0f"),
+                }
+            )
+
 
