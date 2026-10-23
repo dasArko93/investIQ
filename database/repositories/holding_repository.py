@@ -65,7 +65,7 @@ class HoldingRepository:
         db = SessionLocal()
 
         try:
-            dates = db.query(distinct(Holding.snapshot_date)).order_by(Holding.snapshot_date.desc()).all()
+            dates = db.query(Holding.snapshot_date).distinct().order_by(Holding.snapshot_date.desc()).all()
             return [d[0] for d in dates]
 
         finally:

@@ -49,6 +49,14 @@ class HoldingsService:
 
         # Save holdings snapshot history
         HoldingsService.append_and_prune(records)
+
+        # Automatically backup database snapshot to Google Drive if configured
+        try:
+            from services.google_drive_service import GoogleDriveService
+            GoogleDriveService.auto_backup_db()
+        except Exception:
+            pass
+
         return len(records)
 
     @staticmethod
@@ -78,7 +86,7 @@ class HoldingsService:
         """Return chronological summary of snapshots (invested and pnl)."""
         db = SessionLocal()
         try:
-            dates = db.query(distinct(Holding.snapshot_date)).order_by(Holding.snapshot_date.asc()).all()
+            dates = db.query(Holding.snapshot_date).distinct().order_by(Holding.snapshot_date.asc()).all()
             date_list = [d[0] for d in dates]
             if limit is not None:
                 date_list = date_list[-limit:]

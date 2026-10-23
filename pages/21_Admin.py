@@ -289,10 +289,10 @@ st.markdown("## 📅 Holdings Snapshots")
 
 db = SessionLocal()
 try:
-    from sqlalchemy import distinct, func
+    from sqlalchemy import func
     
     snapshots = db.query(
-        distinct(Holding.snapshot_date).label('date'),
+        Holding.snapshot_date.label('date'),
         func.count(Holding.id).label('count')
     ).group_by(Holding.snapshot_date).order_by(Holding.snapshot_date.desc()).all()
     
