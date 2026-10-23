@@ -50,14 +50,37 @@ class GoogleDriveService:
         # 1. Check Streamlit secrets
         try:
             import streamlit as st
-            if hasattr(st, "secrets") and "google_drive" in st.secrets:
-                sec = st.secrets["google_drive"]
-                for k in ["folder_id", "service_account_file", "auto_backup_enabled", "auto_restore_enabled"]:
-                    if k in sec:
-                        config[k] = sec[k]
-                # Check for raw dict service account in secrets
-                if "type" in sec and sec.get("type") == "service_account":
-                    config["service_account_json_raw"] = json.dumps(dict(sec))
+            if hasattr(st, "secrets"):
+                # Case A: [google_drive] table
+                if "google_drive" in st.secrets:
+                    sec = st.secrets["google_drive"]
+                    for k in ["folder_id", "service_account_file", "auto_backup_enabled", "auto_restore_enabled"]:
+                        if k in sec:
+                            config[k] = sec[k]
+                    if "type" in sec and sec.get("type") == "service_account":
+                        config["service_account_json_raw"] = json.dumps(dict(sec))
+                    if "service_account" in sec:
+                        sa_val = sec["service_account"]
+                        if isinstance(sa_val, dict):
+                            config["service_account_json_raw"] = json.dumps(dict(sa_val))
+                        elif isinstance(sa_val, str):
+                            config["service_account_json_raw"] = sa_val
+
+                # Case B: [gdrive_service_account] table
+                for key_name in ["gdrive_service_account", "gdrive", "service_account"]:
+                    if key_name in st.secrets and not config.get("service_account_json_raw"):
+                        val = st.secrets[key_name]
+                        if isinstance(val, dict) and "client_email" in val:
+                            config["service_account_json_raw"] = json.dumps(dict(val))
+                        elif isinstance(val, str) and "client_email" in val:
+                            config["service_account_json_raw"] = val
+
+                # Case C: String key
+                for str_key in ["GDRIVE_SERVICE_ACCOUNT_JSON", "gdrive_service_account_json", "SERVICE_ACCOUNT_JSON"]:
+                    if str_key in st.secrets and not config.get("service_account_json_raw"):
+                        val = st.secrets[str_key]
+                        if isinstance(val, str) and "client_email" in val:
+                            config["service_account_json_raw"] = val
         except Exception:
             pass
 

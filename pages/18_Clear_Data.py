@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 from pathlib import Path
+from sqlalchemy import func
 from database.db import SessionLocal, DATA_DIR, DATABASE_URL, engine
 from database.models import (
     Holding, 
