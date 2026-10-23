@@ -35,11 +35,11 @@ class MFConsensusEngine:
             db.close()
 
     @classmethod
-    def get_consensus_metrics(cls, snapshot_month: str = None, category_filter: str = "All") -> pd.DataFrame:
+    def get_consensus_metrics(cls, snapshot_month: str = None, category_filter: str = "All", top_n_aum: int = None) -> pd.DataFrame:
         """
         Step 2: Consolidated Consensus Metrics Calculation.
         Calculates:
-          - Confidence Score (Cs) = Number of schemes holding stock / Total active schemes
+          - Confidence Score (Cs) = Number of schemes holding stock / Total active schemes in cohort
           - Average Across All Funds (Mean allocation across all schemes, including 0%)
           - Conviction Weight (Mean allocation among schemes actively holding the stock)
           - 3-tier hierarchy tags (Market Cap -> Sector -> Stock)
@@ -60,10 +60,16 @@ class MFConsensusEngine:
                 target_date = snap.snapshot_date
                 month_label = snap.month_str
 
-            # Schemes query with optional category filter
+            # Schemes query with optional category filter & AUM ranking
             scheme_query = db.query(MFScheme)
-            if category_filter and category_filter != "All":
+            if category_filter and category_filter not in ("All", "All Categories"):
                 scheme_query = scheme_query.filter(MFScheme.category == category_filter)
+            
+            # Order schemes dynamically by AUM descending for cohort selection
+            scheme_query = scheme_query.order_by(MFScheme.aum_cr.desc())
+            if top_n_aum and top_n_aum > 0:
+                scheme_query = scheme_query.limit(top_n_aum)
+
             schemes = scheme_query.all()
             total_schemes = len(schemes)
             if total_schemes == 0:
@@ -154,7 +160,7 @@ class MFConsensusEngine:
             db.close()
 
     @classmethod
-    def get_temporal_deltas(cls, t0_month: str = None, t1_month: str = None) -> pd.DataFrame:
+    def get_temporal_deltas(cls, t0_month: str = None, t1_month: str = None, top_n_aum: int = None) -> pd.DataFrame:
         """
         Step 3: Delta Tracking Engine (Temporal Analysis).
         Compares selected month (T0) vs preceding month (T-1):
@@ -184,8 +190,8 @@ class MFConsensusEngine:
             else:
                 t1_month = snap_months[1]
 
-        df_t0 = cls.get_consensus_metrics(snapshot_month=t0_month)
-        df_t1 = cls.get_consensus_metrics(snapshot_month=t1_month)
+        df_t0 = cls.get_consensus_metrics(snapshot_month=t0_month, top_n_aum=top_n_aum)
+        df_t1 = cls.get_consensus_metrics(snapshot_month=t1_month, top_n_aum=top_n_aum)
 
         if df_t0.empty and df_t1.empty:
             return pd.DataFrame()
@@ -260,7 +266,7 @@ class MFConsensusEngine:
         return merged[out_cols].sort_values(by=["Delta_Weight", "Delta_Confidence"], ascending=[False, False])
 
     @classmethod
-    def get_portfolio_gap_analysis(cls) -> dict:
+    def get_portfolio_gap_analysis(cls, snapshot_month: str = None, top_n_aum: int = None) -> dict:
         """
         Step 4: Personal Portfolio Gap & Misalignment Engine.
         Matches user portfolio against MF consensus using ISIN.
@@ -291,8 +297,8 @@ class MFConsensusEngine:
         finally:
             db.close()
 
-        consensus_df = cls.get_consensus_metrics()
-        deltas_df = cls.get_temporal_deltas()
+        consensus_df = cls.get_consensus_metrics(snapshot_month=snapshot_month, top_n_aum=top_n_aum)
+        deltas_df = cls.get_temporal_deltas(t0_month=snapshot_month, top_n_aum=top_n_aum)
 
         if consensus_df.empty:
             return {
@@ -523,7 +529,16 @@ class MFConsensusEngine:
         return actions
 
     @classmethod
-    def simulate_rebalance(cls, alignment_intensity: float = 0.5, stock_overrides: dict = None) -> dict:
+    def simulate_rebalance(
+        cls,
+        alignment_intensity: float = 0.5,
+        stock_overrides: dict = None,
+        capital_to_deploy: float = None,
+        rebalance_mode: str = "self_funding",
+        portfolio_id: str = "PORT001",
+        snapshot_month: str = None,
+        top_n_aum: int = None
+    ) -> dict:
         """
         Step 6: Interactive Portfolio Rebalancing Simulator.
         Models convergence of user portfolio towards institutional consensus:
@@ -534,7 +549,7 @@ class MFConsensusEngine:
           - Active Variance (Tracking Error proxy) reduction
           - Actionable Capital reallocation amounts (₹ Buy / ₹ Sell)
         """
-        gap_data = cls.get_portfolio_gap_analysis()
+        gap_data = cls.get_portfolio_gap_analysis(snapshot_month=snapshot_month, top_n_aum=top_n_aum)
         matched_df = gap_data.get("matched_df", pd.DataFrame())
         if matched_df.empty:
             return {}
@@ -593,6 +608,196 @@ class MFConsensusEngine:
             lambda x: "BUY" if x > 500 else ("SELL" if x < -500 else "HOLD")
         )
 
+        # LTP and Quantity mappings from database
+        db = SessionLocal()
+        ltp_map = {}
+        qty_map = {}
+        try:
+            for h in db.query(Holding).all():
+                if h.security:
+                    sec_k = h.security.upper().strip()
+                    if h.ltp or h.average_cost:
+                        ltp_map[sec_k] = float(h.ltp or h.average_cost)
+                    if h.quantity is not None:
+                        qty_map[sec_k] = qty_map.get(sec_k, 0.0) + float(h.quantity)
+            for sm in db.query(StockMaster).all():
+                if sm.ticker:
+                    tk_k = sm.ticker.upper().strip()
+                    if tk_k not in ltp_map and sm.close_price:
+                        ltp_map[tk_k] = float(sm.close_price)
+        finally:
+            db.close()
+
+        # Calculate baseline buy needs to determine minimum fresh capital required
+        baseline_buy_needs = 0.0
+        for _, row in active_universe.iterrows():
+            ticker = str(row["Ticker"]).upper().strip()
+            curr_qty = float(qty_map.get(ticker, row.get("Holding Qty", 0.0) or 0.0))
+            ltp = float(ltp_map.get(ticker, 0.0))
+            if ltp <= 0:
+                ltp = 1000.0
+            tgt_val = (float(row["Simulated_Weight %"]) / 100.0) * total_portfolio_value
+            tgt_qty = round(tgt_val / ltp, 2)
+            if tgt_qty > curr_qty:
+                baseline_buy_needs += (tgt_qty - curr_qty) * ltp
+
+        min_capital_for_zero_sell = round(baseline_buy_needs, 2)
+
+        # Handle Capital Injection Modes
+        injected_cash = float(capital_to_deploy or 0.0)
+        is_fresh_injection = (rebalance_mode == "fresh_injection")
+        is_hybrid = (rebalance_mode == "hybrid" and injected_cash > 0)
+
+        effective_portfolio_base = total_portfolio_value
+        if is_hybrid:
+            effective_portfolio_base = total_portfolio_value + injected_cash
+
+        # Build trade orders dataframe
+        trade_orders = []
+
+        if is_fresh_injection:
+            # PURE BUY MODE: No existing stock is ever sold!
+            deployable_budget = injected_cash if injected_cash > 0 else min_capital_for_zero_sell
+
+            # Identify underweighted and missing consensus stocks
+            buy_candidates = []
+            for _, row in active_universe.iterrows():
+                ticker = str(row["Ticker"]).upper().strip()
+                curr_qty = float(qty_map.get(ticker, row.get("Holding Qty", 0.0) or 0.0))
+                ltp = float(ltp_map.get(ticker, 0.0))
+                if ltp <= 0:
+                    ltp = 1000.0
+                curr_val = curr_qty * ltp
+                target_mf_pct = float(row.get("Normalized_MF_Weight", row.get("Simulated_Weight %", 0.0)))
+                buy_candidates.append({
+                    "row": row,
+                    "ticker": ticker,
+                    "curr_qty": curr_qty,
+                    "curr_val": curr_val,
+                    "ltp": ltp,
+                    "target_mf_pct": target_mf_pct
+                })
+
+            sum_target_pct = sum(c["target_mf_pct"] for c in buy_candidates if c["target_mf_pct"] > 0) or 100.0
+            new_total_val = total_portfolio_value + deployable_budget
+
+            for c in buy_candidates:
+                ticker = c["ticker"]
+                curr_qty = c["curr_qty"]
+                ltp = c["ltp"]
+                target_weight = round((c["target_mf_pct"] / sum_target_pct) * 100.0, 2)
+                
+                # Pro-rata cash allocation from fresh capital injection
+                if c["target_mf_pct"] > 0:
+                    stock_budget = (c["target_mf_pct"] / sum_target_pct) * deployable_budget
+                    added_qty = round(stock_budget / ltp, 2)
+                else:
+                    added_qty = 0.0
+                    stock_budget = 0.0
+
+                if curr_qty <= 0.01 and added_qty > 0.01:
+                    action = "BUY NEW"
+                    qty_change = added_qty
+                    trade_amt = round(-added_qty * ltp, 2)
+                    target_qty = round(added_qty, 2)
+                elif curr_qty > 0.01 and added_qty > 0.01:
+                    action = "BUY MORE"
+                    qty_change = added_qty
+                    trade_amt = round(-added_qty * ltp, 2)
+                    target_qty = round(curr_qty + added_qty, 2)
+                else:
+                    action = "HOLD"
+                    qty_change = 0.0
+                    target_qty = curr_qty
+                    trade_amt = 0.0
+
+                post_val = target_qty * ltp
+                new_weight = round((post_val / new_total_val) * 100.0, 2) if new_total_val > 0 else target_weight
+
+                trade_orders.append({
+                    "Security": ticker,
+                    "Stock Name": c["row"].get("Stock Name", ticker),
+                    "Market Cap Tier": c["row"].get("Market Cap Tier", "Mid Cap"),
+                    "Action": action,
+                    "Current Qty": round(curr_qty, 2),
+                    "Qty Change": round(qty_change, 2),
+                    "Target Qty": round(target_qty, 2),
+                    "LTP (₹)": round(ltp, 2),
+                    "Trade Amount (₹)": trade_amt,
+                    "Target Weight %": new_weight,
+                    "Sector": c["row"].get("Sector", "Diversified"),
+                    "User Weight %": round(float(c["row"].get("User Weight %", 0.0)), 2),
+                    "Capital Shift ₹": trade_amt
+                })
+
+        else:
+            # STANDARD / HYBRID REBALANCE MODE (Trimming + Buying)
+            for _, row in active_universe.iterrows():
+                ticker = str(row["Ticker"]).upper().strip()
+                curr_qty = float(qty_map.get(ticker, row.get("Holding Qty", 0.0) or 0.0))
+                
+                ltp = float(ltp_map.get(ticker, 0.0))
+                if ltp <= 0:
+                    if curr_qty > 0 and row.get("Current Value", 0) > 0:
+                        ltp = round(float(row["Current Value"]) / curr_qty, 2)
+                    else:
+                        ltp = 1000.0
+                
+                target_weight = float(row["Simulated_Weight %"])
+                target_val = (target_weight / 100.0) * effective_portfolio_base
+                target_qty = round(target_val / ltp, 2) if ltp > 0 else 0.0
+                raw_qty_change = target_qty - curr_qty
+                
+                if curr_qty <= 0.01 and target_qty > 0.01:
+                    action = "BUY NEW"
+                    qty_change = round(target_qty, 2)
+                    target_qty = round(curr_qty + qty_change, 2)
+                    trade_amt = round(-qty_change * ltp, 2)
+                elif raw_qty_change < -0.05:
+                    qty_change = round(raw_qty_change, 2)
+                    target_qty = round(max(0.0, curr_qty + qty_change), 2)
+                    action = "TRIM" if target_qty > 0.01 else "SELL ALL"
+                    trade_amt = round(abs(qty_change) * ltp, 2)
+                elif raw_qty_change > 0.05 and curr_qty > 0.01:
+                    action = "BUY MORE"
+                    qty_change = round(raw_qty_change, 2)
+                    target_qty = round(curr_qty + qty_change, 2)
+                    trade_amt = round(-qty_change * ltp, 2)
+                else:
+                    action = "HOLD"
+                    qty_change = 0.0
+                    target_qty = curr_qty
+                    trade_amt = 0.0
+                
+                trade_orders.append({
+                    "Security": ticker,
+                    "Stock Name": row.get("Stock Name", ticker),
+                    "Market Cap Tier": row.get("Market Cap Tier", "Mid Cap"),
+                    "Action": action,
+                    "Current Qty": round(curr_qty, 2),
+                    "Qty Change": round(qty_change, 2),
+                    "Target Qty": round(target_qty, 2),
+                    "LTP (₹)": round(ltp, 2),
+                    "Trade Amount (₹)": trade_amt,
+                    "Target Weight %": round(target_weight, 2),
+                    "Sector": row.get("Sector", "Diversified"),
+                    "User Weight %": round(float(row.get("User Weight %", 0.0)), 2),
+                    "Capital Shift ₹": round(float(row.get("Capital Shift ₹", 0.0)), 2)
+                })
+
+        orders_df = pd.DataFrame(trade_orders)
+        if not orders_df.empty:
+            action_order = {
+                "BUY NEW": 1, "BUY MORE": 2, "HOLD": 3, "TRIM": 4, "SELL ALL": 5, "SELL": 5
+            } if is_fresh_injection else {
+                "TRIM": 1, "SELL ALL": 2, "SELL": 2, "BUY MORE": 3, "BUY NEW": 4, "HOLD": 5
+            }
+            orders_df["_sort_key"] = orders_df["Action"].map(action_order).fillna(6)
+            orders_df = orders_df.sort_values(
+                by=["_sort_key", "Trade Amount (₹)", "Target Weight %"],
+                ascending=[True, False, False]
+            ).drop(columns=["_sort_key"])
+
         # Risk metrics calculation:
         # 1. Concentration: Herfindahl-Hirschman Index (HHI = sum(w^2))
         w_orig = active_universe["User Weight %"].values
@@ -612,13 +817,26 @@ class MFConsensusEngine:
         active_var_after = float(np.sum((w_sim - w_mf) ** 2))
         variance_reduction_pct = round(((active_var_before - active_var_after) / max(active_var_before, 1)) * 100.0, 1)
 
-        # Total capital reallocated (sum of buys)
-        buys = active_universe[active_universe["Capital Shift ₹"] > 0]["Capital Shift ₹"].sum()
-        sells = abs(active_universe[active_universe["Capital Shift ₹"] < 0]["Capital Shift ₹"].sum())
+        # Capital metrics calculation:
+        total_trim_freed = sum(
+            o["Trade Amount (₹)"] for o in trade_orders if o["Action"] in ("TRIM", "SELL", "SELL ALL")
+        )
+        total_buy_required = sum(
+            abs(o["Trade Amount (₹)"]) for o in trade_orders if o["Action"] in ("BUY", "BUY NEW", "BUY MORE")
+        )
+        net_cash_needed = max(0.0, total_buy_required - total_trim_freed)
 
         return {
             "simulated_df": active_universe.sort_values(by="Simulated_Weight %", ascending=False),
+            "trade_orders_df": orders_df,
             "total_portfolio_value": total_portfolio_value,
+            "effective_portfolio_base": effective_portfolio_base,
+            "min_capital_for_zero_sell": min_capital_for_zero_sell,
+            "total_trim_freed": round(total_trim_freed, 2),
+            "total_buy_required": round(total_buy_required, 2),
+            "net_cash_needed": round(net_cash_needed, 2),
+            "rebalance_mode": rebalance_mode,
+            "capital_injected": injected_cash,
             "hhi_before": round(hhi_before, 0),
             "hhi_after": round(hhi_after, 0),
             "hhi_reduction_pct": hhi_reduction_pct,
@@ -627,6 +845,7 @@ class MFConsensusEngine:
             "active_var_before": round(active_var_before, 0),
             "active_var_after": round(active_var_after, 0),
             "variance_reduction_pct": variance_reduction_pct,
-            "total_buy_inr": round(buys, 2),
-            "total_sell_inr": round(sells, 2)
+            "total_buy_inr": round(total_buy_required, 2),
+            "total_sell_inr": round(total_trim_freed, 2),
+            "top_n_aum": top_n_aum
         }

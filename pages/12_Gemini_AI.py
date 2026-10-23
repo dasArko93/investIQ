@@ -232,7 +232,7 @@ with col_settings:
     )
     
     if api_key_input != stored_key:
-        if st.button("💾 Save API Key", use_container_width=True):
+        if st.button("💾 Save API Key", width="stretch"):
             save_api_key(api_key_input)
             st.success("API Key saved successfully!")
             st.rerun()
@@ -283,7 +283,7 @@ with col_settings:
         system_prompt = st.text_area("System Instructions", value=DEFAULT_SYSTEM_PROMPT, height=200)
 
     # 5. Clear Chat Button
-    if st.button("🧹 Clear Chat History", use_container_width=True):
+    if st.button("🧹 Clear Chat History", width="stretch"):
         st.session_state.gemini_chat_history = [
             {
                 "role": "model",

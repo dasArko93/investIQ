@@ -23,6 +23,8 @@ data/investiq.db
 
 - Portfolio upload and persisted reload
 - Stock universe upload and quality scoring
+- Mutual Fund Institutional Holding Pattern: 50+ flagship schemes across 19+ AMCs, rolling disclosure snapshots, consensus metrics, and MoM sentiment delta tracking
+- Interactive Portfolio Rebalancing Simulator: Benchmark against Top 10/20/30/50 AUM cohorts, alignment intensity slider, pure buy / self-funding trimming modes, dynamic fresh capital calculations, and actionable order generation with live LTP and market cap tiers
 - Dashboard, sector analysis, portfolio health, recommendations, rebalancing, buy-next ideas, watchlist, alerts, goals, journal, reports, and quant analytics
 - SQLite models, repositories, services, and engines
 
