@@ -519,6 +519,8 @@ def historical_trend_figure(view_mode="All Uploads"):
         
     # Group snapshots based on view mode
     snapshots = HoldingsService.group_snapshots_by_mode(snapshots, view_mode)
+    if not snapshots:
+        return None
     
     if view_mode == "Monthly View":
         dates = [s["date"].strftime("%b %Y") for s in snapshots]
@@ -874,7 +876,7 @@ def render_investiq_dashboard():
         with col_ctrl:
             view_mode = st.selectbox(
                 "Trend View Mode",
-                options=["All Uploads", "Monthly View", "Yearly View"],
+                options=["All Uploads", "Current Month", "Monthly View", "Yearly View"],
                 index=0,
                 key="dashboard_trend_view_mode",
                 label_visibility="collapsed"

@@ -1167,18 +1167,15 @@ with tab_sim:
             )
         elif "Hybrid" in chosen_strat:
             mode_key = "hybrid"
-            injected_capital_input = st.number_input(
-                "💵 Custom Fresh Capital to Add (₹)",
-                min_value=0.0,
-                max_value=25000000.0,
-                value=float(round(rec_min_capital * 0.5, -3)),
-                step=5000.0,
-                format="%.0f",
-                key="sim_hybrid_capital_input"
+            injected_capital_input = 0.0
+            st.info(
+                f"💡 **Dynamic Hybrid Alignment ({alignment_pct}%)**: "
+                f"Existing overweight holdings will be selectively trimmed, and the simulator will automatically calculate "
+                f"the exact fresh cash flow needed to meet target investments based on your alignment level with {cohort_short_name}."
             )
-            st.caption(f"Trimming proceeds will cover any remaining balance beyond ₹{injected_capital_input:,.0f}.")
         else:
             mode_key = "self_funding"
+            injected_capital_input = 0.0
             st.info(
                 f"💡 **Self-Funding Strategy**: Overweighted and non-consensus stocks will be trimmed "
                 f"to fund high-conviction buys across Large, Mid, and Small Cap."
@@ -1199,65 +1196,60 @@ with tab_sim:
         st.write("")
         st.markdown("---")
 
-        # ── Financial Balance Strip ──────────────────────────────────────────
+        # ── Financial Balance Strip (Core 3 Buckets + New Base) ───────────────
         curr_port_val = sim_results.get("total_portfolio_value", 0.0)
         trim_freed = sim_results.get("total_trim_freed", 0.0)
         buy_required = sim_results.get("total_buy_required", 0.0)
-        net_cash_needed = sim_results.get("net_cash_needed", 0.0)
+        net_cash_needed = sim_results.get("fresh_cash_needed", sim_results.get("net_cash_needed", 0.0))
         new_port_base = sim_results.get("effective_portfolio_base", 0.0)
         orders_df = sim_results.get("trade_orders_df", pd.DataFrame())
 
         num_trims = len(orders_df[orders_df["Action"].isin(["TRIM", "SELL ALL", "SELL"])]) if not orders_df.empty else 0
         num_buys = len(orders_df[orders_df["Action"].str.startswith("BUY")]) if not orders_df.empty else 0
 
-        st.markdown(f"#### 💳 Financial Balance & Rebalance Summary ({cohort_short_name})")
-        fb1, fb2, fb3, fb4, fb5 = st.columns(5)
-        fb1.metric("Current Portfolio Value", f"₹{curr_port_val:,.0f}")
-        fb2.metric("Trimming Capital Freed", f"₹{trim_freed:,.0f}", f"{num_trims} Stocks Trimmed" if num_trims > 0 else "0 Sold")
-        fb3.metric("Buy Capital Needed", f"₹{buy_required:,.0f}", f"{num_buys} Stocks Bought")
-        
-        if mode_key == "fresh_injection":
-            fb4.metric("Fresh Capital Needed", f"₹{injected_capital_input:,.0f}", "Pure Cash Injection", delta_color="normal")
-        elif mode_key == "hybrid":
-            fb4.metric("Fresh Capital Needed", f"₹{injected_capital_input:,.0f}", f"Net Balance ₹{net_cash_needed:,.0f}")
-        else:
-            fb4.metric("Net Cash Required", f"₹{net_cash_needed:,.0f}", "Internally Funded" if net_cash_needed <= 0 else "Fresh Cash Gap")
+        st.markdown(f"#### 💳 Portfolio Rebalance Financial Summary ({cohort_short_name})")
+        fb1, fb2, fb3, fb4 = st.columns(4)
 
-        fb5.metric(
-            "New Portfolio Base",
-            f"₹{new_port_base:,.0f}",
-            f"+₹{injected_capital_input:,.0f}" if injected_capital_input > 0 else "100% Preserved"
-        )
+        with fb1:
+            st.metric(
+                label="Current Deployed Cash",
+                value=f"₹{curr_port_val:,.0f}",
+                help="Current Portfolio Value before rebalancing"
+            )
+            st.caption("*(Current portfolio value)*")
+
+        with fb2:
+            st.metric(
+                label="Money Recovered",
+                value=f"₹{trim_freed:,.0f}",
+                delta=f"{num_trims} trimmed" if num_trims > 0 else "0 sold",
+                delta_color="normal",
+                help="Capital unlocked after trimming existing portfolio holdings"
+            )
+            st.caption("*(After trimming existing portfolio)*")
+
+        with fb3:
+            calc_diff = f"Target ₹{buy_required:,.0f} − Trims ₹{trim_freed:,.0f}" if net_cash_needed > 0 else "Fully covered by trims"
+            st.metric(
+                label="Fresh Cash Flow Needed",
+                value=f"₹{net_cash_needed:,.0f}",
+                delta=f"+₹{net_cash_needed:,.0f}" if net_cash_needed > 0 else "Self-Funded",
+                delta_color="off",
+                help="Target investment minus money recovered after trimming existing portfolio"
+            )
+            st.caption(f"*({calc_diff})*")
+
+        with fb4:
+            st.metric(
+                label="New Portfolio Base",
+                value=f"₹{new_port_base:,.0f}",
+                delta=f"+₹{net_cash_needed:,.0f} added" if net_cash_needed > 0 else "100% Preserved",
+                delta_color="normal",
+                help="New portfolio base = Current deployed cash + Fresh cash flow needed"
+            )
+            st.caption("*(Current deployed cash + Fresh cash flow)*")
 
         st.write("")
-
-        # ── Market Cap Rebalancing Allocation Strip ──────────────────────────
-        if not orders_df.empty:
-            st.markdown("##### 🏢 Reallocation Breakdown Across Market Cap Tiers")
-            mc1, mc2, mc3 = st.columns(3)
-            for col, tier, color, icon in [
-                (mc1, "Large Cap", "#3b82f6", "🏛️"),
-                (mc2, "Mid Cap", "#8b5cf6", "🚀"),
-                (mc3, "Small Cap", "#ec4899", "🌱")
-            ]:
-                with col:
-                    tier_sub = orders_df[orders_df["Market Cap Tier"] == tier]
-                    t_buys = tier_sub[tier_sub["Action"].str.startswith("BUY")]
-                    t_trims = tier_sub[tier_sub["Action"].isin(["TRIM", "SELL ALL", "SELL"])]
-                    tier_buy_amt = t_buys["Trade Amount (₹)"].apply(abs).sum()
-                    tier_trim_amt = t_trims["Trade Amount (₹)"].sum()
-                    st.markdown(
-                        f"""
-                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-top:3px solid {color}; border-radius:8px; padding:10px 14px; margin-bottom:12px;">
-                            <div style="font-weight:700; color:#1e293b; font-size:0.95rem;">{icon} {tier} Reallocation</div>
-                            <div style="font-size:0.83rem; color:#64748b; margin-top:5px; line-height:1.6;">
-                                <strong style="color:#16a34a;">Buys:</strong> {len(t_buys)} orders (₹{tier_buy_amt:,.0f})<br/>
-                                <strong style="color:#d97706;">Trims:</strong> {len(t_trims)} orders (₹{tier_trim_amt:,.0f})
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
 
         # ── Risk & Concentration KPI Strip ───────────────────────────────────
         hhi_red = sim_results.get("hhi_reduction_pct", 0.0)
