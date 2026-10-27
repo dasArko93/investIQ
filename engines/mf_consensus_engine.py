@@ -608,21 +608,22 @@ class MFConsensusEngine:
             lambda x: "BUY" if x > 500 else ("SELL" if x < -500 else "HOLD")
         )
 
-        # LTP and Quantity mappings from database
+        # LTP and Quantity mappings from active user portfolio and stock master
         db = SessionLocal()
         ltp_map = {}
         qty_map = {}
         try:
-            for h in db.query(Holding).all():
-                if h.security:
-                    sec_k = h.security.upper().strip()
-                    if h.ltp or h.average_cost:
-                        ltp_map[sec_k] = float(h.ltp or h.average_cost)
-                    if h.quantity is not None:
-                        qty_map[sec_k] = qty_map.get(sec_k, 0.0) + float(h.quantity)
+            for u in db.query(UserPortfolioHolding).all():
+                if u.ticker:
+                    tk_k = str(u.ticker).upper().strip()
+                    curr_q = float(u.holding_qty or 0.0)
+                    qty_map[tk_k] = curr_q
+                    if curr_q > 0 and u.current_value and u.current_value > 0:
+                        ltp_map[tk_k] = round(float(u.current_value) / curr_q, 2)
+
             for sm in db.query(StockMaster).all():
                 if sm.ticker:
-                    tk_k = sm.ticker.upper().strip()
+                    tk_k = str(sm.ticker).upper().strip()
                     if tk_k not in ltp_map and sm.close_price:
                         ltp_map[tk_k] = float(sm.close_price)
         finally:
@@ -646,10 +647,10 @@ class MFConsensusEngine:
         # Handle Capital Injection Modes
         injected_cash = float(capital_to_deploy or 0.0)
         is_fresh_injection = (rebalance_mode == "fresh_injection")
-        is_hybrid = (rebalance_mode == "hybrid" and injected_cash > 0)
+        is_hybrid = (rebalance_mode == "hybrid")
 
         effective_portfolio_base = total_portfolio_value
-        if is_hybrid:
+        if is_hybrid and injected_cash > 0:
             effective_portfolio_base = total_portfolio_value + injected_cash
 
         # Build trade orders dataframe
@@ -754,10 +755,16 @@ class MFConsensusEngine:
                     target_qty = round(curr_qty + qty_change, 2)
                     trade_amt = round(-qty_change * ltp, 2)
                 elif raw_qty_change < -0.05:
-                    qty_change = round(raw_qty_change, 2)
-                    target_qty = round(max(0.0, curr_qty + qty_change), 2)
-                    action = "TRIM" if target_qty > 0.01 else "SELL ALL"
-                    trade_amt = round(abs(qty_change) * ltp, 2)
+                    if is_hybrid:
+                        qty_change = round(raw_qty_change * 0.5, 2)
+                        target_qty = round(curr_qty + qty_change, 2)
+                        action = "TRIM"
+                        trade_amt = round(abs(qty_change) * ltp, 2)
+                    else:
+                        qty_change = round(raw_qty_change, 2)
+                        target_qty = round(max(0.0, curr_qty + qty_change), 2)
+                        action = "TRIM" if target_qty > 0.01 else "SELL ALL"
+                        trade_amt = round(abs(qty_change) * ltp, 2)
                 elif raw_qty_change > 0.05 and curr_qty > 0.01:
                     action = "BUY MORE"
                     qty_change = round(raw_qty_change, 2)
@@ -824,7 +831,8 @@ class MFConsensusEngine:
         total_buy_required = sum(
             abs(o["Trade Amount (₹)"]) for o in trade_orders if o["Action"] in ("BUY", "BUY NEW", "BUY MORE")
         )
-        net_cash_needed = max(0.0, total_buy_required - total_trim_freed)
+        net_cash_needed = max(0.0, round(total_buy_required - total_trim_freed, 2))
+        effective_portfolio_base = round(total_portfolio_value + net_cash_needed, 2)
 
         return {
             "simulated_df": active_universe.sort_values(by="Simulated_Weight %", ascending=False),
@@ -835,8 +843,9 @@ class MFConsensusEngine:
             "total_trim_freed": round(total_trim_freed, 2),
             "total_buy_required": round(total_buy_required, 2),
             "net_cash_needed": round(net_cash_needed, 2),
+            "fresh_cash_needed": round(net_cash_needed, 2),
             "rebalance_mode": rebalance_mode,
-            "capital_injected": injected_cash,
+            "capital_injected": round(net_cash_needed, 2),
             "hhi_before": round(hhi_before, 0),
             "hhi_after": round(hhi_after, 0),
             "hhi_reduction_pct": hhi_reduction_pct,

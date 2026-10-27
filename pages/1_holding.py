@@ -229,8 +229,8 @@ with upload_tab3:
         st.warning("⚪ **Google Drive Not Configured Yet**")
         st.markdown(
             "To enable automatic cloud backup and startup restoration:\n"
-            "1. Go to **Database Admin** (Page 18) or configure `.streamlit/secrets.toml`.\n"
-            "2. Provide your Google Drive **Folder ID** and **Service Account JSON key**.\n"
+            "1. Keep your service account JSON key in `config/gdrive/` (referred by default).\n"
+            "2. Provide your Google Drive **Folder ID** in `config/gdrive_config.json` or Database Admin (Page 18).\n"
             "3. Share your Google Drive folder with the service account email."
         )
         if st.button("⚙️ Open Google Drive Setup in Database Admin", type="primary"):
@@ -715,7 +715,7 @@ else:
             with col_ctrl:
                 view_mode = st.selectbox(
                     "Trend View Mode",
-                    options=["All Uploads", "Monthly View", "Yearly View"],
+                    options=["All Uploads", "Current Month", "Monthly View", "Yearly View"],
                     index=0,
                     key="portfolio_trend_view_mode",
                     label_visibility="collapsed"
@@ -731,6 +731,9 @@ else:
             elif view_mode == "Yearly View":
                 df_snap["Date"] = df_snap["date"].dt.strftime("%Y")
                 x_title = "Year"
+            elif "Current Month" in view_mode:
+                df_snap["Date"] = df_snap["date"].dt.strftime("%d-%b-%y")
+                x_title = "Upload Date (Current Month)"
             else:
                 df_snap["Date"] = df_snap["date"].dt.strftime("%d-%b-%y")
                 x_title = "Upload Date"

@@ -12,10 +12,15 @@ from database.db import DATA_DIR
 
 logger = logging.getLogger("investiq.gdrive")
 
-CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+CONFIG_DIR = PROJECT_ROOT / "config"
 CONFIG_DIR.mkdir(exist_ok=True)
+GDRIVE_DIR = CONFIG_DIR / "gdrive"
+GDRIVE_DIR.mkdir(exist_ok=True)
+
 GDRIVE_CONFIG_FILE = CONFIG_DIR / "gdrive_config.json"
-DEFAULT_SERVICE_ACCOUNT_FILE = CONFIG_DIR / "gdrive_service_account.json"
+DEFAULT_SERVICE_ACCOUNT_FILE = GDRIVE_DIR / "gdrive_service_account.json"
+LEGACY_SERVICE_ACCOUNT_FILE = CONFIG_DIR / "gdrive_service_account.json"
 LOCAL_DB_PATH = DATA_DIR / "investiq.db"
 REMOTE_BACKUP_FILENAME = "investiq_backup.db"
 DEFAULT_FOLDER_ID = "1atBhonsk_qdG7KW9zShYCppmtWYvxAmO"
@@ -30,18 +35,95 @@ class GoogleDriveService:
     for InvestIQ's SQLite database.
     
     Supports:
-      1. Google Service Account (via JSON file or Streamlit secrets)
+      1. Google Service Account (via JSON file under config/gdrive/ or Streamlit secrets)
       2. Configurable Google Drive Folder ID
       3. Auto-backup of investiq_backup.db whenever new holdings are uploaded
       4. Auto-restore of investiq_backup.db upon session startup
     """
 
     @classmethod
+    def resolve_service_account_file(cls, path_hint: Optional[str] = None) -> Optional[Path]:
+        """
+        Resolves the service account JSON file needed for Google Drive backup.
+        By default, it refers to the JSON file present in the 'config/gdrive/' folder,
+        with fallback to 'config/'.
+        """
+        # If an explicit path is provided, try resolving it first
+        if path_hint:
+            p = Path(path_hint)
+            candidates = [
+                p,
+                PROJECT_ROOT / p,
+                CONFIG_DIR / p,
+                GDRIVE_DIR / p,
+            ]
+            for cand in candidates:
+                try:
+                    if cand.is_file():
+                        return cand.resolve()
+                except Exception:
+                    pass
+
+        # 1. PRIMARY: Check config/gdrive/ folder
+        if GDRIVE_DIR.exists():
+            # Check standard file names
+            for name in ["gdrive_service_account.json", "service_account.json", "credentials.json"]:
+                target = GDRIVE_DIR / name
+                if target.is_file():
+                    return target.resolve()
+
+            # Scan any *.json file in config/gdrive/
+            try:
+                for jf in GDRIVE_DIR.glob("*.json"):
+                    if "config" in jf.name.lower():
+                        continue
+                    try:
+                        with open(jf, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            if isinstance(data, dict) and ("client_email" in data or data.get("type") == "service_account"):
+                                return jf.resolve()
+                    except Exception:
+                        pass
+                # If there are any json files in config/gdrive/, return the first one
+                gdrive_jsons = list(GDRIVE_DIR.glob("*.json"))
+                if gdrive_jsons:
+                    return gdrive_jsons[0].resolve()
+            except Exception:
+                pass
+
+        # 2. FALLBACK: Check config/ folder
+        if LEGACY_SERVICE_ACCOUNT_FILE.is_file():
+            return LEGACY_SERVICE_ACCOUNT_FILE.resolve()
+
+        if CONFIG_DIR.exists():
+            for name in ["service_account.json", "credentials.json"]:
+                target = CONFIG_DIR / name
+                if target.is_file():
+                    return target.resolve()
+
+            try:
+                for jf in CONFIG_DIR.glob("*.json"):
+                    if "config" in jf.name.lower():
+                        continue
+                    try:
+                        with open(jf, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            if isinstance(data, dict) and ("client_email" in data or data.get("type") == "service_account"):
+                                return jf.resolve()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        return None
+
+    @classmethod
     def get_config(cls) -> Dict[str, Any]:
         """Loads configuration from secrets, env vars, or config/gdrive_config.json."""
+        resolved_sa = cls.resolve_service_account_file()
         config = {
             "folder_id": DEFAULT_FOLDER_ID,
-            "service_account_file": str(DEFAULT_SERVICE_ACCOUNT_FILE) if DEFAULT_SERVICE_ACCOUNT_FILE.exists() else "",
+            "service_account_file": str(resolved_sa) if resolved_sa else "",
             "service_account_json_raw": "",
             "auto_backup_enabled": True,
             "auto_restore_enabled": True,
@@ -104,9 +186,12 @@ class GoogleDriveService:
         if env_sa:
             config["service_account_file"] = env_sa
 
-        # 4. Check default service account path if not set
-        if not config["service_account_file"] and not config["service_account_json_raw"]:
-            if DEFAULT_SERVICE_ACCOUNT_FILE.exists():
+        # 4. Resolve service account file (prioritizing config/gdrive/)
+        if not config.get("service_account_json_raw"):
+            resolved = cls.resolve_service_account_file(config.get("service_account_file"))
+            if resolved:
+                config["service_account_file"] = str(resolved)
+            elif not config.get("service_account_file"):
                 config["service_account_file"] = str(DEFAULT_SERVICE_ACCOUNT_FILE)
 
         return config
@@ -120,6 +205,8 @@ class GoogleDriveService:
         current["auto_restore_enabled"] = bool(auto_restore)
         if sa_file_path:
             current["service_account_file"] = sa_file_path.strip()
+        elif not current.get("service_account_file"):
+            current["service_account_file"] = "config/gdrive/gdrive_service_account.json"
 
         try:
             with open(GDRIVE_CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -131,17 +218,27 @@ class GoogleDriveService:
 
     @classmethod
     def save_service_account_json(cls, json_content: str) -> Tuple[bool, str]:
-        """Saves uploaded service account JSON key to config/gdrive_service_account.json."""
+        """Saves uploaded service account JSON key to config/gdrive/gdrive_service_account.json."""
         try:
             parsed = json.loads(json_content) if isinstance(json_content, str) else json_content
             if not isinstance(parsed, dict) or "client_email" not in parsed:
                 return False, "Invalid service account JSON: missing 'client_email' field."
 
+            # Save in config/gdrive/ (PRIMARY)
+            GDRIVE_DIR.mkdir(parents=True, exist_ok=True)
             with open(DEFAULT_SERVICE_ACCOUNT_FILE, "w", encoding="utf-8") as f:
                 json.dump(parsed, f, indent=2)
 
-            # Update config
-            cls.save_config(folder_id=cls.get_config().get("folder_id", ""), sa_file_path=str(DEFAULT_SERVICE_ACCOUNT_FILE))
+            # Also mirror to config/ for backwards compatibility
+            try:
+                with open(LEGACY_SERVICE_ACCOUNT_FILE, "w", encoding="utf-8") as f:
+                    json.dump(parsed, f, indent=2)
+            except Exception:
+                pass
+
+            # Update config with relative path inside config/gdrive/
+            rel_path = "config/gdrive/gdrive_service_account.json"
+            cls.save_config(folder_id=cls.get_config().get("folder_id", ""), sa_file_path=rel_path)
             return True, f"Service account key saved for: {parsed.get('client_email')}"
         except Exception as e:
             return False, f"Failed parsing JSON key: {e}"
@@ -151,8 +248,9 @@ class GoogleDriveService:
         """Checks whether Google Drive credentials and folder_id are present."""
         cfg = cls.get_config()
         has_folder = bool(cfg.get("folder_id"))
+        sa_resolved = cls.resolve_service_account_file(cfg.get("service_account_file"))
         has_credentials = bool(cfg.get("service_account_json_raw")) or (
-            bool(cfg.get("service_account_file")) and Path(cfg["service_account_file"]).exists()
+            sa_resolved is not None and sa_resolved.exists()
         )
         return has_folder and has_credentials
 
@@ -163,16 +261,21 @@ class GoogleDriveService:
         from googleapiclient.discovery import build
 
         cfg = cls.get_config()
+        sa_resolved = cls.resolve_service_account_file(cfg.get("service_account_file"))
 
         if cfg.get("service_account_json_raw"):
             info = json.loads(cfg["service_account_json_raw"])
             creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
-        elif cfg.get("service_account_file") and Path(cfg["service_account_file"]).exists():
-            creds = service_account.Credentials.from_service_account_file(cfg["service_account_file"], scopes=SCOPES)
+        elif sa_resolved and sa_resolved.exists():
+            creds = service_account.Credentials.from_service_account_file(str(sa_resolved), scopes=SCOPES)
         else:
-            raise ValueError("No valid Google Service Account credentials found.")
+            raise ValueError(
+                "No valid Google Service Account credentials found. "
+                "Ensure your service account JSON file is present under 'config/gdrive/' or 'config/'."
+            )
 
         return build("drive", "v3", credentials=creds, cache_discovery=False)
+
 
     @classmethod
     def test_connection(cls) -> Dict[str, Any]:

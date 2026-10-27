@@ -199,21 +199,33 @@ with tab_backup:
             st.caption(gdrive_conn.get("message", "Credentials or Folder ID missing."))
 
         with st.expander("⚙️ Configure Google Drive Cloud Sync Settings", expanded=(gdrive_conn.get("status") != "connected")):
-            st.markdown(
-                "**Setup Instructions:**\n"
-                "1. Create a free **Google Cloud Service Account** at [console.cloud.google.com](https://console.cloud.google.com/) and enable the **Google Drive API**.\n"
-                "2. Create and download a **JSON Key** for the Service Account.\n"
-                "3. In Google Drive, create a folder (e.g. `InvestIQ_Data`) and **share it with the Service Account email** (giving *Editor* permission).\n"
-                "4. Enter the **Folder ID** (the long string at the end of the folder URL) and upload the JSON key below."
-            )
-            cfg_c1, cfg_c2 = st.columns(2)
-            with cfg_c1:
+            sa_path = GoogleDriveService.resolve_service_account_file(gdrive_cfg.get("service_account_file"))
+            sa_email = ""
+            if sa_path and sa_path.exists():
+                try:
+                    import json
+                    with open(sa_path, "r", encoding="utf-8") as f:
+                        sa_email = json.load(f).get("client_email", "")
+                except Exception:
+                    pass
+
+            if sa_email:
+                st.info(f"🔑 **Service Account:** `{sa_email}` *(loaded from `config/gdrive/{sa_path.name}`)*\n\n*Ensure your Google Drive folder is shared with this email with **Editor** permission.*")
+            elif sa_path and sa_path.exists():
+                st.info(f"🔑 **Service Account:** Loaded from `config/gdrive/{sa_path.name}`")
+            else:
+                st.warning("⚠️ **No Service Account Key Found:** Please place your service account JSON file inside `config/gdrive/`.")
+
+            col_fid, col_opts = st.columns([1.5, 1.5])
+            with col_fid:
                 gdrive_folder_id = st.text_input(
                     "Google Drive Folder ID",
                     value=gdrive_cfg.get("folder_id", ""),
-                    placeholder="e.g. 1a2b3c4d5e6f7g8h9...",
+                    placeholder="e.g. 1atBhonsk_qdG7KW9zShYCppmtWYvxAmO",
+                    help="The alphanumeric ID at the end of your Google Drive folder URL.",
                     key="gdrive_folder_id_input"
                 )
+            with col_opts:
                 auto_backup_chk = st.checkbox(
                     "Auto-backup DB when new holdings are uploaded",
                     value=gdrive_cfg.get("auto_backup_enabled", True),
@@ -224,30 +236,8 @@ with tab_backup:
                     value=gdrive_cfg.get("auto_restore_enabled", True),
                     key="gdrive_auto_restore_chk"
                 )
-            with cfg_c2:
-                uploaded_sa_file = st.file_uploader(
-                    "Upload Service Account JSON Key",
-                    type=["json"],
-                    key="gdrive_sa_uploader"
-                )
-                sa_paste = st.text_area(
-                    "Or Paste Service Account JSON Key",
-                    height=100,
-                    placeholder='{"type": "service_account", "project_id": "...", "client_email": "..."}',
-                    key="gdrive_sa_paste"
-                )
 
             if st.button("💾 Save Google Drive Settings", type="primary", width="stretch", key="save_gdrive_settings_btn"):
-                if uploaded_sa_file is not None:
-                    json_str = uploaded_sa_file.getvalue().decode("utf-8")
-                    ok, msg = GoogleDriveService.save_service_account_json(json_str)
-                    if not ok:
-                        st.error(msg)
-                elif sa_paste.strip():
-                    ok, msg = GoogleDriveService.save_service_account_json(sa_paste.strip())
-                    if not ok:
-                        st.error(msg)
-                
                 saved = GoogleDriveService.save_config(
                     folder_id=gdrive_folder_id,
                     auto_backup=auto_backup_chk,

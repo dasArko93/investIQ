@@ -112,6 +112,7 @@ class HoldingsService:
         """
         Groups a list of snapshot dicts by:
         - "All Uploads": returns all snapshots (sorted by date)
+        - "Current Month": returns all uploads in the current month (or latest month)
         - "Monthly View": Groups by Year and Month, picking the latest snapshot of each month.
         - "Yearly View": Groups by Year, picking the latest snapshot of each year.
         """
@@ -120,7 +121,23 @@ class HoldingsService:
         
         sorted_snaps = sorted(snapshots, key=lambda s: s["date"])
         
-        if view_mode == "Monthly View":
+        if "Current Month" in view_mode:
+            from datetime import datetime
+            now = datetime.now()
+            cur_snaps = [
+                s for s in sorted_snaps 
+                if s["date"].year == now.year and s["date"].month == now.month
+            ]
+            if cur_snaps:
+                return cur_snaps
+            # Fallback to latest available month if current calendar month has no snapshots
+            latest = sorted_snaps[-1]["date"]
+            return [
+                s for s in sorted_snaps
+                if s["date"].year == latest.year and s["date"].month == latest.month
+            ]
+
+        elif view_mode == "Monthly View":
             grouped = {}
             for snap in sorted_snaps:
                 key = (snap["date"].year, snap["date"].month)

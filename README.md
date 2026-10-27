@@ -5,9 +5,17 @@ InvestIQ is a Streamlit application for long-term Indian equity portfolio resear
 ## Run Locally
 
 ```powershell
-python -m pip install -r requirements.txt
-python -m streamlit run app.py
+# Using the project's virtual environment (.venv)
+.\.venv\Scripts\python.exe -m streamlit run app.py
+
+# Or activate the virtual environment first:
+.\.venv\Scripts\Activate.ps1
+streamlit run app.py
+
+# Or simply execute:
+.\run.bat
 ```
+
 
 ## Data Inputs
 

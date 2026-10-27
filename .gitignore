@@ -8,3 +8,5 @@ data/snapshots/
 .streamlit/secrets.toml
 config/gdrive_service_account.json
 config/gdrive_config.json
+config/gdrive/
+config/gdrive/*.json
