@@ -744,7 +744,15 @@ def render_investiq_dashboard():
     health = HealthService.evaluate(portfolio, avg_quality, sector_count) if not portfolio.empty else 87
     total_return = summary["return_pct"]
 
-    hour = datetime.now().hour
+    # Determine greeting based on Indian Standard Time (IST, UTC+5:30)
+    try:
+        from zoneinfo import ZoneInfo
+        now_ist = datetime.now(ZoneInfo("Asia/Kolkata"))
+    except Exception:
+        from datetime import timezone, timedelta
+        now_ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
+
+    hour = now_ist.hour
     if 5 <= hour < 12:
         greeting = "Good Morning"
     elif 12 <= hour < 17:

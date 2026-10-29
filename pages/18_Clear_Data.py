@@ -201,20 +201,50 @@ with tab_backup:
         with st.expander("⚙️ Configure Google Drive Cloud Sync Settings", expanded=(gdrive_conn.get("status") != "connected")):
             sa_path = GoogleDriveService.resolve_service_account_file(gdrive_cfg.get("service_account_file"))
             sa_email = ""
+            source_desc = ""
+
             if sa_path and sa_path.exists():
                 try:
                     import json
                     with open(sa_path, "r", encoding="utf-8") as f:
                         sa_email = json.load(f).get("client_email", "")
+                        source_desc = f"loaded from `config/gdrive/{sa_path.name}`"
+                except Exception:
+                    pass
+            elif gdrive_cfg.get("service_account_json_raw"):
+                try:
+                    import json
+                    sa_info = json.loads(gdrive_cfg["service_account_json_raw"])
+                    sa_email = sa_info.get("client_email", "")
+                    source_desc = "loaded from Streamlit Secrets (`st.secrets`)"
                 except Exception:
                     pass
 
             if sa_email:
-                st.info(f"🔑 **Service Account:** `{sa_email}` *(loaded from `config/gdrive/{sa_path.name}`)*\n\n*Ensure your Google Drive folder is shared with this email with **Editor** permission.*")
+                st.info(f"🔑 **Service Account Active:** `{sa_email}` *({source_desc})*\n\n*Ensure your Google Drive folder is shared with this email with **Editor** permission.*")
             elif sa_path and sa_path.exists():
                 st.info(f"🔑 **Service Account:** Loaded from `config/gdrive/{sa_path.name}`")
             else:
-                st.warning("⚠️ **No Service Account Key Found:** Please place your service account JSON file inside `config/gdrive/`.")
+                st.warning("⚠️ **No Service Account Key Found:** Upload your JSON key below or configure it in Streamlit Cloud Secrets.")
+
+            # Direct Upload Option (Essential for Streamlit Cloud and quick setup)
+            sa_upload = st.file_uploader(
+                "📤 Upload Service Account Key File (.json)",
+                type=["json"],
+                help="Upload your Google Cloud service account JSON key file directly.",
+                key="gdrive_sa_file_uploader_admin"
+            )
+            if sa_upload is not None:
+                try:
+                    content_str = sa_upload.getvalue().decode("utf-8")
+                    ok, msg = GoogleDriveService.save_service_account_json(content_str)
+                    if ok:
+                        st.success(f"✅ {msg}")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ {msg}")
+                except Exception as ex:
+                    st.error(f"Failed processing uploaded key: {ex}")
 
             col_fid, col_opts = st.columns([1.5, 1.5])
             with col_fid:
@@ -248,6 +278,18 @@ with tab_backup:
                     st.rerun()
                 else:
                     st.error("Failed to save settings.")
+
+            st.write("")
+            # Streamlit Cloud Permanent Secrets Accordion
+            with st.expander("☁️ Streamlit Community Cloud: How to keep credentials permanently configured", expanded=False):
+                st.markdown(
+                    "When deployed to **Streamlit Community Cloud**, uploaded files may be reset if the cloud container restarts. "
+                    "To make your Google Drive sync **permanent** across all cloud restarts:\n\n"
+                    "1. Open your app on **[share.streamlit.io](https://share.streamlit.io)**.\n"
+                    "2. In the app menu (`...`), click **Settings** → **Secrets**.\n"
+                    "3. Paste the TOML block below and click **Save**:"
+                )
+                st.code(GoogleDriveService.generate_streamlit_secrets_toml(), language="toml")
 
         st.divider()
         st.markdown("### 📥 Manual File Download & Restore")
