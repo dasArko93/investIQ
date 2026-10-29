@@ -133,38 +133,56 @@ class GoogleDriveService:
         try:
             import streamlit as st
             if hasattr(st, "secrets"):
+                # Direct top-level folder ID overrides
+                for fid_key in ["folder_id", "GDRIVE_FOLDER_ID", "gdrive_folder_id"]:
+                    if fid_key in st.secrets:
+                        config["folder_id"] = str(st.secrets[fid_key]).strip()
+
                 # Case A: [google_drive] table
                 if "google_drive" in st.secrets:
                     sec = st.secrets["google_drive"]
                     for k in ["folder_id", "service_account_file", "auto_backup_enabled", "auto_restore_enabled"]:
                         if k in sec:
                             config[k] = sec[k]
-                    if "type" in sec and sec.get("type") == "service_account":
+                    if hasattr(sec, "get") and sec.get("type") == "service_account":
                         config["service_account_json_raw"] = json.dumps(dict(sec))
                     if "service_account" in sec:
                         sa_val = sec["service_account"]
-                        if isinstance(sa_val, dict):
-                            config["service_account_json_raw"] = json.dumps(dict(sa_val))
-                        elif isinstance(sa_val, str):
+                        if isinstance(sa_val, str):
                             config["service_account_json_raw"] = sa_val
+                        elif hasattr(sa_val, "items") or isinstance(sa_val, dict):
+                            config["service_account_json_raw"] = json.dumps(dict(sa_val))
 
-                # Case B: [gdrive_service_account] table
-                for key_name in ["gdrive_service_account", "gdrive", "service_account"]:
+                # Case B: [gdrive_service_account], [gcp_service_account], etc.
+                for key_name in ["gdrive_service_account", "gcp_service_account", "gdrive", "service_account"]:
                     if key_name in st.secrets and not config.get("service_account_json_raw"):
                         val = st.secrets[key_name]
-                        if isinstance(val, dict) and "client_email" in val:
-                            config["service_account_json_raw"] = json.dumps(dict(val))
-                        elif isinstance(val, str) and "client_email" in val:
+                        if isinstance(val, str) and ("client_email" in val or "private_key" in val):
                             config["service_account_json_raw"] = val
+                        elif hasattr(val, "items") or isinstance(val, dict):
+                            val_dict = dict(val)
+                            if "client_email" in val_dict or "private_key" in val_dict:
+                                config["service_account_json_raw"] = json.dumps(val_dict)
 
                 # Case C: String key
                 for str_key in ["GDRIVE_SERVICE_ACCOUNT_JSON", "gdrive_service_account_json", "SERVICE_ACCOUNT_JSON"]:
                     if str_key in st.secrets and not config.get("service_account_json_raw"):
                         val = st.secrets[str_key]
-                        if isinstance(val, str) and "client_email" in val:
+                        if isinstance(val, str) and ("client_email" in val or "private_key" in val):
                             config["service_account_json_raw"] = val
         except Exception:
             pass
+
+        # If secrets gave us a raw service account JSON, write it to DEFAULT_SERVICE_ACCOUNT_FILE if missing
+        if config.get("service_account_json_raw"):
+            try:
+                if not DEFAULT_SERVICE_ACCOUNT_FILE.exists():
+                    GDRIVE_DIR.mkdir(parents=True, exist_ok=True)
+                    with open(DEFAULT_SERVICE_ACCOUNT_FILE, "w", encoding="utf-8") as f:
+                        f.write(config["service_account_json_raw"])
+                config["service_account_file"] = str(DEFAULT_SERVICE_ACCOUNT_FILE)
+            except Exception:
+                pass
 
         # 2. Check local gdrive_config.json
         if GDRIVE_CONFIG_FILE.exists():
@@ -255,6 +273,66 @@ class GoogleDriveService:
         return has_folder and has_credentials
 
     @classmethod
+    def generate_streamlit_secrets_toml(cls) -> str:
+        """
+        Generates the exact TOML snippet to copy-paste into Streamlit Cloud Secrets.
+        Pulls values from existing local credentials if available.
+        """
+        cfg = cls.get_config()
+        folder_id = cfg.get("folder_id", DEFAULT_FOLDER_ID)
+
+        sa_data = {}
+        if cfg.get("service_account_json_raw"):
+            try:
+                sa_data = json.loads(cfg["service_account_json_raw"])
+            except Exception:
+                pass
+
+        if not sa_data:
+            resolved = cls.resolve_service_account_file(cfg.get("service_account_file"))
+            if resolved and resolved.exists():
+                try:
+                    with open(resolved, "r", encoding="utf-8") as f:
+                        sa_data = json.load(f)
+                except Exception:
+                    pass
+
+        lines = [
+            "# -- InvestIQ Google Drive Sync for Streamlit Cloud --",
+            "[google_drive]",
+            f'folder_id = "{folder_id}"',
+            "auto_backup_enabled = true",
+            "auto_restore_enabled = true",
+            "",
+            "[gdrive_service_account]"
+        ]
+
+        if sa_data:
+            for k in [
+                "type", "project_id", "private_key_id", "client_email",
+                "client_id", "auth_uri", "token_uri", "auth_provider_x509_cert_url",
+                "client_x509_cert_url", "universe_domain"
+            ]:
+                if k in sa_data:
+                    lines.append(f'{k} = "{sa_data[k]}"')
+
+            pk = sa_data.get("private_key", "")
+            if pk:
+                # Use multiline literal string format in TOML
+                lines.append(f"private_key = '''{pk}'''")
+        else:
+            lines.extend([
+                'type = "service_account"',
+                'project_id = "your-gcp-project-id"',
+                'private_key = """-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"""',
+                'client_email = "your-sa@your-project.iam.gserviceaccount.com"',
+                'client_id = "100000000000000000000"',
+                'token_uri = "https://oauth2.googleapis.com/token"'
+            ])
+
+        return "\n".join(lines)
+
+    @classmethod
     def _build_drive_service(cls):
         """Constructs and returns Google Drive API v3 resource client."""
         from google.oauth2 import service_account
@@ -265,13 +343,15 @@ class GoogleDriveService:
 
         if cfg.get("service_account_json_raw"):
             info = json.loads(cfg["service_account_json_raw"])
+            if "private_key" in info and isinstance(info["private_key"], str):
+                info["private_key"] = info["private_key"].replace("\\n", "\n")
             creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
         elif sa_resolved and sa_resolved.exists():
             creds = service_account.Credentials.from_service_account_file(str(sa_resolved), scopes=SCOPES)
         else:
             raise ValueError(
                 "No valid Google Service Account credentials found. "
-                "Ensure your service account JSON file is present under 'config/gdrive/' or 'config/'."
+                "Ensure your service account JSON file is present under 'config/gdrive/' or in Streamlit Secrets."
             )
 
         return build("drive", "v3", credentials=creds, cache_discovery=False)
