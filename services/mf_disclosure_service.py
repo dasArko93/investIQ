@@ -256,6 +256,31 @@ class MFDisclosureService:
             )])
         }
 
+    @classmethod
+    def get_amc_aum_summary(cls) -> list[dict]:
+        """Returns Top AMCs ranked by total money managed (AUM in Cr) and scheme count."""
+        from database.db import SessionLocal
+        from database.models import MFScheme
+        from sqlalchemy import func
+        db = SessionLocal()
+        results = []
+        try:
+            rows = db.query(
+                MFScheme.amc,
+                func.sum(MFScheme.aum_cr).label("total_aum"),
+                func.count(MFScheme.id).label("scheme_count")
+            ).group_by(MFScheme.amc).order_by(func.sum(MFScheme.aum_cr).desc()).all()
+            for r in rows:
+                if r[0]:
+                    results.append({
+                        "AMC": r[0],
+                        "Total Money Managed (₹ Cr)": int(round(float(r[1] or 0.0))),
+                        "Scheme Count": int(r[2] or 0)
+                    })
+        finally:
+            db.close()
+        return results
+
     # -----------------------------------------------------------------------
     # Comprehensive Seed Data for All Major Indian Fund Houses
     # -----------------------------------------------------------------------

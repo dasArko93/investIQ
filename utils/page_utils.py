@@ -367,6 +367,7 @@ def render_sidebar():
             st.page_link("pages/2_Stock_Universe.py", label="Stock Universe & Screening", icon="🌐")
             st.page_link("pages/4_Stock_Analysis.py", label="Fundamental Analysis", icon="📈")
             st.page_link("pages/5_MF_Holding_Pattern.py", label="MF Holding Pattern", icon="📊")
+            st.page_link("pages/8_Pre_Market_Scanner.py", label="Pre-Market Breakout Radar", icon="⚡")
             st.caption("🧹 Database Operations")
             st.page_link("pages/18_Clear_Data.py", label="Database Admin", icon="⚙️")
             
