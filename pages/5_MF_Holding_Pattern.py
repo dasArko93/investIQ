@@ -164,10 +164,11 @@ Click <em>"Download All Disclosures"</em> to automatically ingest official month
 Explore institutional conviction across Large Cap, Mid Cap, Small Cap, and Flexi/Multi Cap schemes. 
 Every stock is aggregated via <strong>ISIN</strong> with transparent conviction metrics:
 <ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
+<li><strong>Filter Category Selector:</strong> Filter consensus dynamically by fund peer group (Large Cap, Mid Cap, Small Cap, etc.) right beside the sector filter to see category-specific conviction.</li>
 <li><strong>Confidence Score (C<sub>s</sub>):</strong> Percentage of active mutual funds in the benchmark cohort holding the stock.</li>
 <li><strong>Average Across All Funds:</strong> Mean portfolio weight across all schemes in the cohort (including 0% for non-holders).</li>
 <li><strong>Conviction Weight:</strong> Mean allocation calculated strictly among schemes actively holding the stock.</li>
-<li><strong>Summary Deep-Dive Dashboard:</strong> Inspect individual scheme allocations for any stock via the <em>Scheme-Level Holding Inspector</em>, view top 10 holding funds in an interactive bar chart, audit scheme concentration tables, and evaluate sector/cap-tier distribution signals.</li>
+<li><strong>Summary Deep-Dive Dashboard:</strong> Inspect individual scheme allocations for any stock via the <em>Scheme-Level Holding Inspector</em>, view top AMCs by Total Money Managed (AUM in ₹ Cr) and scheme count.</li>
 </ul>
 </div>
 </div>
@@ -176,12 +177,12 @@ Every stock is aggregated via <strong>ISIN</strong> with transparent conviction 
 <div class="guide-badge">3</div>
 <div>
 <strong>Month-over-Month Delta Tracking (Sentiment Engine):</strong><br/>
-Audits period-over-period institutional capital flow between snapshot month <code>T<sub>0</sub></code> and previous month <code>T<sub>-1</sub></code>:
+Audits period-over-period institutional capital flow between snapshot month <code>T<sub>0</sub></code> and previous month <code>T<sub>-1</sub></code> with Fund Category filtering:
 <ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
-<li><span class="pill-green">🚀 Aggressive Accumulation:</span> Weight change <strong>&Delta;W &gt; +0.5%</strong> AND Confidence change <strong>&Delta;C &gt; +10%</strong>.</li>
-<li><span class="pill-green">🟢 Modest Buying:</span> Weight change <strong>&Delta;W &gt; 0%</strong> AND Confidence change <strong>&Delta;C &ge; 0%</strong>.</li>
-<li><span class="pill-amber">🟡 Profit Booking / Trimming:</span> Allocation scaled back (<strong>&Delta;W &lt; 0%</strong>).</li>
-<li><span class="pill-red">🔴 Complete Exit:</span> Position liquidated across all funds (Confidence drops to 0%).</li>
+<li><span class="pill-green">🚀 Accumulation:</span> Institutional buying and allocation increase (<strong>&Delta;W &gt; 0%</strong>).</li>
+<li><span class="pill-gray">⚪ Holding:</span> Allocation maintained steady within neutral band (<strong>&Delta;W &asymp; 0%</strong>).</li>
+<li><span class="pill-amber">🟡 Trimming:</span> Position trimmed, profit booking, or full exit (<strong>&Delta;W &lt; 0%</strong>).</li>
+<li><strong>Delta Threshold Cutoff:</strong> Filter chart by minimum absolute delta (5% delta, 10% delta, or custom min/max range) with up to 60 stocks displayed.</li>
 </ul>
 </div>
 </div>
@@ -189,13 +190,13 @@ Audits period-over-period institutional capital flow between snapshot month <cod
 <div class="guide-step">
 <div class="guide-badge">4</div>
 <div>
-<strong>Portfolio Gap & Misalignment Engine:</strong><br/>
-Audits your personal holdings against institutional consensus using standard ISIN keys:
+<strong>Next Best Actions (Recommendations Engine):</strong><br/>
+Automated rule-based recommendations aligned to your selected Fund Category:
 <ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
-<li><span class="pill-green">Consensus Aligned:</span> Stocks you hold that also enjoy high institutional conviction (&ge; 30% confidence).</li>
-<li><span class="pill-amber">Institutional Misses (Gaps):</span> High institutional confidence (&ge; 50–60%) across peer funds, but <strong>0% in your portfolio</strong>.</li>
-<li><span class="pill-red">Unbacked Bets:</span> Stocks where your personal allocation is high (&gt; 3–5%), but institutional confidence is under 10–15%.</li>
-<li><strong>Active Weight Difference:</strong> <code>Your Weight % &minus; MF Consensus Weight %</code> (Overweight &gt; +5%, Underweight &lt; -3%).</li>
+<li><strong>Intuitive Metric Strip:</strong> Clearly shows <code>Current User Weight</code>, <code>Target Weight</code>, integer <code>Buy Qty (+shares)</code>, and integer <code>Sell Qty (-shares)</code>.</li>
+<li><span class="pill-green">Buy Candidates:</span> High institutional conviction (&ge; 50%) with active accumulation where user holds 0%.</li>
+<li><span class="pill-amber">Trim Candidates:</span> Stocks where user is heavily overconcentrated (&gt; 8%) and institutions are trimming.</li>
+<li><span class="pill-red">Review Candidates:</span> Unbacked speculative stocks held by fewer than 10% of institutional funds.</li>
 </ul>
 </div>
 </div>
@@ -204,20 +205,13 @@ Audits your personal holdings against institutional consensus using standard ISI
 <div class="guide-badge">5</div>
 <div>
 <strong>🎛️ Interactive Portfolio Rebalancing Simulator & Capital Engine:</strong><br/>
-Execute structured convergence of your personal portfolio towards institutional mutual fund standards:
+Execute structured convergence of your personal portfolio towards institutional mutual fund standards across 4 ordered steps:
 <ul style="margin:6px 0 0 16px; padding:0; line-height:1.5;">
-<li><strong>Institutional AUM Cohort Filter:</strong> Benchmark dynamically against <strong>Top 10 Schemes by AUM (Mega-Whales)</strong>, <strong>Top 20 Schemes</strong>, <strong>Top 30 Schemes</strong>, <strong>Top 50 Schemes</strong>, or the full scheme universe. Consensus metrics update dynamically based on the selected cohort.</li>
-<li><strong>Target Alignment Intensity (%):</strong> Slide between <strong>10% to 100% convergence</strong> to specify the exact degree of institutional alignment.</li>
-<li><strong>Execution Strategies & Dynamic Capital Engine:</strong>
-  <ul style="margin:4px 0 0 16px; padding:0;">
-    <li><strong>💰 Fresh Capital Injection (Zero Selling — Pure Buy):</strong> Preserves 100% of your existing winning shares without a single trim. The system automatically computes and displays the exact fresh capital required to build consensus positions.</li>
-    <li><strong>💼 Self-Funding (Trim Overweights to Fund Buys):</strong> Systematically trims overweighted and unbacked stocks to generate cash, funding high-conviction buys across Large, Mid, and Small Cap. Displays trimming proceeds freed vs buy needs.</li>
-    <li><strong>⚖️ Hybrid:</strong> Deploy a custom cash amount; any remaining balance is covered through gentle trimming.</li>
-  </ul>
-</li>
-<li><strong>Financial Balance Strip:</strong> Instant visibility into <em>Current Portfolio Value</em>, <em>Trimming Capital Freed</em>, <em>Buy Capital Needed</em>, <em>Fresh Capital Needed</em>, and <em>New Portfolio Base</em>.</li>
-<li><strong>Market Cap Allocation Reallocation:</strong> Visual cards summarizing buy vs trim order totals across Large Cap, Mid Cap, and Small Cap tiers.</li>
-<li><strong>Actionable Trade Orders Table:</strong> Complete trade sheet displaying <code>Security</code>, <code>Stock Name</code>, <code>Market Cap Tier</code>, <code>Action</code> (BUY NEW, BUY MORE, TRIM, SELL ALL, HOLD), <code>Current Qty</code>, <code>Qty Change</code>, <code>Target Qty</code>, <code>LTP (₹)</code>, <code>Trade Amount (₹)</code>, and <code>Target Weight %</code>. Strict mathematical guarantee: <code>Current Qty + Qty Change = Target Qty</code>. Downloadable as CSV for one-click broker execution.</li>
+<li><strong>1️⃣ Fund Category Filter:</strong> Target specific fund peer groups (Large Cap, Mid Cap, Small Cap, Flexi Cap, All).</li>
+<li><strong>2️⃣ Institutional AUM Cohort:</strong> Benchmark dynamically against Top 10 Mega-Whales, Top 20, Top 30, Top 50, or All Schemes.</li>
+<li><strong>3️⃣ Target Alignment Intensity (%):</strong> Slide between 10% to 100% convergence.</li>
+<li><strong>4️⃣ Capital Deployment Strategy:</strong> Fresh Capital Injection (Zero Selling), Self-Funding (Trim to Buy), or Hybrid.</li>
+<li><strong>Clean Integer Quantities:</strong> All share quantities and rupee amounts across cards, metrics, and execution sheets are converted to neat integer numbers without decimal clutter.</li>
 </ul>
 </div>
 </div>
@@ -331,9 +325,23 @@ with st.expander("📊 AMFI Scheme Universe Browser (Live — All Indian MF Sche
         st.dataframe(cat_df, width="stretch", hide_index=True,
                      column_config={"Scheme Count": st.column_config.ProgressColumn("Scheme Count", format="%d", min_value=0, max_value=int(cat_df["Scheme Count"].max()))})
 
-        st.markdown("**Top AMCs by Scheme Count:**")
-        amc_df = pd.DataFrame(list(amfi_summary["by_amc"].items()), columns=["AMC", "Scheme Count"]).head(20)
-        st.dataframe(amc_df, width="stretch", hide_index=True)
+        st.markdown("**Top AMCs by Total Money Managed:**")
+        amc_aum_list = MFDisclosureService.get_amc_aum_summary()
+        if amc_aum_list:
+            amc_df = pd.DataFrame(amc_aum_list)
+            st.dataframe(
+                amc_df,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "AMC": st.column_config.TextColumn("AMC Name", width="medium"),
+                    "Total Money Managed (₹ Cr)": st.column_config.NumberColumn("Total Money Managed (₹ Cr)", format="₹%,d Cr"),
+                    "Scheme Count": st.column_config.NumberColumn("Scheme Count", format="%d")
+                }
+            )
+        else:
+            amc_df = pd.DataFrame(list(amfi_summary["by_amc"].items()), columns=["AMC", "Scheme Count"]).head(20)
+            st.dataframe(amc_df, width="stretch", hide_index=True)
     else:
         st.info("Click **'Refresh AMFI Scheme List'** above to fetch the live scheme master from AMFI.")
 
@@ -455,21 +463,30 @@ with tab_consensus:
     if consensus_df.empty:
         st.warning("No consensus data available for the selected filter. Click 'Fetch Latest Disclosures' above.")
     else:
-        c1, c2, c3 = st.columns([1.5, 1.5, 2])
+        c1, c2, c3, c4 = st.columns([1.2, 1.2, 1.2, 1.8])
         with c1:
-            tier_filter = st.selectbox("Filter Market Cap Tier", ["All Tiers"] + sorted(consensus_df["Market Cap Tier"].unique().tolist()), index=0)
+            tier_filter = st.selectbox("Filter Market Cap Tier", ["All Tiers"] + sorted(consensus_df["Market Cap Tier"].unique().tolist()) if not consensus_df.empty and "Market Cap Tier" in consensus_df.columns else ["All Tiers"], index=0)
         with c2:
-            all_sec = sorted(consensus_df["Sector"].unique().tolist())
+            all_sec = sorted(consensus_df["Sector"].unique().tolist()) if not consensus_df.empty and "Sector" in consensus_df.columns else []
             sec_filter = st.selectbox("Filter Sector", ["All Sectors"] + all_sec, index=0)
         with c3:
+            fund_cat_options = ["All Categories", "Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
+            cat_filter = st.selectbox("Filter Category", fund_cat_options, index=0, key="cons_tab_cat_filter")
+        with c4:
             search_stock = st.text_input("🔍 Search Stock or ISIN", placeholder="Type Reliance, HDFC, BEL, INE...", key="cons_search")
 
-        filtered_cons = consensus_df.copy()
-        if tier_filter != "All Tiers":
+        # Dynamically evaluate consensus for selected category if specific category is selected
+        if cat_filter != "All Categories":
+            active_cons_df = MFConsensusEngine.get_consensus_metrics(snapshot_month=selected_snapshot, category_filter=cat_filter)
+        else:
+            active_cons_df = consensus_df.copy()
+
+        filtered_cons = active_cons_df.copy() if not active_cons_df.empty else consensus_df.copy()
+        if tier_filter != "All Tiers" and not filtered_cons.empty and "Market Cap Tier" in filtered_cons.columns:
             filtered_cons = filtered_cons[filtered_cons["Market Cap Tier"] == tier_filter]
-        if sec_filter != "All Sectors":
+        if sec_filter != "All Sectors" and not filtered_cons.empty and "Sector" in filtered_cons.columns:
             filtered_cons = filtered_cons[filtered_cons["Sector"] == sec_filter]
-        if search_stock.strip():
+        if search_stock.strip() and not filtered_cons.empty:
             q = search_stock.strip().upper()
             filtered_cons = filtered_cons[
                 filtered_cons["Ticker"].str.contains(q, case=False, na=False) |
@@ -521,7 +538,7 @@ with tab_consensus:
                         "Schemes Holding:Q"
                     ]
                 )
-                .properties(height=max(380, len(top15_cons) * 26), title=f"Top Institutional Consensus Stocks — {selected_category} ({selected_snapshot})")
+                .properties(height=max(380, len(top15_cons) * 26), title=f"Top Institutional Consensus Stocks — {cat_filter if cat_filter != 'All Categories' else selected_category} ({selected_snapshot})")
             )
             st.altair_chart(cons_chart, width="stretch")
 
@@ -809,19 +826,37 @@ with tab_delta:
     st.markdown(f'<div class="section-hdr">Temporal Sentiment Engine: Month-over-Month Delta ({t0_display} vs {t1_display})</div>', unsafe_allow_html=True)
     st.caption(f"Measures fund manager sentiment shift between {t0_display} and {t1_display} through Weight Delta (ΔW) and Confidence Delta (ΔC).")
 
-    if deltas_df.empty:
+    # Allow filtering by Fund Category in Delta Engine
+    d_hdr1, d_hdr2, d_hdr3 = st.columns([1.5, 1.5, 2])
+    with d_hdr1:
+        delta_cat_options = ["All", "Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
+        selected_delta_cat = st.selectbox("🎯 Filter Fund Category", delta_cat_options, index=0, key="delta_fund_category_select")
+    with d_hdr2:
+        # 3 intuitive sentiment options as requested
+        sentiment_options = ["All", "Accumulation", "Holding", "Trimming"]
+        selected_sentiment = st.selectbox("📊 Sentiment Classification", sentiment_options, index=0, key="delta_sentiment_select")
+    with d_hdr3:
+        search_delta = st.text_input("🔍 Search Stock in Delta Engine", placeholder="Type stock name or ticker...", key="delta_search")
+
+    # Fetch category-filtered deltas if specified
+    if selected_delta_cat != "All":
+        active_deltas = MFConsensusEngine.get_temporal_deltas(t0_month=selected_snapshot, category_filter=selected_delta_cat)
+    else:
+        active_deltas = deltas_df.copy()
+
+    if active_deltas.empty:
         st.info("At least two monthly disclosure snapshots are required for delta tracking. Click 'Fetch Latest Disclosures' to load disclosure data.")
     else:
-        d_c1, d_c2 = st.columns([1.5, 2])
-        with d_c1:
-            sentiment_options = ["All Sentiments", "Aggressive Accumulation", "Modest Buying", "Profit Booking / Trimming", "Complete Exit"]
-            selected_sentiment = st.selectbox("Filter Sentiment Classification", sentiment_options, index=0)
-        with d_c2:
-            search_delta = st.text_input("🔍 Search Stock in Delta Engine", placeholder="Type stock name or ticker...", key="delta_search")
+        filtered_deltas = active_deltas.copy()
 
-        filtered_deltas = deltas_df.copy()
-        if selected_sentiment != "All Sentiments":
-            filtered_deltas = filtered_deltas[filtered_deltas["Sentiment"] == selected_sentiment]
+        # Apply 3-option sentiment filter
+        if selected_sentiment == "Accumulation":
+            filtered_deltas = filtered_deltas[filtered_deltas["Delta_Weight"] > 0.001]
+        elif selected_sentiment == "Trimming":
+            filtered_deltas = filtered_deltas[filtered_deltas["Delta_Weight"] < -0.001]
+        elif selected_sentiment == "Holding":
+            filtered_deltas = filtered_deltas[filtered_deltas["Delta_Weight"].abs() <= 0.001]
+
         if search_delta.strip():
             q = search_delta.strip().upper()
             filtered_deltas = filtered_deltas[
@@ -829,15 +864,49 @@ with tab_delta:
                 filtered_deltas["Stock Name"].str.contains(q, case=False, na=False)
             ]
 
-        # Delta Bar Chart (Top accumulation & trimming)
+        # ── Chart Controls: Stock Count & Threshold Cutoff ────────────────────
+        st.markdown("**Chart Customization & Delta Cutoff Threshold:**")
+        tc1, tc2 = st.columns([2, 2])
+        with tc1:
+            threshold_option = st.selectbox(
+                "Filter by Delta Threshold Cutoff",
+                ["All Moves (No Cutoff)", "5% Relative Delta (or ≥ 0.05% ΔW)", "10% Relative Delta (or ≥ 0.10% ΔW)", "High Impact (≥ 0.25% ΔW)", "Custom Range (Min & Max Delta)"],
+                index=0,
+                key="delta_threshold_option"
+            )
+        with tc2:
+            num_stocks_to_show = st.slider("Number of Stocks in Chart", min_value=10, max_value=60, value=30, step=5, key="delta_chart_stock_count")
+
+        chart_filtered = filtered_deltas.copy()
+        if threshold_option == "5% Relative Delta (or ≥ 0.05% ΔW)":
+            chart_filtered = chart_filtered[chart_filtered["Delta_Weight"].abs() >= 0.05]
+        elif threshold_option == "10% Relative Delta (or ≥ 0.10% ΔW)":
+            chart_filtered = chart_filtered[chart_filtered["Delta_Weight"].abs() >= 0.10]
+        elif threshold_option == "High Impact (≥ 0.25% ΔW)":
+            chart_filtered = chart_filtered[chart_filtered["Delta_Weight"].abs() >= 0.25]
+        elif threshold_option == "Custom Range (Min & Max Delta)":
+            min_d_val = float(filtered_deltas["Delta_Weight"].min()) if not filtered_deltas.empty else -1.0
+            max_d_val = float(filtered_deltas["Delta_Weight"].max()) if not filtered_deltas.empty else 1.0
+            min_cut, max_cut = st.slider(
+                "Select Delta Range (Between Min & Max ΔW pp)",
+                min_value=min_d_val,
+                max_value=max_d_val,
+                value=(min_d_val, max_d_val),
+                step=0.01,
+                format="%.2f"
+            )
+            chart_filtered = chart_filtered[(chart_filtered["Delta_Weight"] >= min_cut) & (chart_filtered["Delta_Weight"] <= max_cut)]
+
+        # Delta Bar Chart (Increased stocks count & dynamic cutoff)
+        half_n = max(5, num_stocks_to_show // 2)
         top_deltas = pd.concat([
-            filtered_deltas.nlargest(8, "Delta_Weight"),
-            filtered_deltas.nsmallest(8, "Delta_Weight")
+            chart_filtered.nlargest(half_n, "Delta_Weight"),
+            chart_filtered.nsmallest(half_n, "Delta_Weight")
         ]).drop_duplicates().sort_values(by="Delta_Weight", ascending=False)
 
         if not top_deltas.empty:
             top_deltas["Delta_Trend"] = top_deltas["Delta_Weight"].apply(
-                lambda x: "Accumulation (Buying)" if x > 0 else "Trimming (Selling)"
+                lambda x: "Accumulation (Buying)" if x > 0.001 else ("Trimming (Selling)" if x < -0.001 else "Holding (Neutral)")
             )
             delta_chart = (
                 alt.Chart(top_deltas)
@@ -848,8 +917,8 @@ with tab_delta:
                     color=alt.Color(
                         "Delta_Trend:N",
                         scale=alt.Scale(
-                            domain=["Accumulation (Buying)", "Trimming (Selling)"],
-                            range=["#16a34a", "#dc2626"]
+                            domain=["Accumulation (Buying)", "Holding (Neutral)", "Trimming (Selling)"],
+                            range=["#16a34a", "#64748b", "#dc2626"]
                         ),
                         legend=alt.Legend(title="Trend", labelColor="#000", titleColor="#000")
                     ),
@@ -864,9 +933,11 @@ with tab_delta:
                         alt.Tooltip("Weight_T1:Q", format=".2f", title=f"{t1_snap} Wt %")
                     ]
                 )
-                .properties(height=max(280, len(top_deltas) * 22), title=f"Allocation Shift: {t0_snap} vs {t1_snap} (ΔW)")
+                .properties(height=max(280, len(top_deltas) * 22), title=f"Allocation Shift ({selected_delta_cat}): {t0_snap} vs {t1_snap} (ΔW)")
             )
             st.altair_chart(delta_chart, width="stretch")
+        else:
+            st.info("No stocks match the selected sentiment and threshold cutoff criteria.")
 
         # Styled Table with Sentiment Icons
         st.markdown(f"**Period-over-Period Delta & Sentiment Table ({t0_snap} vs {t1_snap}):**")
@@ -1010,14 +1081,26 @@ with tab_nba:
     st.markdown('<div class="section-hdr">⚡ Next Best Action (NBA) Recommendation Engine</div>', unsafe_allow_html=True)
     st.caption("Automated rule-based recommendations prioritized by institutional conviction, trimming signals, and risk concentration.")
 
-    if not nba_actions:
-        st.info("No active recommendations generated. Your portfolio is well-aligned with mutual fund consensus!")
+    # Alignment based on Fund Category Selection
+    nba_col1, nba_col2 = st.columns([1.8, 2.2])
+    with nba_col1:
+        nba_cat_options = ["All Categories", "Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
+        selected_nba_cat = st.selectbox("🎯 Target Fund Category Alignment", nba_cat_options, index=0, key="nba_cat_selection", help="Align stock actions against specific fund peer groups.")
+    with nba_col2:
+        st.write("")
+        st.caption(f"Recommendations aligned against **{selected_nba_cat}** institutional consensus.")
+
+    active_nba_cat = None if selected_nba_cat == "All Categories" else selected_nba_cat
+    current_nba_actions = MFConsensusEngine.get_next_best_actions(snapshot_month=selected_snapshot, category_filter=active_nba_cat)
+
+    if not current_nba_actions:
+        st.info(f"No active recommendations generated for {selected_nba_cat}. Your portfolio is well-aligned with mutual fund consensus!")
     else:
         # Category count badges
-        buys = [a for a in nba_actions if a["type"] == "Buy Candidate"]
-        trims = [a for a in nba_actions if a["type"] == "Trim Candidate"]
-        reviews = [a for a in nba_actions if a["type"] == "Review Candidate"]
-        rebalances = [a for a in nba_actions if a["type"] == "Sector Rebalance"]
+        buys = [a for a in current_nba_actions if a["type"] == "Buy Candidate"]
+        trims = [a for a in current_nba_actions if a["type"] == "Trim Candidate"]
+        reviews = [a for a in current_nba_actions if a["type"] == "Review Candidate"]
+        rebalances = [a for a in current_nba_actions if a["type"] == "Sector Rebalance"]
 
         nba_filter = st.radio(
             "Filter Actions by Type",
@@ -1025,7 +1108,7 @@ with tab_nba:
             horizontal=True
         )
 
-        display_actions = nba_actions
+        display_actions = current_nba_actions
         if "Buy Candidates" in nba_filter:
             display_actions = buys
         elif "Trim Candidates" in nba_filter:
@@ -1042,34 +1125,32 @@ with tab_nba:
             stock_name = act["stock_name"]
             sector = act["sector"]
             reason = act["reason"]
+            u_wt = act.get("user_weight", 0.0)
+            t_wt = act.get("target_weight", 0.0)
+            b_qty = int(act.get("buy_qty", 0))
+            s_qty = int(act.get("sell_qty", 0))
 
             badge_pill = f'<span style="background:{color}22; color:{color}; border:1px solid {color}; border-radius:6px; padding:3px 8px; font-size:0.78rem; font-weight:800; margin-right:8px;">{badge_text}</span>'
             
-            st.markdown(
-                f"""
-                <div class="action-card" style="border-left: 5px solid {color};">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <div>
-                            {badge_pill}
-                            <strong style="font-size:1.05rem; color:#1e293b;">{ticker}</strong> 
-                            <span style="color:#64748b; font-size:0.9rem;">({stock_name})</span>
-                        </div>
-                        <div>
-                            <span class="pill-gray">{sector}</span>
-                        </div>
-                    </div>
-                    <div style="color:#334155; font-size:0.92rem; margin-top:6px; line-height:1.5;">
-                        {reason}
-                    </div>
-                    <div style="margin-top:10px; font-size:0.83rem; color:#64748b;">
-                        <strong>Current User Weight:</strong> {act['user_weight']:.1f}% &nbsp;|&nbsp; 
-                        <strong>MF Consensus Weight:</strong> {act['mf_weight']:.1f}% &nbsp;|&nbsp; 
-                        <strong>Institutional Confidence:</strong> {act['confidence']:.0f}%
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            # Intuitive summary metric badges
+            buy_badge = f'<span style="background:rgba(22,163,74,0.12); color:#16a34a; border:1px solid rgba(22,163,74,0.3); border-radius:6px; padding:3px 8px; font-weight:700;">+{b_qty:,} shares</span>' if b_qty > 0 else '<span style="color:#94a3b8;">0</span>'
+            sell_badge = f'<span style="background:rgba(220,38,38,0.12); color:#dc2626; border:1px solid rgba(220,38,38,0.3); border-radius:6px; padding:3px 8px; font-weight:700;">-{s_qty:,} shares</span>' if s_qty > 0 else '<span style="color:#94a3b8;">0</span>'
+
+            with st.container(border=True):
+                c_top1, c_top2 = st.columns([3.2, 1.2])
+                with c_top1:
+                    badge_styled = f":green[{badge_text}]" if "Buy" in badge_text else (":red[{badge_text}]" if "Trim" in badge_text or "Sell" in badge_text else f":blue[{badge_text}]")
+                    st.markdown(f"#### {badge_styled} &nbsp; **{ticker}** · *{stock_name}*")
+                with c_top2:
+                    st.markdown(f"<div style='text-align:right;'><span class='pill-gray'>{sector}</span></div>", unsafe_allow_html=True)
+
+                st.markdown(f"<div style='color:#334155; font-size:0.92rem; margin-bottom:8px;'>{reason}</div>", unsafe_allow_html=True)
+
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Current User Weight", f"{u_wt:.1f}%")
+                m2.metric("Target Weight", f"{t_wt:.1f}%")
+                m3.metric("Buy Quantity", f"+{b_qty:,} shs" if b_qty > 0 else "0")
+                m4.metric("Sell Quantity", f"-{s_qty:,} shs" if s_qty > 0 else "0")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 5: Interactive Rebalancing Simulator
@@ -1078,11 +1159,22 @@ with tab_sim:
     st.markdown('<div class="section-hdr">🎛️ Interactive Portfolio Rebalancing Simulator</div>', unsafe_allow_html=True)
     st.caption("Simulate aligning your personal portfolio with institutional mutual fund consensus across AUM cohorts, modeling capital injection, trimming, and actionable trade orders.")
 
-    # ── STEP 1 & 2: Top Controls Strip ──────────────────────────────────────
+    # ── 4-STEP CONTROLS STRIP ────────────────────────────────────────────────
     sim_col1, sim_col2 = st.columns([1.8, 2.2])
 
     with sim_col1:
-        st.markdown("**1️⃣ Institutional Benchmark AUM Cohort:**")
+        st.markdown("**1️⃣ Fund Category:**")
+        sim_cat_options = ["All Categories", "Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
+        chosen_sim_cat = st.selectbox(
+            "Select Fund Category",
+            options=sim_cat_options,
+            index=0,
+            key="sim_category_choice",
+            help="Filter the institutional universe to a specific fund category."
+        )
+        active_sim_cat = None if chosen_sim_cat == "All Categories" else chosen_sim_cat
+
+        st.markdown("**2️⃣ Institutional Benchmark AUM Cohort:**")
         cohort_options = [
             "Top 10 Schemes by AUM (Mega-Whales)",
             "Top 20 Schemes by AUM",
@@ -1107,7 +1199,8 @@ with tab_sim:
         }
         selected_top_n = cohort_map[chosen_cohort]
 
-        st.markdown("**2️⃣ Target Institutional Alignment Intensity (%):**")
+    with sim_col2:
+        st.markdown("**3️⃣ Target Institutional Alignment Intensity (%):**")
         alignment_pct = st.slider(
             "Target Alignment with Selected Cohort",
             min_value=10,
@@ -1120,19 +1213,8 @@ with tab_sim:
         )
         alignment_intensity = float(alignment_pct) / 100.0
         cohort_short_name = chosen_cohort.split('(')[0].strip()
-        st.caption(f"Modeling **{alignment_pct}% convergence** towards **{cohort_short_name}** consensus weights.")
 
-    # Probe baseline fresh capital required for Zero Selling / Pure Buy
-    probe_results = MFConsensusEngine.simulate_rebalance(
-        alignment_intensity=alignment_intensity,
-        rebalance_mode="fresh_injection",
-        snapshot_month=selected_snapshot,
-        top_n_aum=selected_top_n
-    )
-    rec_min_capital = probe_results.get("min_capital_for_zero_sell", 50000.0)
-
-    with sim_col2:
-        st.markdown("**3️⃣ Capital Deployment Strategy:**")
+        st.markdown("**4️⃣ Capital Deployment Strategy:**")
         strat_options = [
             "💰 Fresh Capital Injection (Zero Selling — Pure Buy)",
             "💼 Self-Funding (Trim Overweights to Fund Buys)",
@@ -1146,40 +1228,50 @@ with tab_sim:
             help="Fresh Capital Injection preserves 100% of existing holdings and buys institutional consensus using new capital. Self-funding trims overweighted or non-MF stocks to fund buys."
         )
 
-        injected_capital_input = 0.0
-        mode_key = "self_funding"
+    # Probe baseline fresh capital required for Zero Selling / Pure Buy
+    probe_results = MFConsensusEngine.simulate_rebalance(
+        alignment_intensity=alignment_intensity,
+        rebalance_mode="fresh_injection",
+        snapshot_month=selected_snapshot,
+        category_filter=active_sim_cat,
+        top_n_aum=selected_top_n
+    )
+    rec_min_capital = probe_results.get("min_capital_for_zero_sell", 50000)
 
-        if "Fresh Capital Injection" in chosen_strat:
-            mode_key = "fresh_injection"
-            st.info(
-                f"💡 **Fresh Capital Needed for {alignment_pct}% Alignment with {cohort_short_name}**: "
-                f"**₹{rec_min_capital:,.0f}**\n\n"
-                f"*Deploying this amount establishes consensus positions with **zero shares sold**.*"
-            )
-            injected_capital_input = st.number_input(
-                "💵 Fresh Capital to Deploy (₹)",
-                min_value=5000.0,
-                max_value=25000000.0,
-                value=float(rec_min_capital),
-                step=5000.0,
-                format="%.0f",
-                key="sim_fresh_capital_input"
-            )
-        elif "Hybrid" in chosen_strat:
-            mode_key = "hybrid"
-            injected_capital_input = 0.0
-            st.info(
-                f"💡 **Dynamic Hybrid Alignment ({alignment_pct}%)**: "
-                f"Existing overweight holdings will be selectively trimmed, and the simulator will automatically calculate "
-                f"the exact fresh cash flow needed to meet target investments based on your alignment level with {cohort_short_name}."
-            )
-        else:
-            mode_key = "self_funding"
-            injected_capital_input = 0.0
-            st.info(
-                f"💡 **Self-Funding Strategy**: Overweighted and non-consensus stocks will be trimmed "
-                f"to fund high-conviction buys across Large, Mid, and Small Cap."
-            )
+    injected_capital_input = 0.0
+    mode_key = "self_funding"
+
+    if "Fresh Capital Injection" in chosen_strat:
+        mode_key = "fresh_injection"
+        st.info(
+            f"💡 **Fresh Capital Needed for {alignment_pct}% Alignment with {chosen_sim_cat} ({cohort_short_name})**: "
+            f"**₹{rec_min_capital:,.0f}**\n\n"
+            f"*Deploying this amount establishes consensus positions with **zero shares sold**.*"
+        )
+        injected_capital_input = st.number_input(
+            "💵 Fresh Capital to Deploy (₹)",
+            min_value=5000.0,
+            max_value=25000000.0,
+            value=float(rec_min_capital),
+            step=5000.0,
+            format="%.0f",
+            key="sim_fresh_capital_input"
+        )
+    elif "Hybrid" in chosen_strat:
+        mode_key = "hybrid"
+        injected_capital_input = 0.0
+        st.info(
+            f"💡 **Dynamic Hybrid Alignment ({alignment_pct}%)**: "
+            f"Existing overweight holdings will be selectively trimmed, and the simulator will automatically calculate "
+            f"the exact fresh cash flow needed to meet target investments based on {chosen_sim_cat} ({cohort_short_name})."
+        )
+    else:
+        mode_key = "self_funding"
+        injected_capital_input = 0.0
+        st.info(
+            f"💡 **Self-Funding Strategy**: Overweighted and non-consensus stocks in {chosen_sim_cat} will be trimmed "
+            f"to fund high-conviction buys across Large, Mid, and Small Cap."
+        )
 
     # ── Execute Rebalancing Simulation ───────────────────────────────────────
     sim_results = MFConsensusEngine.simulate_rebalance(
@@ -1187,6 +1279,7 @@ with tab_sim:
         capital_to_deploy=injected_capital_input,
         rebalance_mode=mode_key,
         snapshot_month=selected_snapshot,
+        category_filter=active_sim_cat,
         top_n_aum=selected_top_n
     )
 
@@ -1196,24 +1289,47 @@ with tab_sim:
         st.write("")
         st.markdown("---")
 
-        # ── Financial Balance Strip (Core 3 Buckets + New Base) ───────────────
-        curr_port_val = sim_results.get("total_portfolio_value", 0.0)
-        trim_freed = sim_results.get("total_trim_freed", 0.0)
-        buy_required = sim_results.get("total_buy_required", 0.0)
-        net_cash_needed = sim_results.get("fresh_cash_needed", sim_results.get("net_cash_needed", 0.0))
-        new_port_base = sim_results.get("effective_portfolio_base", 0.0)
+        curr_port_val = int(round(sim_results.get("total_portfolio_value", 0)))
+        trim_freed = int(round(sim_results.get("total_trim_freed", 0)))
+        buy_required = int(round(sim_results.get("total_buy_required", 0)))
+        net_cash_needed = int(round(sim_results.get("fresh_cash_needed", sim_results.get("net_cash_needed", 0))))
+        new_port_base = int(round(sim_results.get("effective_portfolio_base", 0)))
         orders_df = sim_results.get("trade_orders_df", pd.DataFrame())
 
         num_trims = len(orders_df[orders_df["Action"].isin(["TRIM", "SELL ALL", "SELL"])]) if not orders_df.empty else 0
         num_buys = len(orders_df[orders_df["Action"].str.startswith("BUY")]) if not orders_df.empty else 0
 
-        st.markdown(f"#### 💳 Portfolio Rebalance Financial Summary ({cohort_short_name})")
+        strat_label = chosen_strat.split('(')[0].replace("💰", "").replace("💼", "").replace("⚖️", "").strip()
+
+        # ── Summary Section (Generated from the 4 Inputs) ───────────────────
+        st.markdown(
+            f"""
+            <div style="background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border-left: 5px solid #4f46e5; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e7ff;">
+                <div style="font-weight: 800; font-size: 1.05rem; color: #1e1b4b; margin-bottom: 6px;">
+                    🎯 Rebalancing Simulation Plan & Synthesis
+                </div>
+                <div style="color: #334155; font-size: 0.92rem; line-height: 1.6;">
+                    <strong>Inputs Configured:</strong> Fund Category: <span class="pill-gray" style="background:#e0e7ff; color:#3730a3; font-weight:700;">{chosen_sim_cat}</span> &nbsp;|&nbsp; 
+                    AUM Cohort: <span class="pill-gray" style="background:#e0e7ff; color:#3730a3; font-weight:700;">{cohort_short_name}</span> &nbsp;|&nbsp; 
+                    Target Alignment: <span class="pill-gray" style="background:#e0e7ff; color:#3730a3; font-weight:700;">{alignment_pct}%</span> &nbsp;|&nbsp; 
+                    Deployment: <span class="pill-gray" style="background:#e0e7ff; color:#3730a3; font-weight:700;">{strat_label}</span>
+                </div>
+                <div style="color: #475569; font-size: 0.88rem; margin-top: 6px;">
+                    Executing <strong>{num_buys} buy orders</strong> and <strong>{num_trims} trim orders</strong>. 
+                    Portfolio base transitions from <strong>₹{curr_port_val:,}</strong> to <strong>₹{new_port_base:,}</strong> with <strong>₹{net_cash_needed:,}</strong> net capital required.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # ── Financial Balance Strip (Neat Integer Values) ────────────────────
         fb1, fb2, fb3, fb4 = st.columns(4)
 
         with fb1:
             st.metric(
                 label="Current Deployed Cash",
-                value=f"₹{curr_port_val:,.0f}",
+                value=f"₹{curr_port_val:,}",
                 help="Current Portfolio Value before rebalancing"
             )
             st.caption("*(Current portfolio value)*")
@@ -1221,7 +1337,7 @@ with tab_sim:
         with fb2:
             st.metric(
                 label="Money Recovered",
-                value=f"₹{trim_freed:,.0f}",
+                value=f"₹{trim_freed:,}",
                 delta=f"{num_trims} trimmed" if num_trims > 0 else "0 sold",
                 delta_color="normal",
                 help="Capital unlocked after trimming existing portfolio holdings"
@@ -1229,11 +1345,11 @@ with tab_sim:
             st.caption("*(After trimming existing portfolio)*")
 
         with fb3:
-            calc_diff = f"Target ₹{buy_required:,.0f} − Trims ₹{trim_freed:,.0f}" if net_cash_needed > 0 else "Fully covered by trims"
+            calc_diff = f"Target ₹{buy_required:,} − Trims ₹{trim_freed:,}" if net_cash_needed > 0 else "Fully covered by trims"
             st.metric(
                 label="Fresh Cash Flow Needed",
-                value=f"₹{net_cash_needed:,.0f}",
-                delta=f"+₹{net_cash_needed:,.0f}" if net_cash_needed > 0 else "Self-Funded",
+                value=f"₹{net_cash_needed:,}",
+                delta=f"+₹{net_cash_needed:,}" if net_cash_needed > 0 else "Self-Funded",
                 delta_color="off",
                 help="Target investment minus money recovered after trimming existing portfolio"
             )
@@ -1242,8 +1358,8 @@ with tab_sim:
         with fb4:
             st.metric(
                 label="New Portfolio Base",
-                value=f"₹{new_port_base:,.0f}",
-                delta=f"+₹{net_cash_needed:,.0f} added" if net_cash_needed > 0 else "100% Preserved",
+                value=f"₹{new_port_base:,}",
+                delta=f"+₹{net_cash_needed:,} added" if net_cash_needed > 0 else "100% Preserved",
                 delta_color="normal",
                 help="New portfolio base = Current deployed cash + Fresh cash flow needed"
             )
@@ -1259,7 +1375,7 @@ with tab_sim:
         rk1.metric("Concentration (HHI)", f"{sim_results.get('hhi_after', 0):.0f}", delta=f"-{hhi_red:.1f}%", delta_color="inverse")
         rk2.metric("Top 5 Holdings %", f"{sim_results.get('top5_after', 0):.1f}%", delta=f"{sim_results.get('top5_after', 0) - sim_results.get('top5_before', 0):.1f}%", delta_color="inverse")
         rk3.metric("Active Variance (Tracking Error)", f"{sim_results.get('active_var_after', 0):.0f}", delta=f"-{var_red:.1f}%", delta_color="inverse")
-        rk4.metric("Total Trade Turnover", f"₹{buy_required + trim_freed:,.0f}")
+        rk4.metric("Total Trade Turnover", f"₹{buy_required + trim_freed:,}")
 
         st.divider()
 
@@ -1292,13 +1408,13 @@ with tab_sim:
                 ),
                 tooltip=["Ticker:N", "Stock Name:N", "Allocation Type:N", alt.Tooltip("Weight %:Q", format=".2f")]
             )
-            .properties(height=360, title=f"Current Portfolio vs {alignment_pct}% {cohort_short_name} Target Allocation")
+            .properties(height=360, title=f"Current Portfolio vs {alignment_pct}% {chosen_sim_cat} ({cohort_short_name}) Target Allocation")
         )
         st.altair_chart(sim_chart, width="stretch")
 
-        # ── Actionable Trade Orders Table (Exact Specification) ──────────────
+        # ── Actionable Trade Orders Table (Neat Integer Values) ──────────────
         st.markdown("**📋 Actionable Rebalancing Orders & Execution Plan:**")
-        st.caption("Detailed trade execution orders specifying stocks to trim and buy across market caps. Note: `Current Qty + Qty Change = Target Qty`.")
+        st.caption("Detailed trade execution orders specifying stocks to trim and buy across market caps. Note: `Current Qty + Qty Change = Target Qty` (all share counts and amounts in neat integer values).")
 
         if not orders_df.empty:
             exec_cols = [
@@ -1314,6 +1430,13 @@ with tab_sim:
                 "Target Weight %"
             ]
             display_exec = orders_df[exec_cols].copy()
+
+            # Ensure all quantity and currency columns are integer
+            display_exec["Current Qty"] = display_exec["Current Qty"].round().astype(int)
+            display_exec["Qty Change"] = display_exec["Qty Change"].round().astype(int)
+            display_exec["Target Qty"] = display_exec["Target Qty"].round().astype(int)
+            display_exec["LTP (₹)"] = display_exec["LTP (₹)"].round().astype(int)
+            display_exec["Trade Amount (₹)"] = display_exec["Trade Amount (₹)"].round().astype(int)
 
             # CSV Download Button
             csv_data = display_exec.to_csv(index=False)
@@ -1337,11 +1460,11 @@ with tab_sim:
                     "Stock Name": st.column_config.TextColumn("Stock Name", width="medium"),
                     "Market Cap Tier": st.column_config.TextColumn("Market Cap Tier", width="small"),
                     "Action": st.column_config.TextColumn("Action", width="small"),
-                    "Current Qty": st.column_config.NumberColumn("Current Qty", format="%.2f"),
-                    "Qty Change": st.column_config.NumberColumn("Qty Change", format="%+.2f"),
-                    "Target Qty": st.column_config.NumberColumn("Target Qty", format="%.2f"),
-                    "LTP (₹)": st.column_config.NumberColumn("LTP (₹)", format="₹%.2f"),
-                    "Trade Amount (₹)": st.column_config.NumberColumn("Trade Amount (₹)", format="₹%+.2f"),
+                    "Current Qty": st.column_config.NumberColumn("Current Qty", format="%d"),
+                    "Qty Change": st.column_config.NumberColumn("Qty Change", format="%+d"),
+                    "Target Qty": st.column_config.NumberColumn("Target Qty", format="%d"),
+                    "LTP (₹)": st.column_config.NumberColumn("LTP (₹)", format="₹%,d"),
+                    "Trade Amount (₹)": st.column_config.NumberColumn("Trade Amount (₹)", format="₹%+,d"),
                     "Target Weight %": st.column_config.NumberColumn("Target Weight %", format="%.2f%%"),
                 }
             )
@@ -1353,6 +1476,8 @@ with tab_sim:
                 "Simulated_Weight %", "Weight Change (pp)", "Capital Shift ₹"
             ]].copy()
 
+            display_sim["Capital Shift ₹"] = display_sim["Capital Shift ₹"].round().astype(int)
+
             st.dataframe(
                 display_sim,
                 width="stretch",
@@ -1363,7 +1488,7 @@ with tab_sim:
                     "User Weight %": st.column_config.NumberColumn("Current Wt %", format="%.2f%%"),
                     "Simulated_Weight %": st.column_config.NumberColumn("Target Wt %", format="%.2f%%"),
                     "Weight Change (pp)": st.column_config.NumberColumn("Δ Weight", format="%+.2f"),
-                    "Capital Shift ₹": st.column_config.NumberColumn("Capital Shift (₹)", format="₹%+.0f"),
+                    "Capital Shift ₹": st.column_config.NumberColumn("Capital Shift (₹)", format="₹%+,d"),
                 }
             )
 

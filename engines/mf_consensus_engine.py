@@ -160,7 +160,7 @@ class MFConsensusEngine:
             db.close()
 
     @classmethod
-    def get_temporal_deltas(cls, t0_month: str = None, t1_month: str = None, top_n_aum: int = None) -> pd.DataFrame:
+    def get_temporal_deltas(cls, t0_month: str = None, t1_month: str = None, category_filter: str = None, top_n_aum: int = None) -> pd.DataFrame:
         """
         Step 3: Delta Tracking Engine (Temporal Analysis).
         Compares selected month (T0) vs preceding month (T-1):
@@ -190,8 +190,8 @@ class MFConsensusEngine:
             else:
                 t1_month = snap_months[1]
 
-        df_t0 = cls.get_consensus_metrics(snapshot_month=t0_month, top_n_aum=top_n_aum)
-        df_t1 = cls.get_consensus_metrics(snapshot_month=t1_month, top_n_aum=top_n_aum)
+        df_t0 = cls.get_consensus_metrics(snapshot_month=t0_month, category_filter=category_filter, top_n_aum=top_n_aum)
+        df_t1 = cls.get_consensus_metrics(snapshot_month=t1_month, category_filter=category_filter, top_n_aum=top_n_aum)
 
         if df_t0.empty and df_t1.empty:
             return pd.DataFrame()
@@ -254,19 +254,31 @@ class MFConsensusEngine:
         merged["Sentiment_Icon"] = [c[1] for c in classifications]
         merged["Sentiment_Rank"] = [c[2] for c in classifications]
 
+        def classify_group(row):
+            dw = row["Delta_Weight"]
+            s = row["Sentiment"]
+            if dw > 0.001 or s in ("Aggressive Accumulation", "Modest Buying"):
+                return "Accumulation"
+            elif dw < -0.001 or s in ("Profit Booking / Trimming", "Complete Exit"):
+                return "Trimming"
+            else:
+                return "Holding"
+
+        merged["Sentiment_Group"] = [classify_group(r) for _, r in merged.iterrows()]
+
         out_cols = [
             "ISIN", "Ticker", "Stock Name", "Sector", "Market Cap Tier",
             "Weight_T0", "Weight_T1", "Delta_Weight",
             "Conf_T0", "Conf_T1", "Delta_Confidence", "Delta_Confidence_Pct",
             "Conviction_T0", "Conviction_T1",
             "Holding_Schemes_T0", "Holding_Schemes_T1",
-            "Sentiment", "Sentiment_Icon", "Sentiment_Rank",
+            "Sentiment", "Sentiment_Icon", "Sentiment_Rank", "Sentiment_Group",
             "T0_Month", "T1_Month"
         ]
         return merged[out_cols].sort_values(by=["Delta_Weight", "Delta_Confidence"], ascending=[False, False])
 
     @classmethod
-    def get_portfolio_gap_analysis(cls, snapshot_month: str = None, top_n_aum: int = None) -> dict:
+    def get_portfolio_gap_analysis(cls, snapshot_month: str = None, category_filter: str = None, top_n_aum: int = None) -> dict:
         """
         Step 4: Personal Portfolio Gap & Misalignment Engine.
         Matches user portfolio against MF consensus using ISIN.
@@ -297,8 +309,8 @@ class MFConsensusEngine:
         finally:
             db.close()
 
-        consensus_df = cls.get_consensus_metrics(snapshot_month=snapshot_month, top_n_aum=top_n_aum)
-        deltas_df = cls.get_temporal_deltas(t0_month=snapshot_month, top_n_aum=top_n_aum)
+        consensus_df = cls.get_consensus_metrics(snapshot_month=snapshot_month, category_filter=category_filter, top_n_aum=top_n_aum)
+        deltas_df = cls.get_temporal_deltas(t0_month=snapshot_month, category_filter=category_filter, top_n_aum=top_n_aum)
 
         if consensus_df.empty:
             return {
@@ -415,7 +427,7 @@ class MFConsensusEngine:
         }
 
     @classmethod
-    def get_next_best_actions(cls) -> list[dict]:
+    def get_next_best_actions(cls, snapshot_month: str = None, category_filter: str = None, top_n_aum: int = None) -> list[dict]:
         """
         Step 5: Next Best Action & Recommendation Framework.
         Automated business rules:
@@ -424,10 +436,35 @@ class MFConsensusEngine:
           3. Review Candidate: User Weight > 5%, Confidence < 5%
           4. Rebalance: User Sector Weight exceeds MF Sector Weight by > 15%
         """
-        gap_data = cls.get_portfolio_gap_analysis()
+        gap_data = cls.get_portfolio_gap_analysis(snapshot_month=snapshot_month, category_filter=category_filter, top_n_aum=top_n_aum)
         matched_df = gap_data.get("matched_df", pd.DataFrame())
         if matched_df.empty:
             return []
+
+        total_portfolio_value = matched_df["Current Value"].sum()
+        if total_portfolio_value <= 0:
+            total_portfolio_value = 1000000.0  # ₹10 Lakhs simulation base
+
+        # LTP and Quantity mappings from active user portfolio and stock master
+        db = SessionLocal()
+        ltp_map = {}
+        qty_map = {}
+        try:
+            for u in db.query(UserPortfolioHolding).all():
+                if u.ticker:
+                    tk_k = str(u.ticker).upper().strip()
+                    curr_q = float(u.holding_qty or 0.0)
+                    qty_map[tk_k] = curr_q
+                    if curr_q > 0 and u.current_value and u.current_value > 0:
+                        ltp_map[tk_k] = round(float(u.current_value) / curr_q, 2)
+
+            for sm in db.query(StockMaster).all():
+                if sm.ticker:
+                    tk_k = str(sm.ticker).upper().strip()
+                    if tk_k not in ltp_map and sm.close_price:
+                        ltp_map[tk_k] = float(sm.close_price)
+        finally:
+            db.close()
 
         actions = []
 
@@ -435,6 +472,18 @@ class MFConsensusEngine:
         for _, r in matched_df.iterrows():
             eff_conf = float(r.get("Effective_Confidence %", r.get("Confidence %", 0.0)))
             if r["User Weight %"] <= 0.05 and eff_conf >= 50.0 and r["Delta_Weight"] >= 0.0:
+                ticker_k = str(r["Ticker"]).upper().strip()
+                ltp = float(ltp_map.get(ticker_k, 1000.0))
+                if ltp <= 0:
+                    ltp = 1000.0
+                curr_q = int(round(float(qty_map.get(ticker_k, r.get("Holding Qty", 0.0) or 0.0))))
+                target_w = round(max(float(r["MF Consensus Weight %"]), float(r.get("Conviction Weight %", 0.0)) * 0.5), 2)
+                if target_w <= 0:
+                    target_w = 3.0
+                target_val = (target_w / 100.0) * total_portfolio_value
+                target_q = int(round(target_val / ltp))
+                buy_qty = max(1, target_q - curr_q) if target_q > curr_q else 1
+
                 actions.append({
                     "type": "Buy Candidate",
                     "badge": "BUY",
@@ -448,8 +497,11 @@ class MFConsensusEngine:
                         f"{eff_conf:.0f}% of peer funds hold an average {r['Conviction Weight %']:.1f}% weight "
                         f"with active accumulation ({r['Delta_Weight']:+.2f}%) over the last month."
                     ),
-                    "user_weight": r["User Weight %"],
-                    "mf_weight": r["MF Consensus Weight %"],
+                    "user_weight": round(float(r["User Weight %"]), 2),
+                    "target_weight": target_w,
+                    "buy_qty": int(buy_qty),
+                    "sell_qty": 0,
+                    "mf_weight": round(float(r["MF Consensus Weight %"]), 2),
                     "confidence": eff_conf,
                     "delta_weight": r["Delta_Weight"]
                 })
@@ -457,6 +509,16 @@ class MFConsensusEngine:
         # 2. Trim Candidates (High concentration + fund managers trimming or overweight)
         for _, r in matched_df.iterrows():
             if r["User Weight %"] > 8.0 and (r["Delta_Weight"] < -0.2 or r["Active Weight Diff"] > 5.0):
+                ticker_k = str(r["Ticker"]).upper().strip()
+                ltp = float(ltp_map.get(ticker_k, 1000.0))
+                if ltp <= 0:
+                    ltp = 1000.0
+                curr_q = int(round(float(qty_map.get(ticker_k, r.get("Holding Qty", 0.0) or 0.0))))
+                target_w = round(max(float(r["MF Consensus Weight %"]), 2.0), 2)
+                target_val = (target_w / 100.0) * total_portfolio_value
+                target_q = int(round(target_val / ltp))
+                sell_qty = max(1, curr_q - target_q) if curr_q > target_q else max(1, int(round(curr_q * 0.3)))
+
                 actions.append({
                     "type": "Trim Candidate",
                     "badge": "TRIM",
@@ -470,8 +532,11 @@ class MFConsensusEngine:
                         f"MF average {r['MF Consensus Weight %']:.1f}%. Institutions have trimmed allocation "
                         f"({r['Delta_Weight']:+.2f}%) or you are heavily overweight."
                     ),
-                    "user_weight": r["User Weight %"],
-                    "mf_weight": r["MF Consensus Weight %"],
+                    "user_weight": round(float(r["User Weight %"]), 2),
+                    "target_weight": target_w,
+                    "buy_qty": 0,
+                    "sell_qty": int(sell_qty),
+                    "mf_weight": round(float(r["MF Consensus Weight %"]), 2),
                     "confidence": r["Confidence %"],
                     "delta_weight": r["Delta_Weight"]
                 })
@@ -479,6 +544,8 @@ class MFConsensusEngine:
         # 3. Review Candidates (Unbacked speculative stocks)
         for _, r in matched_df.iterrows():
             if r["User Weight %"] > 2.0 and r["Confidence %"] < 10.0:
+                ticker_k = str(r["Ticker"]).upper().strip()
+                curr_q = int(round(float(qty_map.get(ticker_k, r.get("Holding Qty", 0.0) or 0.0))))
                 actions.append({
                     "type": "Review Candidate",
                     "badge": "REVIEW",
@@ -491,8 +558,11 @@ class MFConsensusEngine:
                         f"Evaluate fundamental thesis for {r['Stock Name']}. You hold {r['User Weight %']:.1f}%, "
                         f"but fewer than {max(r['Confidence %'], 1.0):.0f}% of institutional equity funds hold this position."
                     ),
-                    "user_weight": r["User Weight %"],
-                    "mf_weight": r["MF Consensus Weight %"],
+                    "user_weight": round(float(r["User Weight %"]), 2),
+                    "target_weight": 0.0,
+                    "buy_qty": 0,
+                    "sell_qty": int(curr_q),
+                    "mf_weight": round(float(r["MF Consensus Weight %"]), 2),
                     "confidence": r["Confidence %"],
                     "delta_weight": r["Delta_Weight"]
                 })
@@ -518,8 +588,11 @@ class MFConsensusEngine:
                         f"You are heavily overweight in {sec} ({u_sec_wt:.1f}% vs institutional average {mf_sec_wt:.1f}%). "
                         f"Consider reallocating capital into underweight institutional consensus sectors."
                     ),
-                    "user_weight": u_sec_wt,
-                    "mf_weight": mf_sec_wt,
+                    "user_weight": round(float(u_sec_wt), 2),
+                    "target_weight": round(float(mf_sec_wt), 2),
+                    "buy_qty": 0,
+                    "sell_qty": 0,
+                    "mf_weight": round(float(mf_sec_wt), 2),
                     "confidence": 100.0,
                     "delta_weight": 0.0
                 })
@@ -537,6 +610,7 @@ class MFConsensusEngine:
         rebalance_mode: str = "self_funding",
         portfolio_id: str = "PORT001",
         snapshot_month: str = None,
+        category_filter: str = None,
         top_n_aum: int = None
     ) -> dict:
         """
@@ -549,7 +623,7 @@ class MFConsensusEngine:
           - Active Variance (Tracking Error proxy) reduction
           - Actionable Capital reallocation amounts (₹ Buy / ₹ Sell)
         """
-        gap_data = cls.get_portfolio_gap_analysis(snapshot_month=snapshot_month, top_n_aum=top_n_aum)
+        gap_data = cls.get_portfolio_gap_analysis(snapshot_month=snapshot_month, category_filter=category_filter, top_n_aum=top_n_aum)
         matched_df = gap_data.get("matched_df", pd.DataFrame())
         if matched_df.empty:
             return {}
@@ -720,15 +794,15 @@ class MFConsensusEngine:
                     "Stock Name": c["row"].get("Stock Name", ticker),
                     "Market Cap Tier": c["row"].get("Market Cap Tier", "Mid Cap"),
                     "Action": action,
-                    "Current Qty": round(curr_qty, 2),
-                    "Qty Change": round(qty_change, 2),
-                    "Target Qty": round(target_qty, 2),
-                    "LTP (₹)": round(ltp, 2),
-                    "Trade Amount (₹)": trade_amt,
+                    "Current Qty": int(round(curr_qty)),
+                    "Qty Change": int(round(qty_change)),
+                    "Target Qty": int(round(target_qty)),
+                    "LTP (₹)": int(round(ltp)),
+                    "Trade Amount (₹)": int(round(trade_amt)),
                     "Target Weight %": new_weight,
                     "Sector": c["row"].get("Sector", "Diversified"),
                     "User Weight %": round(float(c["row"].get("User Weight %", 0.0)), 2),
-                    "Capital Shift ₹": trade_amt
+                    "Capital Shift ₹": int(round(trade_amt))
                 })
 
         else:
@@ -781,15 +855,15 @@ class MFConsensusEngine:
                     "Stock Name": row.get("Stock Name", ticker),
                     "Market Cap Tier": row.get("Market Cap Tier", "Mid Cap"),
                     "Action": action,
-                    "Current Qty": round(curr_qty, 2),
-                    "Qty Change": round(qty_change, 2),
-                    "Target Qty": round(target_qty, 2),
-                    "LTP (₹)": round(ltp, 2),
-                    "Trade Amount (₹)": trade_amt,
+                    "Current Qty": int(round(curr_qty)),
+                    "Qty Change": int(round(qty_change)),
+                    "Target Qty": int(round(target_qty)),
+                    "LTP (₹)": int(round(ltp)),
+                    "Trade Amount (₹)": int(round(trade_amt)),
                     "Target Weight %": round(target_weight, 2),
                     "Sector": row.get("Sector", "Diversified"),
                     "User Weight %": round(float(row.get("User Weight %", 0.0)), 2),
-                    "Capital Shift ₹": round(float(row.get("Capital Shift ₹", 0.0)), 2)
+                    "Capital Shift ₹": int(round(float(row.get("Capital Shift ₹", 0.0))))
                 })
 
         orders_df = pd.DataFrame(trade_orders)
@@ -824,15 +898,17 @@ class MFConsensusEngine:
         active_var_after = float(np.sum((w_sim - w_mf) ** 2))
         variance_reduction_pct = round(((active_var_before - active_var_after) / max(active_var_before, 1)) * 100.0, 1)
 
-        # Capital metrics calculation:
-        total_trim_freed = sum(
+        # Capital metrics calculation (neat integers):
+        total_trim_freed = int(round(sum(
             o["Trade Amount (₹)"] for o in trade_orders if o["Action"] in ("TRIM", "SELL", "SELL ALL")
-        )
-        total_buy_required = sum(
+        )))
+        total_buy_required = int(round(sum(
             abs(o["Trade Amount (₹)"]) for o in trade_orders if o["Action"] in ("BUY", "BUY NEW", "BUY MORE")
-        )
-        net_cash_needed = max(0.0, round(total_buy_required - total_trim_freed, 2))
-        effective_portfolio_base = round(total_portfolio_value + net_cash_needed, 2)
+        )))
+        net_cash_needed = int(round(max(0.0, total_buy_required - total_trim_freed)))
+        effective_portfolio_base = int(round(total_portfolio_value + net_cash_needed))
+        min_capital_for_zero_sell = int(round(min_capital_for_zero_sell))
+        total_portfolio_value = int(round(total_portfolio_value))
 
         return {
             "simulated_df": active_universe.sort_values(by="Simulated_Weight %", ascending=False),
@@ -840,12 +916,12 @@ class MFConsensusEngine:
             "total_portfolio_value": total_portfolio_value,
             "effective_portfolio_base": effective_portfolio_base,
             "min_capital_for_zero_sell": min_capital_for_zero_sell,
-            "total_trim_freed": round(total_trim_freed, 2),
-            "total_buy_required": round(total_buy_required, 2),
-            "net_cash_needed": round(net_cash_needed, 2),
-            "fresh_cash_needed": round(net_cash_needed, 2),
+            "total_trim_freed": total_trim_freed,
+            "total_buy_required": total_buy_required,
+            "net_cash_needed": net_cash_needed,
+            "fresh_cash_needed": net_cash_needed,
             "rebalance_mode": rebalance_mode,
-            "capital_injected": round(net_cash_needed, 2),
+            "capital_injected": net_cash_needed,
             "hhi_before": round(hhi_before, 0),
             "hhi_after": round(hhi_after, 0),
             "hhi_reduction_pct": hhi_reduction_pct,
@@ -854,7 +930,8 @@ class MFConsensusEngine:
             "active_var_before": round(active_var_before, 0),
             "active_var_after": round(active_var_after, 0),
             "variance_reduction_pct": variance_reduction_pct,
-            "total_buy_inr": round(total_buy_required, 2),
-            "total_sell_inr": round(total_trim_freed, 2),
+            "total_buy_inr": total_buy_required,
+            "total_sell_inr": total_trim_freed,
+            "category_filter": category_filter,
             "top_n_aum": top_n_aum
         }
