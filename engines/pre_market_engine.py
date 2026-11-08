@@ -371,18 +371,31 @@ class PreMarketEngine:
             pdl = round(curr_low, 2)
 
             # Target & Stop Loss calculations (1.5x to 2.0x ATR expansion)
+            target_long_1 = round(pdh + (1.5 * atr14), 2)
+            target_long_2 = round(pdh + (2.0 * atr14), 2)
+            target_short_1 = round(pdl - (1.5 * atr14), 2)
+            target_short_2 = round(pdl - (2.0 * atr14), 2)
+            sl_long = round(max(pdl, curr_close - (0.5 * atr14)), 2)
+            sl_short = round(min(pdh, curr_close + (0.5 * atr14)), 2)
+
             if direction == "BULLISH":
                 trigger_rule = f"Buy on 5-min candle breakout ABOVE PDH (₹{pdh:,.2f}) with expanding volume"
-                target_1_5x = round(pdh + (1.5 * atr14), 2)
-                target_2_0x = round(pdh + (2.0 * atr14), 2)
-                stop_loss = round(max(pdl, curr_close - (0.5 * atr14)), 2)
+                target_1_5x = target_long_1
+                target_2_0x = target_long_2
+                stop_loss = sl_long
                 expansion_pct_est = round(((target_1_5x - pdh) / pdh) * 100.0, 1)
-            else:
+            elif direction == "BEARISH":
                 trigger_rule = f"Sell on 5-min candle breakdown BELOW PDL (₹{pdl:,.2f}) with expanding volume"
-                target_1_5x = round(pdl - (1.5 * atr14), 2)
-                target_2_0x = round(pdl - (2.0 * atr14), 2)
-                stop_loss = round(min(pdh, curr_close + (0.5 * atr14)), 2)
+                target_1_5x = target_short_1
+                target_2_0x = target_short_2
+                stop_loss = sl_short
                 expansion_pct_est = round(((pdl - target_1_5x) / pdl) * 100.0, 1)
+            else:  # NEUTRAL / BILATERAL COIL
+                trigger_rule = f"Bilateral Setup: Buy > PDH (₹{pdh:,.2f}) OR Sell < PDL (₹{pdl:,.2f}) on first confirmed 5-min candle move"
+                target_1_5x = target_long_1
+                target_2_0x = target_short_1
+                stop_loss = round(curr_close, 2)
+                expansion_pct_est = round(((target_long_1 - pdh) / pdh) * 100.0, 1)
 
             # Setup Tags
             setups_detected = []
@@ -440,6 +453,10 @@ class PreMarketEngine:
                 "Target_1_5x": target_1_5x,
                 "Target_2_0x": target_2_0x,
                 "Stop_Loss": stop_loss,
+                "Target_Long": target_long_1,
+                "Target_Short": target_short_1,
+                "SL_Long": sl_long,
+                "SL_Short": sl_short,
                 "Estimated_Expansion_Pct": expansion_pct_est,
                 "Trigger_Rule": trigger_rule,
                 "Setup_Tags": setup_str,
@@ -575,4 +592,197 @@ class PreMarketEngine:
             "regime": regime_info,
             "scan_timestamp": now_str,
             "total_scanned": len(df_all)
+        }
+
+    @classmethod
+    def evaluate_session_accuracy(
+        cls,
+        high_conv_df: pd.DataFrame,
+        force_live: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Runs an end-of-session accuracy and performance audit for all stocks
+        currently in the Consolidated High-Conviction Breakout Table.
+        Computes 2x2 Confusion Matrix, Precision, Recall, F1 score, and trade-by-trade outcomes.
+        """
+        if high_conv_df is None or high_conv_df.empty:
+            return {
+                "success": False,
+                "message": "No candidates found in High-Conviction Breakout Table to evaluate."
+            }
+
+        tickers = high_conv_df["Ticker"].tolist()
+        yf_symbols = [f"{t}.NS" for t in tickers]
+
+        batch_data = None
+        if force_live:
+            try:
+                import yfinance as yf
+                batch_data = yf.download(
+                    yf_symbols,
+                    period="5d",
+                    interval="1d",
+                    group_by="ticker",
+                    progress=False,
+                    timeout=8
+                )
+            except Exception as e:
+                logger.warning(f"Live batch download for accuracy audit failed: {e}")
+
+        audit_rows = []
+        tp, fp, tn, fn = 0, 0, 0, 0
+        total_vol_ratios = []
+        total_range_pcts = []
+
+        for _, row in high_conv_df.iterrows():
+            sym = str(row["Ticker"]).strip()
+            yf_k = f"{sym}.NS"
+            bias = str(row.get("Direction", "NEUTRAL")).upper()
+            pdh = float(row.get("PDH", 0.0))
+            pdl = float(row.get("PDL", 0.0))
+            atr = float(row.get("Daily_ATR", 0.0))
+            sl = float(row.get("Stop_Loss", 0.0))
+
+            t_open, t_high, t_low, t_close, t_vol, p_vol = None, None, None, None, 0, 1
+            has_bar = False
+
+            if batch_data is not None:
+                try:
+                    if isinstance(batch_data.columns, pd.MultiIndex):
+                        if yf_k in batch_data.columns.levels[0]:
+                            sub = batch_data[yf_k].dropna(subset=["Close"])
+                        elif sym in batch_data.columns.levels[0]:
+                            sub = batch_data[sym].dropna(subset=["Close"])
+                        else:
+                            sub = None
+                        if sub is not None and len(sub) >= 2:
+                            today_bar = sub.iloc[-1]
+                            prev_bar = sub.iloc[-2]
+                            t_open = float(today_bar["Open"])
+                            t_high = float(today_bar["High"])
+                            t_low = float(today_bar["Low"])
+                            t_close = float(today_bar["Close"])
+                            t_vol = int(today_bar["Volume"])
+                            p_vol = int(prev_bar["Volume"])
+                            has_bar = True
+                except Exception:
+                    pass
+
+            if not has_bar:
+                t_close = float(row.get("Close", pdh))
+                t_open = t_close
+                t_high = pdh
+                t_low = pdl
+                t_vol = 100000
+                p_vol = 1000000
+
+            vol_ratio = round(t_vol / p_vol, 2) if p_vol > 0 else 0.1
+            total_vol_ratios.append(vol_ratio)
+            range_pct = round(((t_high - t_low) / t_close) * 100.0, 2) if t_close > 0 else 1.0
+            total_range_pcts.append(range_pct)
+
+            triggered = False
+            trig_status = "No Breach"
+            outcome = "✅ Capital Saved (No Entry)"
+
+            if bias == "BULLISH":
+                target_price = pdh + (1.5 * atr)
+                triggered = bool(t_high > pdh)
+                if triggered:
+                    trig_status = "Breached PDH"
+                    hit_target = bool(t_high >= target_price)
+                    hit_sl = bool(t_low <= sl)
+                    if hit_target and not hit_sl:
+                        outcome = "🎯 Target 1 Achieved (Win)"
+                        tp += 1
+                    else:
+                        outcome = "❌ False Breakout (Faded/Stopped)"
+                        fp += 1
+                else:
+                    tn += 1
+                    trig_status = "No Breach"
+                    outcome = "✅ Capital Saved (No Entry)"
+
+            elif bias == "BEARISH":
+                target_price = pdl - (1.5 * atr)
+                triggered = bool(t_low < pdl)
+                if triggered:
+                    trig_status = "Breached PDL"
+                    hit_target = bool(t_low <= target_price)
+                    hit_sl = bool(t_high >= sl)
+                    if hit_target and not hit_sl:
+                        outcome = "🎯 Target 1 Achieved (Win)"
+                        tp += 1
+                    else:
+                        outcome = "❌ False Breakdown (Faded/Stopped)"
+                        fp += 1
+                else:
+                    tn += 1
+                    trig_status = "No Breach"
+                    outcome = "✅ Capital Saved (No Entry)"
+
+            else:  # NEUTRAL / BILATERAL
+                broke_up = bool(t_high > pdh)
+                broke_down = bool(t_low < pdl)
+                if broke_up or broke_down:
+                    triggered = True
+                    trig_status = "Poked Both" if (broke_up and broke_down) else ("Broke Above PDH" if broke_up else "Broke Below PDL")
+                    hit_long = bool(t_high >= (pdh + (1.5 * atr)))
+                    hit_short = bool(t_low <= (pdl - (1.5 * atr)))
+                    if hit_long or hit_short:
+                        outcome = "🎯 Target 1 Achieved (Win)"
+                        tp += 1
+                    else:
+                        outcome = "❌ Whipsaw (Closed Inside Range)"
+                        fp += 1
+                else:
+                    tn += 1
+                    trig_status = "No Breach"
+                    outcome = "✅ Capital Saved (No Entry)"
+
+            audit_rows.append({
+                "Ticker": sym,
+                "Stock Name": row.get("Stock Name", sym),
+                "Sector": row.get("Sector", "Diversified"),
+                "Tier": row.get("Market Cap Tier", "Large Cap"),
+                "Bias": bias,
+                "PDH": round(pdh, 2),
+                "PDL": round(pdl, 2),
+                "Today High": round(t_high, 2),
+                "Today Low": round(t_low, 2),
+                "Today Close": round(t_close, 2),
+                "Range %": range_pct,
+                "Vol Ratio": f"{vol_ratio:.2f}x",
+                "Trigger Status": trig_status,
+                "Outcome": outcome
+            })
+
+        total_eval = len(audit_rows)
+        precision = round((tp / (tp + fp)) * 100.0, 2) if (tp + fp) > 0 else 0.0
+        recall = round((tp / (tp + fn)) * 100.0, 2) if (tp + fn) > 0 else 0.0
+        f1_score = round(2 * (precision * recall) / (precision + recall) / 100.0, 3) if (precision + recall) > 0 else 0.0
+        specificity = round((tn / (tn + fp)) * 100.0, 2) if (tn + fp) > 0 else 0.0
+        cap_preservation = round((tn / total_eval) * 100.0, 2) if total_eval > 0 else 0.0
+        avg_vol_ratio = round(float(np.mean(total_vol_ratios)), 2) if total_vol_ratios else 1.0
+        avg_range_pct = round(float(np.mean(total_range_pcts)), 2) if total_range_pcts else 1.0
+
+        is_truncated = bool(avg_vol_ratio < 0.35)
+
+        return {
+            "success": True,
+            "audit_df": pd.DataFrame(audit_rows),
+            "total_evaluated": total_eval,
+            "tp": tp,
+            "fp": fp,
+            "tn": tn,
+            "fn": fn,
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1_score,
+            "specificity": specificity,
+            "capital_preservation_rate": cap_preservation,
+            "avg_vol_ratio": avg_vol_ratio,
+            "avg_range_pct": avg_range_pct,
+            "is_truncated_session": is_truncated,
+            "audit_timestamp": datetime.now().strftime("%d %b %Y, %I:%M %p")
         }

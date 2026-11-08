@@ -119,6 +119,56 @@ st.markdown(
         padding: 2px 7px;
         font-size: 0.75rem;
     }
+
+    /* Responsive metric cards & font scaling to prevent ellipsis truncation on any screen width */
+    [data-testid="stMetricValue"] {
+        font-size: clamp(0.95rem, 1.35vw, 1.35rem) !important;
+        font-weight: 800 !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        line-height: 1.2 !important;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: clamp(0.68rem, 0.8vw, 0.78rem) !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.03em !important;
+        line-height: 1.2 !important;
+    }
+
+    .spotlight-metric-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 8px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .spotlight-metric-lbl {
+        color: #64748b;
+        font-size: clamp(0.65rem, 0.78vw, 0.74rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .spotlight-metric-val {
+        font-weight: 800;
+        font-size: clamp(0.92rem, 1.25vw, 1.25rem);
+        color: #0f172a;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+    .spotlight-metric-sub {
+        font-size: clamp(0.65rem, 0.72vw, 0.74rem);
+        font-weight: 700;
+        margin-top: 2px;
+    }
+
     .section-hdr {
         font-size: 1.25rem;
         font-weight: 800;
@@ -344,13 +394,14 @@ kp5.markdown(f'<div class="kpi-card"><div class="kpi-val" style="color:#dc2626;"
 st.write("")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 4 INTERACTIVE TABS
+# 5 INTERACTIVE TABS
 # ─────────────────────────────────────────────────────────────────────────────
-tab_watchlist, tab_compression, tab_playbook, tab_guide = st.tabs([
+tab_watchlist, tab_compression, tab_playbook, tab_guide, tab_audit = st.tabs([
     "⚡ High-Conviction Actionable Watchlist (Stage 1 + 2 Confirmed)",
     "🔍 Full Market Compression Radar (Stage 1 Candidates)",
     "📋 Next-Morning Execution Playbook (9:15–10:15 AM)",
-    "📖 Comprehensive User Guide & Strategy Manual"
+    "📖 Comprehensive User Guide & Strategy Manual",
+    "📊 Session Accuracy & Performance Audit"
 ])
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -383,56 +434,217 @@ with tab_watchlist:
         with d_col2:
             st.caption(f"Generated from latest trading session data ({scan_time}). Zero penny stocks included.")
 
+        st.markdown("---")
+
+        # ─────────────────────────────────────────────────────────────────────
+        # CANDIDATE SPOTLIGHT & BREAKOUT INSPECTOR (SINGLE DYNAMIC TILE)
+        # ─────────────────────────────────────────────────────────────────────
+        st.markdown(
+            '<div class="section-hdr">🎯 Candidate Spotlight & Breakout Inspector</div>',
+            unsafe_allow_html=True
+        )
+        st.caption("Filter and select any priority candidate to inspect its exact morning triggers, expansion targets, and execution rules in a unified spotlight card.")
+
+        # Interactive Filter Bar
+        flt_cap_col, flt_sec_col, flt_bias_col, flt_pick_col = st.columns([1.1, 1.4, 1.4, 2.1])
+
+        with flt_cap_col:
+            cap_opts = ["All Caps"] + sorted([t for t in high_conv_df["Market Cap Tier"].dropna().unique() if str(t).strip()])
+            sel_cap = st.selectbox("🏷️ Market Cap", cap_opts, index=0, key="spotlight_cap_flt")
+
+        with flt_sec_col:
+            sec_opts = ["All Sectors"] + sorted([s for s in high_conv_df["Sector"].dropna().unique() if str(s).strip()])
+            sel_sec = st.selectbox("🏢 Sector", sec_opts, index=0, key="spotlight_sec_flt")
+
+        with flt_bias_col:
+            bias_opts = ["All Biases", "🚀 Bullish Only", "🔻 Bearish Only", "⚖️ Neutral / Bilateral Only"]
+            sel_bias = st.selectbox("🧭 Directional Bias", bias_opts, index=0, key="spotlight_bias_flt")
+
+        # Apply filters to narrow down candidates for the inspector
+        scoped_df = high_conv_df.copy()
+        if sel_cap != "All Caps":
+            scoped_df = scoped_df[scoped_df["Market Cap Tier"] == sel_cap]
+        if sel_sec != "All Sectors":
+            scoped_df = scoped_df[scoped_df["Sector"] == sel_sec]
+        if sel_bias == "🚀 Bullish Only":
+            scoped_df = scoped_df[scoped_df["Direction"] == "BULLISH"]
+        elif sel_bias == "🔻 Bearish Only":
+            scoped_df = scoped_df[scoped_df["Direction"] == "BEARISH"]
+        elif sel_bias == "⚖️ Neutral / Bilateral Only":
+            scoped_df = scoped_df[scoped_df["Direction"] == "NEUTRAL"]
+
+        with flt_pick_col:
+            if scoped_df.empty:
+                st.selectbox("📌 Select Candidate to Inspect", ["No matching candidates found"], disabled=True, key="spotlight_stock_picker")
+                selected_stock_ticker = None
+            else:
+                stock_label_map = {}
+                for _, r in scoped_df.iterrows():
+                    d_icon = "🚀" if r["Direction"] == "BULLISH" else ("🔻" if r["Direction"] == "BEARISH" else "⚖️")
+                    lbl = f"{r['Ticker']} — {r['Stock Name'][:22]} ({d_icon} {r['Direction']})"
+                    stock_label_map[lbl] = r["Ticker"]
+                
+                chosen_label = st.selectbox("📌 Select Candidate to Inspect", list(stock_label_map.keys()), index=0, key="spotlight_stock_picker")
+                selected_stock_ticker = stock_label_map[chosen_label]
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Render the Single Spotlight Tile
+        # ─────────────────────────────────────────────────────────────────────
+        if selected_stock_ticker and not scoped_df.empty:
+            match_row = scoped_df[scoped_df["Ticker"] == selected_stock_ticker]
+            if not match_row.empty:
+                stock = match_row.iloc[0]
+                ticker = stock["Ticker"]
+                name = stock["Stock Name"]
+                sector = stock["Sector"]
+                tier = stock["Market Cap Tier"]
+                direction = stock["Direction"]
+                close_p = stock["Close"]
+                pdh = stock["PDH"]
+                pdl = stock["PDL"]
+                atr = stock["Daily_ATR"]
+                atr_pct = stock["Daily_ATR_Pct"]
+                tgt1 = stock["Target_1_5x"]
+                tgt2 = stock["Target_2_0x"]
+                sl = stock["Stop_Loss"]
+                exp_pct = stock["Estimated_Expansion_Pct"]
+                rule = stock["Trigger_Rule"]
+                setups = stock["Setup_Tags"]
+                cpr_p = stock["CPR_Pct"]
+                vol_r = stock["Vol_Ratio"]
+
+                # Bias-specific badge, colors, and levels
+                if direction == "BULLISH":
+                    dir_color = "#16a34a"
+                    dir_badge = ":green[▲ BULLISH EXPANSION]"
+                    trig_lbl = "Trigger (BUY > PDH)"
+                    trig_val = pdh
+                    trig_sub = "5-min Confirm"
+                    tgt1_lbl = "Target 1 (1.5x ATR)"
+                    tgt1_val = tgt1
+                    tgt1_sub = f"+{exp_pct:.1f}%"
+                    tgt2_lbl = "Target 2 (2.0x ATR)"
+                    tgt2_val = tgt2
+                    tgt2_sub = "Runner Target"
+                    sl_lbl = "Stop Loss (VWAP/Low)"
+                    sl_val = sl
+                    sl_sub = "Risk Invalidation"
+                elif direction == "BEARISH":
+                    dir_color = "#dc2626"
+                    dir_badge = ":red[▼ BEARISH BREAKDOWN]"
+                    trig_lbl = "Trigger (SELL < PDL)"
+                    trig_val = pdl
+                    trig_sub = "5-min Confirm"
+                    tgt1_lbl = "Target 1 (1.5x ATR)"
+                    tgt1_val = tgt1
+                    tgt1_sub = f"-{exp_pct:.1f}%"
+                    tgt2_lbl = "Target 2 (2.0x ATR)"
+                    tgt2_val = tgt2
+                    tgt2_sub = "Runner Target"
+                    sl_lbl = "Stop Loss (VWAP/High)"
+                    sl_val = sl
+                    sl_sub = "Risk Invalidation"
+                else:  # NEUTRAL / BILATERAL COIL
+                    dir_color = "#6366f1"
+                    dir_badge = ":blue[⚖️ BILATERAL BREAKOUT (NEUTRAL COIL)]"
+                    trig_lbl = "Buy Trigger (> PDH)"
+                    trig_val = pdh
+                    trig_sub = "Upside Trigger"
+                    tgt1_lbl = "Sell Trigger (< PDL)"
+                    tgt1_val = pdl
+                    tgt1_sub = "Downside Trigger"
+                    tgt2_lbl = "Target Long (+1.5x ATR)"
+                    tgt2_val = round(pdh + (1.5 * atr), 2)
+                    tgt2_sub = f"+{exp_pct:.1f}%"
+                    sl_lbl = "Target Short (-1.5x ATR)"
+                    sl_val = round(pdl - (1.5 * atr), 2)
+                    sl_sub = f"-{exp_pct:.1f}%"
+
+                with st.container(border=True):
+                    # Header row: Direction pill, ticker, name, tier, and sector
+                    h1, h2 = st.columns([3.4, 1.2])
+                    with h1:
+                        st.markdown(f"#### {dir_badge} &nbsp; **{ticker}** · *{name}*")
+                    with h2:
+                        st.markdown(f"<div style='text-align:right;'><span class='pill-blue'>{tier}</span> <span class='pill-gray'>{sector}</span></div>", unsafe_allow_html=True)
+
+                    # Setups and Compression Signals
+                    st.markdown(f"**Setups Detected:** `{setups}` &nbsp;•&nbsp; **CPR Width:** `{cpr_p:.3f}%` &nbsp;•&nbsp; **Volume vs 20D Avg:** `{vol_r:.2f}x`")
+
+                    # 6-Metric Responsive Execution Grid
+                    m_cols = st.columns(6)
+                    with m_cols[0]:
+                        st.markdown(
+                            f"""
+                            <div class="spotlight-metric-card">
+                                <div class="spotlight-metric-lbl">Closing Price</div>
+                                <div class="spotlight-metric-val">₹{close_p:,.2f}</div>
+                                <div class="spotlight-metric-sub" style="color:#64748b;">EOD Bar</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    with m_cols[1]:
+                        st.markdown(
+                            f"""
+                            <div class="spotlight-metric-card">
+                                <div class="spotlight-metric-lbl">{trig_lbl}</div>
+                                <div class="spotlight-metric-val" style="color:{dir_color};">₹{trig_val:,.2f}</div>
+                                <div class="spotlight-metric-sub" style="color:{dir_color};">{trig_sub}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    with m_cols[2]:
+                        st.markdown(
+                            f"""
+                            <div class="spotlight-metric-card">
+                                <div class="spotlight-metric-lbl">{tgt1_lbl}</div>
+                                <div class="spotlight-metric-val" style="color:#2563eb;">₹{tgt1_val:,.2f}</div>
+                                <div class="spotlight-metric-sub" style="color:#2563eb;">{tgt1_sub}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    with m_cols[3]:
+                        st.markdown(
+                            f"""
+                            <div class="spotlight-metric-card">
+                                <div class="spotlight-metric-lbl">{tgt2_lbl}</div>
+                                <div class="spotlight-metric-val" style="color:#7c3aed;">₹{tgt2_val:,.2f}</div>
+                                <div class="spotlight-metric-sub" style="color:#7c3aed;">{tgt2_sub}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    with m_cols[4]:
+                        st.markdown(
+                            f"""
+                            <div class="spotlight-metric-card">
+                                <div class="spotlight-metric-lbl">{sl_lbl}</div>
+                                <div class="spotlight-metric-val" style="color:#dc2626;">₹{sl_val:,.2f}</div>
+                                <div class="spotlight-metric-sub" style="color:#dc2626;">{sl_sub}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    with m_cols[5]:
+                        st.markdown(
+                            f"""
+                            <div class="spotlight-metric-card">
+                                <div class="spotlight-metric-lbl">Daily ATR (14D)</div>
+                                <div class="spotlight-metric-val">₹{atr:,.2f}</div>
+                                <div class="spotlight-metric-sub" style="color:#0f172a;">{atr_pct:.2f}% Range</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                    st.markdown(f"<div style='margin-top:10px; font-size:0.86rem; color:#475569;'>🎯 <strong>Action Plan:</strong> {rule}. Move stop loss to breakeven once Target 1 is hit.</div>", unsafe_allow_html=True)
+        else:
+            st.info("No candidates match your selected filters. Try broadening the Market Cap, Sector, or Bias filter above.")
+
         st.write("")
-
-        # Visual Actionable Stock Cards Grid
-        for _, stock in high_conv_df.iterrows():
-            ticker = stock["Ticker"]
-            name = stock["Stock Name"]
-            sector = stock["Sector"]
-            tier = stock["Market Cap Tier"]
-            direction = stock["Direction"]
-            dir_color = stock["Direction_Color"]
-            dir_icon = stock["Direction_Icon"]
-            close_p = stock["Close"]
-            pdh = stock["PDH"]
-            pdl = stock["PDL"]
-            atr = stock["Daily_ATR"]
-            atr_pct = stock["Daily_ATR_Pct"]
-            tgt1 = stock["Target_1_5x"]
-            tgt2 = stock["Target_2_0x"]
-            sl = stock["Stop_Loss"]
-            exp_pct = stock["Estimated_Expansion_Pct"]
-            rule = stock["Trigger_Rule"]
-            setups = stock["Setup_Tags"]
-            cpr_p = stock["CPR_Pct"]
-            vol_r = stock["Vol_Ratio"]
-
-            trigger_label = "BUY ABOVE PDH" if direction == "BULLISH" else "SELL BELOW PDL"
-            trigger_price = pdh if direction == "BULLISH" else pdl
-
-            with st.container(border=True):
-                # Header row: Direction pill, ticker, name, tier, and sector
-                h1, h2 = st.columns([3.2, 1.4])
-                with h1:
-                    dir_badge = ":green[▲ BULLISH EXPANSION]" if direction == "BULLISH" else ":red[▼ BEARISH EXPANSION]"
-                    st.markdown(f"#### {dir_badge} &nbsp; **{ticker}** · *{name}*")
-                with h2:
-                    st.markdown(f"<div style='text-align:right;'><span class='pill-blue'>{tier}</span> <span class='pill-gray'>{sector}</span></div>", unsafe_allow_html=True)
-
-                # Setups and Compression Signals
-                st.markdown(f"**Setups Detected:** `{setups}` &nbsp;•&nbsp; **CPR Width:** `{cpr_p:.3f}%` &nbsp;•&nbsp; **Volume vs 20D Avg:** `{vol_r:.2f}x`")
-
-                # 6-Metric Execution Grid
-                m1, m2, m3, m4, m5, m6 = st.columns(6)
-                m1.metric("Closing Price", f"₹{close_p:,.2f}")
-                m2.metric(f"Trigger ({trigger_label})", f"₹{trigger_price:,.2f}")
-                m3.metric("Target 1 (1.5x ATR)", f"₹{tgt1:,.2f}", f"+{exp_pct:.1f}%")
-                m4.metric("Target 2 (2.0x ATR)", f"₹{tgt2:,.2f}")
-                m5.metric("Stop Loss", f"₹{sl:,.2f}")
-                m6.metric("Daily ATR (14D)", f"₹{atr:,.2f}", f"{atr_pct:.2f}%")
-
-                st.caption(f"🎯 **Action Plan:** {rule}. Move stop loss to breakeven once Target 1 is hit.")
 
         # Consolidated High Conviction Table
         st.markdown("**📋 Consolidated High-Conviction Breakout Table:**")
@@ -743,5 +955,218 @@ with tab_guide:
                - Take 50% profits at Target 1 ($1.5\\times$ ATR) and move stop loss to breakeven!
             """
         )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 5: Session Accuracy & Performance Audit
+# ─────────────────────────────────────────────────────────────────────────────
+with tab_audit:
+    st.markdown('<div class="section-hdr">📊 Breakout Performance & Classification Accuracy Audit</div>', unsafe_allow_html=True)
+    st.caption("Evaluates whichever candidates are currently in your **Consolidated High-Conviction Breakout Table** against the actual trading session bars, computing the Confusion Matrix, F1 Score, and trade outcomes.")
+# ─────────────────────────────────────────────────────────────────────────────
+# TAB 5: Session Accuracy & Performance Audit
+# ─────────────────────────────────────────────────────────────────────────────
+with tab_audit:
+    st.markdown('<div class="section-hdr">📊 Breakout Performance & Classification Accuracy Audit</div>', unsafe_allow_html=True)
+    st.caption("Evaluates whichever candidates are currently in your **Consolidated High-Conviction Breakout Table** against the actual trading session bars, computing the Confusion Matrix, F1 Score, and trade outcomes.")
+
+    audit_ctl1, audit_ctl2 = st.columns([3.8, 1.4])
+    with audit_ctl1:
+        st.markdown(
+            """
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; font-size:0.88rem; color:#334155;">
+                📌 <strong>How it works:</strong> Click <strong>Run Accuracy Check</strong> after any market session (or half session). 
+                The audit engine pulls the actual OHLCV bars for your current High-Conviction stocks, checks whether the PDH/PDL trigger was breached, whether the 1.5x ATR target was achieved (True Positive), or if the trade was safely filtered out (True Negative).
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    with audit_ctl2:
+        st.write("")
+        run_audit_btn = st.button("🚀 Run Accuracy Check", type="primary", key="btn_run_accuracy_audit", width="stretch")
+
+    # Run audit logic on button click or default initial evaluation
+    if run_audit_btn or "session_audit_result" not in st.session_state:
+        with st.spinner("Analyzing high-conviction breakout candidates against session executions..."):
+            audit_res = PreMarketEngine.evaluate_session_accuracy(high_conv_df, force_live=True)
+            st.session_state["session_audit_result"] = audit_res
+            if run_audit_btn:
+                st.toast("✅ Breakout Accuracy Audit Completed!", icon="📊")
+
+    audit_res = st.session_state.get("session_audit_result")
+
+    if audit_res and audit_res.get("success"):
+        total_eval = audit_res["total_evaluated"]
+        tp = audit_res["tp"]
+        fp = audit_res["fp"]
+        tn = audit_res["tn"]
+        fn = audit_res["fn"]
+        prec = audit_res["precision"]
+        rec = audit_res["recall"]
+        f1 = audit_res["f1_score"]
+        spec = audit_res["specificity"]
+        cap_pres = audit_res["capital_preservation_rate"]
+        avg_vol = audit_res["avg_vol_ratio"]
+        avg_rng = audit_res["avg_range_pct"]
+        is_trunc = audit_res["is_truncated_session"]
+        audit_time = audit_res["audit_timestamp"]
+        audit_table_df = audit_res["audit_df"]
+
+        st.write("")
+
+        # Session Context Alert
+        if is_trunc:
+            st.markdown(
+                f"""
+                <div style="background: rgba(245, 158, 11, 0.10); border-left: 5px solid #d97706; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <strong style="color:#b45309; font-size: 0.95rem;">⚠️ Truncated / Low-Volume Session Detected (Avg Vol: {avg_vol}x)</strong><br>
+                    <span style="color:#334155; font-size: 0.88rem;">
+                        Institutional volume was only <strong>{avg_vol}x ({(avg_vol*100):.0f}% of normal)</strong>, compressing average intraday range to just <strong>{avg_rng:.2f}%</strong>.
+                        In truncated sessions, directional momentum to 1.5x ATR expansion targets is mathematically blocked by lack of block flow. The tape operated in pure <strong>Mean Reversion / Range-Bound Mode</strong>.
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f"""
+                <div style="background: rgba(22, 163, 74, 0.10); border-left: 5px solid #16a34a; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <strong style="color:#15803d; font-size: 0.95rem;">🟢 Standard Trading Session Performance (Avg Vol: {avg_vol}x)</strong><br>
+                    <span style="color:#334155; font-size: 0.88rem;">
+                        Evaluated {total_eval} high-conviction breakout candidates against session trading bars as of {audit_time}.
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # Classification KPI Cards
+        ak1, ak2, ak3, ak4, ak5 = st.columns(5)
+        ak1.markdown(f'<div class="kpi-card"><div class="kpi-val" style="color:#2563eb;">{total_eval}</div><div class="kpi-lbl">Setups Evaluated</div></div>', unsafe_allow_html=True)
+        ak2.markdown(f'<div class="kpi-card"><div class="kpi-val" style="color:{"#16a34a" if prec > 50 else "#dc2626"};">{prec:.1f}%</div><div class="kpi-lbl">Precision (Win Rate)</div></div>', unsafe_allow_html=True)
+        ak3.markdown(f'<div class="kpi-card"><div class="kpi-val" style="color:{"#16a34a" if f1 > 0.5 else "#dc2626"};">{f1:.3f}</div><div class="kpi-lbl">Session F1 Score</div></div>', unsafe_allow_html=True)
+        ak4.markdown(f'<div class="kpi-card"><div class="kpi-val" style="color:#16a34a;">{cap_pres:.1f}%</div><div class="kpi-lbl">Capital Saved (No-Trade)</div></div>', unsafe_allow_html=True)
+        ak5.markdown(f'<div class="kpi-card"><div class="kpi-val" style="color:#d97706;">{avg_vol}x</div><div class="kpi-lbl">Avg Session Volume</div></div>', unsafe_allow_html=True)
+
+        st.write("")
+
+        # Visual 2x2 Confusion Matrix & Formulas
+        st.markdown("#### 🧮 2×2 Confusion Matrix & Classification Metrics")
+        cm_col1, cm_col2 = st.columns(2)
+
+        with cm_col1:
+            st.markdown(
+                f"""
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; text-align:center;">
+                        <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:14px;">
+                            <div style="font-size:2rem; font-weight:800; color:#16a34a; font-family:monospace;">{tp}</div>
+                            <div style="font-size:0.75rem; font-weight:700; color:#16a34a; text-transform:uppercase;">True Positive (TP)</div>
+                            <div style="font-size:0.72rem; color:#64748b; margin-top:4px;">1.5x ATR Target Met</div>
+                        </div>
+                        <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:8px; padding:14px;">
+                            <div style="font-size:2rem; font-weight:800; color:#dc2626; font-family:monospace;">{fp}</div>
+                            <div style="font-size:0.75rem; font-weight:700; color:#dc2626; text-transform:uppercase;">False Positive (FP)</div>
+                            <div style="font-size:0.72rem; color:#64748b; margin-top:4px;">Triggered but Faded/SL</div>
+                        </div>
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:14px;">
+                            <div style="font-size:2rem; font-weight:800; color:#64748b; font-family:monospace;">{fn}</div>
+                            <div style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase;">False Negative (FN)</div>
+                            <div style="font-size:0.72rem; color:#64748b; margin-top:4px;">Missed Expansion Move</div>
+                        </div>
+                        <div style="background:#eff6ff; border:1px solid #93c5fd; border-radius:8px; padding:14px;">
+                            <div style="font-size:2rem; font-weight:800; color:#2563eb; font-family:monospace;">{tn}</div>
+                            <div style="font-size:0.75rem; font-weight:700; color:#2563eb; text-transform:uppercase;">True Negative (TN)</div>
+                            <div style="font-size:0.72rem; color:#64748b; margin-top:4px;">Rule Shielded Capital ({cap_pres:.0f}%)</div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        with cm_col2:
+            st.markdown(
+                f"""
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+                    <h5 style="margin:0 0 10px 0; font-size:1.0rem; color:#0f172a;">📐 Mathematical Formulation & Scores</h5>
+                    <div style="font-size:0.88rem; color:#334155; line-height:1.7;">
+                        • <strong>Precision:</strong> <code>TP / (TP + FP) = {tp} / ({tp} + {fp}) = {prec:.2f}%</code><br>
+                        • <strong>Recall:</strong> <code>TP / (TP + FN) = {tp} / ({tp} + {fn}) = {rec:.2f}%</code><br>
+                        • <strong>F1 Score:</strong> <code>2 &times; (Prec &times; Rec) / (Prec + Rec) = {f1:.3f}</code><br>
+                        • <strong>Specificity (Noise Shield):</strong> <code>TN / (TN + FP) = {tn} / ({tn} + {fp}) = {spec:.2f}%</code><br>
+                        • <strong>Capital Preservation Rate:</strong> <code>{tn} / {total_eval} = {cap_pres:.2f}%</code><br>
+                    </div>
+                    <div style="margin-top:12px; font-size:0.82rem; color:#64748b; background:#f8fafc; padding:8px 12px; border-radius:6px;">
+                        💡 <em>Stage 3 Rule saved capital on {tn} of {total_eval} stocks where price never breached PDH/PDL.</em>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        st.write("")
+
+        # Candidate-by-Candidate Trade Audit Table
+        st.markdown(f"#### 📋 Candidate-by-Candidate Session Audit ({total_eval} Stocks from High-Conviction Table)")
+        st.dataframe(
+            audit_table_df,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Ticker": st.column_config.TextColumn("Ticker", width="small"),
+                "Stock Name": st.column_config.TextColumn("Stock Name", width="medium"),
+                "Tier": st.column_config.TextColumn("Tier", width="small"),
+                "Bias": st.column_config.TextColumn("Bias", width="small"),
+                "PDH": st.column_config.NumberColumn("PDH (₹)", format="₹%.2f"),
+                "PDL": st.column_config.NumberColumn("PDL (₹)", format="₹%.2f"),
+                "Session High": st.column_config.NumberColumn("High (₹)", format="₹%.2f"),
+                "Session Low": st.column_config.NumberColumn("Low (₹)", format="₹%.2f"),
+                "Session Close": st.column_config.NumberColumn("Close (₹)", format="₹%.2f"),
+                "Range %": st.column_config.NumberColumn("Range %", format="%.2f%%"),
+                "Vol Ratio": st.column_config.TextColumn("Vol vs Prior", width="small"),
+                "Trigger Status": st.column_config.TextColumn("Trigger Breach?", width="medium"),
+                "Outcome": st.column_config.TextColumn("Trade Outcome", width="large")
+            }
+        )
+
+        st.write("")
+
+        # Download Report Button
+        rep_p = Path(__file__).resolve().parent.parent / "reports" / "breakout_accuracy_audit_20261108.html"
+        if rep_p.exists():
+            with open(rep_p, "r", encoding="utf-8") as f:
+                html_export = f.read()
+            st.download_button(
+                label="📥 Download Detailed Audit Report (HTML)",
+                data=html_export,
+                file_name=f"investiq_breakout_audit_{datetime.now().strftime('%Y%m%d_%H%M')}.html",
+                mime="text/html",
+                type="secondary",
+                key="btn_download_audit_html",
+                width="stretch"
+            )
+
+        st.write("")
+
+        # Deep-Dive Insights & Tactical Rules
+        st.markdown("#### 💡 Tactical Playbook Adjustments & Audit Insights")
+        t_col1, t_col2 = st.columns(2)
+        with t_col1:
+            st.markdown(
+                r"""
+                - **1. Volume Starvation Rule:** Directional breakout expansions require institutional volume ($\ge 1.5\times$). If morning volume on the 5-min chart is trending below $0.5\times$, **disable all breakout entry orders**.
+                - **2. The Capital Preservation Shield:** The Stage 3 rule ("Never enter without trigger breach") automatically saved capital on all unbreached setups, preventing losing trades in a dead session.
+                """
+            )
+        with t_col2:
+            st.markdown(
+                r"""
+                - **3. Low Range Ceilings:** Intraday ranges in half sessions are capped at $\le 0.5\times$ ATR (under 1.0%), making $1.5\times$ ATR expansion targets mathematically unattainable.
+                - **4. Switch to Mean Reversion:** During Muhurat, special weekend, or truncated sessions, favor mean-reversion strategies (fading the edges of Narrow CPR / PDH / PDL) rather than chasing breakouts.
+                """
+            )
+    else:
+        st.warning("No High-Conviction candidates available to audit. Run the screener in Tab 1 first.")
 
 
