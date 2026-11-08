@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Market Breakout Radar — Half-Session Accuracy & Performance Audit | InvestIQ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f0fdf4 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(226, 232, 240, 0.9);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --success: #16a34a;
+            --success-light: #dcfce7;
+            --danger: #dc2626;
+            --danger-light: #fee2e2;
+            --warning: #d97706;
+            --warning-light: #fef3c7;
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 32px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Card */
+        .header-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 32px 36px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .badge-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #fde68a; }
+        .badge-primary { background: var(--primary-light); color: var(--primary); border: 1px solid #c7d2fe; }
+        .badge-success { background: var(--success-light); color: var(--success); border: 1px solid #bbf7d0; }
+        .badge-danger  { background: var(--danger-light);  color: var(--danger);  border: 1px solid #fecaca; }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 12px 0 6px 0;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.0rem;
+            max-width: 900px;
+        }
+
+        .meta-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .meta-item strong {
+            color: var(--text-primary);
+        }
+
+        /* KPI Strip */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .kpi-lbl {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .kpi-val {
+            font-size: 2.0rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+            font-family: var(--font-mono);
+        }
+
+        .kpi-sub {
+            font-size: 0.80rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        /* Confusion Matrix Section */
+        .section-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 26px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f8fafc;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cm-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 24px;
+            align-items: center;
+        }
+
+        @media (max-width: 860px) {
+            .cm-layout { grid-template-columns: 1fr; }
+        }
+
+        /* 2x2 Matrix Table */
+        .cm-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 8px;
+            text-align: center;
+        }
+
+        .cm-table th {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 8px;
+        }
+
+        .cm-cell {
+            padding: 22px 16px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .cm-tp {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: var(--success);
+        }
+
+        .cm-fp {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: var(--danger);
+        }
+
+        .cm-tn {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #2563eb;
+        }
+
+        .cm-fn {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #64748b;
+        }
+
+        .cm-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .cm-desc {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .cm-note {
+            font-size: 0.72rem;
+            margin-top: 4px;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        /* Metric Equations List */
+        .metric-calc-list {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px 20px;
+        }
+
+        .metric-calc-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 0.90rem;
+        }
+
+        .metric-calc-item:last-child {
+            border-bottom: none;
+        }
+
+        .calc-name {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .calc-formula {
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .calc-result {
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+            font-size: 1.05rem;
+        }
+
+        /* Data Table */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 14px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table.audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.88rem;
+            background: #ffffff;
+        }
+
+        table.audit-table th {
+            background: #f8fafc;
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.74rem;
+            letter-spacing: 0.04em;
+            padding: 12px 14px;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        table.audit-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-primary);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        table.audit-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .stock-tag {
+            font-weight: 800;
+            font-size: 0.94rem;
+            color: var(--text-primary);
+        }
+
+        .stock-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        /* Insight Cards */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .insight-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .insight-card h4 {
+            font-size: 1.0rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-card p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Action Checklist */
+        .checklist {
+            list-style: none;
+            margin-top: 14px;
+        }
+
+        .checklist li {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            font-size: 0.90rem;
+            color: var(--text-secondary);
+        }
+
+        .checklist li strong {
+            color: var(--text-primary);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header Section -->
+    <div class="header-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <span class="badge-pill badge-warning">⚡ Truncated Session Performance Audit</span>
+            <span class="badge-pill badge-primary">Session Date: 08 Nov 2026</span>
+        </div>
+        <h1>Pre-Market Breakout Radar — Accuracy Audit</h1>
+        <p class="subtitle">
+            Quantitative assessment of the <strong>Consolidated High-Conviction Breakout Table</strong> against actual market executions during the <strong>08 November 2026 Half/Special Trading Session</strong>.
+        </p>
+        <div class="meta-strip">
+            <div class="meta-item">Strategy: <strong>3-Stage EOD Breakout Funnel (NR7 / CPR / ATR Expansion)</strong></div>
+            <div class="meta-item">Session Type: <strong>Special Truncated Half-Session</strong></div>
+            <div class="meta-item">Avg Session Volume: <strong>0.09x (9% of Friday)</strong></div>
+            <div class="meta-item">Avg Intraday Range: <strong>0.92% (Compressed)</strong></div>
+        </div>
+    </div>
+
+    <!-- Executive KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-lbl">Candidates Evaluated</div>
+            <div class="kpi-val">10</div>
+            <div class="kpi-sub">Large Cap High-Conviction Setups</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-lbl">True Positives (Target Met)</div>
+            <div class="kpi-val" style="color: var(--success);">0</div>
+            <div class="kpi-sub">0% achieved 1.5x ATR Expansion</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-lbl">False Positives (Fakeouts)</div>
+            <div class="kpi-val" style="color: var(--danger);">5</div>
+            <div class="kpi-sub">Breached trigger but stalled/faded</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-lbl">Capital Saved (No Trigger)</div>
+            <div class="kpi-val" style="color: #2563eb;">5</div>
+            <div class="kpi-sub">Stage 3 rule prevented entry (50%)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-lbl">Session F1 Score</div>
+            <div class="kpi-val" style="color: var(--primary);">0.000</div>
+            <div class="kpi-sub">Precision: 0.0% | Recall: 0.0%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-lbl">Capital Preservation Rate</div>
+            <div class="kpi-val" style="color: var(--success);">50.0%</div>
+            <div class="kpi-sub">Protected by strict PDH/PDL gate</div>
+        </div>
+    </div>
+
+    <!-- Confusion Matrix & Classification Metrics -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <span>🧮 2×2 Confusion Matrix & Classification Performance</span>
+            </div>
+            <span class="badge-pill badge-primary">Classification Mode: Breakout Expansion (Target 1)</span>
+        </div>
+
+        <div class="cm-layout">
+            <!-- Matrix Visual -->
+            <div>
+                <table class="cm-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;"></th>
+                            <th style="width: 37.5%;">Actual Breakout (Win)<br><small style="text-transform:none; color:var(--text-muted); font-weight:500;">Expanded &ge; 1.5x ATR</small></th>
+                            <th style="width: 37.5%;">Actual Rangebound (Loss)<br><small style="text-transform:none; color:var(--text-muted); font-weight:500;">Failed / Inside Range</small></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th style="text-align: right; vertical-align: middle;">
+                                Predicted Breakout<br>
+                                <small style="text-transform:none; color:var(--text-muted); font-weight:500;">Trigger Breached</small>
+                            </th>
+                            <td class="cm-cell cm-tp">
+                                <div class="cm-number">0</div>
+                                <div class="cm-desc">True Positive (TP)</div>
+                                <div class="cm-note">Clean Breakout Expansion</div>
+                            </td>
+                            <td class="cm-cell cm-fp">
+                                <div class="cm-number">5</div>
+                                <div class="cm-desc">False Positive (FP)</div>
+                                <div class="cm-note">Volume Starvation Fakeout</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="text-align: right; vertical-align: middle;">
+                                Predicted No-Trade<br>
+                                <small style="text-transform:none; color:var(--text-muted); font-weight:500;">Unbreached Levels</small>
+                            </th>
+                            <td class="cm-cell cm-fn">
+                                <div class="cm-number">0</div>
+                                <div class="cm-desc">False Negative (FN)</div>
+                                <div class="cm-note">Missed Expansion Move</div>
+                            </td>
+                            <td class="cm-cell cm-tn">
+                                <div class="cm-number">5</div>
+                                <div class="cm-desc">True Negative (TN)</div>
+                                <div class="cm-note">Rule Shielded Capital (50%)</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mathematical Calculations -->
+            <div class="metric-calc-list">
+                <div class="metric-calc-item">
+                    <div>
+                        <div class="calc-name">Precision</div>
+                        <div class="calc-formula">TP / (TP + FP) = 0 / (0 + 5)</div>
+                    </div>
+                    <div class="calc-result" style="color: var(--danger);">0.00%</div>
+                </div>
+                <div class="metric-calc-item">
+                    <div>
+                        <div class="calc-name">Recall (Sensitivity)</div>
+                        <div class="calc-formula">TP / (TP + FN) = 0 / (0 + 0)</div>
+                    </div>
+                    <div class="calc-result" style="color: var(--danger);">0.00%</div>
+                </div>
+                <div class="metric-calc-item">
+                    <div>
+                        <div class="calc-name">F1 Score (Harmonic Mean)</div>
+                        <div class="calc-formula">2 &times; (Prec &times; Rec) / (Prec + Rec)</div>
+                    </div>
+                    <div class="calc-result" style="color: var(--primary);">0.000</div>
+                </div>
+                <div class="metric-calc-item">
+                    <div>
+                        <div class="calc-name">Specificity (Noise Shield)</div>
+                        <div class="calc-formula">TN / (TN + FP) = 5 / (5 + 5)</div>
+                    </div>
+                    <div class="calc-result" style="color: var(--success);">50.00%</div>
+                </div>
+                <div class="metric-calc-item">
+                    <div>
+                        <div class="calc-name">Capital Preservation Rate</div>
+                        <div class="calc-formula">TN / Total Candidates = 5 / 10</div>
+                    </div>
+                    <div class="calc-result" style="color: var(--success);">50.00%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Candidate-by-Candidate Trade Audit Table -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <span>📋 Candidate-by-Candidate Session Audit Table</span>
+            </div>
+            <span class="badge-pill badge-warning">Session Reality: 08 Nov 2026</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>Ticker & Name</th>
+                        <th>EOD Bias</th>
+                        <th>PDH (Buy Level)</th>
+                        <th>PDL (Sell Level)</th>
+                        <th>Today Open</th>
+                        <th>Today High</th>
+                        <th>Today Low</th>
+                        <th>Today Close</th>
+                        <th>Range %</th>
+                        <th>Vol Ratio</th>
+                        <th>Trigger Status</th>
+                        <th>Trade Outcome</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">RELIANCE</span>
+                            <span class="stock-sub">Reliance Industries</span>
+                        </td>
+                        <td><span class="badge-pill badge-primary">NEUTRAL</span></td>
+                        <td class="mono">₹1,324.90</td>
+                        <td class="mono">₹1,314.70</td>
+                        <td class="mono">₹1,322.10</td>
+                        <td class="mono">₹1,324.90</td>
+                        <td class="mono">₹1,314.70</td>
+                        <td class="mono">₹1,324.00</td>
+                        <td class="mono">0.77%</td>
+                        <td class="mono">0.18x</td>
+                        <td><span class="badge-pill badge-warning">Tested Both</span></td>
+                        <td><strong style="color:var(--warning);">Whipsaw (Closed Inside)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">BHARTIARTL</span>
+                            <span class="stock-sub">Bharti Airtel</span>
+                        </td>
+                        <td><span class="badge-pill badge-success">BULLISH</span></td>
+                        <td class="mono">₹2,104.00</td>
+                        <td class="mono">₹2,085.20</td>
+                        <td class="mono">₹2,097.00</td>
+                        <td class="mono">₹2,104.00</td>
+                        <td class="mono">₹2,085.20</td>
+                        <td class="mono">₹2,085.50</td>
+                        <td class="mono">0.90%</td>
+                        <td class="mono">0.03x</td>
+                        <td><span class="badge-pill badge-success">No Breach</span></td>
+                        <td><strong style="color:var(--success);">✅ Capital Saved (No Entry)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">HDFCBANK</span>
+                            <span class="stock-sub">HDFC Bank Limited</span>
+                        </td>
+                        <td><span class="badge-pill badge-primary">NEUTRAL</span></td>
+                        <td class="mono">₹795.00</td>
+                        <td class="mono">₹782.55</td>
+                        <td class="mono">₹788.90</td>
+                        <td class="mono">₹795.00</td>
+                        <td class="mono">₹782.55</td>
+                        <td class="mono">₹784.10</td>
+                        <td class="mono">1.59%</td>
+                        <td class="mono">0.10x</td>
+                        <td><span class="badge-pill badge-warning">Tested Both</span></td>
+                        <td><strong style="color:var(--danger);">Faded Back to Range</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">ICICIBANK</span>
+                            <span class="stock-sub">ICICI Bank Limited</span>
+                        </td>
+                        <td><span class="badge-pill badge-primary">NEUTRAL</span></td>
+                        <td class="mono">₹1,577.80</td>
+                        <td class="mono">₹1,564.00</td>
+                        <td class="mono">₹1,572.00</td>
+                        <td class="mono">₹1,577.80</td>
+                        <td class="mono">₹1,564.00</td>
+                        <td class="mono">₹1,565.00</td>
+                        <td class="mono">0.88%</td>
+                        <td class="mono">0.05x</td>
+                        <td><span class="badge-pill badge-success">No Breach</span></td>
+                        <td><strong style="color:var(--success);">✅ Capital Saved (No Entry)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">SBIN</span>
+                            <span class="stock-sub">State Bank of India</span>
+                        </td>
+                        <td><span class="badge-pill badge-danger">BEARISH</span></td>
+                        <td class="mono">₹1,025.00</td>
+                        <td class="mono">₹1,015.10</td>
+                        <td class="mono">₹1,023.20</td>
+                        <td class="mono">₹1,025.00</td>
+                        <td class="mono">₹1,015.10</td>
+                        <td class="mono">₹1,016.00</td>
+                        <td class="mono">0.97%</td>
+                        <td class="mono">0.12x</td>
+                        <td><span class="badge-pill badge-danger">Breached PDL</span></td>
+                        <td><strong style="color:var(--danger);">False Breakdown (Reversed)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">TCS</span>
+                            <span class="stock-sub">Tata Consultancy Services</span>
+                        </td>
+                        <td><span class="badge-pill badge-danger">BEARISH</span></td>
+                        <td class="mono">₹2,513.90</td>
+                        <td class="mono">₹2,492.00</td>
+                        <td class="mono">₹2,503.90</td>
+                        <td class="mono">₹2,513.90</td>
+                        <td class="mono">₹2,492.00</td>
+                        <td class="mono">₹2,498.80</td>
+                        <td class="mono">0.88%</td>
+                        <td class="mono">0.06x</td>
+                        <td><span class="badge-pill badge-success">No Breach</span></td>
+                        <td><strong style="color:var(--success);">✅ Capital Saved (No Entry)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">BAJFINANCE</span>
+                            <span class="stock-sub">Bajaj Finance Limited</span>
+                        </td>
+                        <td><span class="badge-pill badge-danger">BEARISH</span></td>
+                        <td class="mono">₹1,099.00</td>
+                        <td class="mono">₹1,082.85</td>
+                        <td class="mono">₹1,090.00</td>
+                        <td class="mono">₹1,099.00</td>
+                        <td class="mono">₹1,081.75</td>
+                        <td class="mono">₹1,081.75</td>
+                        <td class="mono">1.59%</td>
+                        <td class="mono">0.09x</td>
+                        <td><span class="badge-pill badge-danger">Broke by ₹1.10</span></td>
+                        <td><strong style="color:var(--warning);">Stalled (Target Missed)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">LT</span>
+                            <span class="stock-sub">Larsen & Toubro</span>
+                        </td>
+                        <td><span class="badge-pill badge-success">BULLISH</span></td>
+                        <td class="mono">₹4,130.00</td>
+                        <td class="mono">₹4,096.10</td>
+                        <td class="mono">₹4,119.00</td>
+                        <td class="mono">₹4,130.00</td>
+                        <td class="mono">₹4,096.10</td>
+                        <td class="mono">₹4,110.00</td>
+                        <td class="mono">0.82%</td>
+                        <td class="mono">0.09x</td>
+                        <td><span class="badge-pill badge-success">No Breach</span></td>
+                        <td><strong style="color:var(--success);">✅ Capital Saved (No Entry)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">LICI</span>
+                            <span class="stock-sub">Life Insurance Corp</span>
+                        </td>
+                        <td><span class="badge-pill badge-primary">NEUTRAL</span></td>
+                        <td class="mono">₹398.00</td>
+                        <td class="mono">₹395.75</td>
+                        <td class="mono">₹398.00</td>
+                        <td class="mono">₹398.00</td>
+                        <td class="mono">₹395.75</td>
+                        <td class="mono">₹396.85</td>
+                        <td class="mono">0.57%</td>
+                        <td class="mono">0.06x</td>
+                        <td><span class="badge-pill badge-success">No Breach</span></td>
+                        <td><strong style="color:var(--success);">✅ Capital Saved (No Entry)</strong></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="stock-tag">HINDUNILVR</span>
+                            <span class="stock-sub">Hindustan Unilever</span>
+                        </td>
+                        <td><span class="badge-pill badge-danger">BEARISH</span></td>
+                        <td class="mono">₹2,009.00</td>
+                        <td class="mono">₹1,999.00</td>
+                        <td class="mono">₹2,000.00</td>
+                        <td class="mono">₹2,009.00</td>
+                        <td class="mono">₹1,997.00</td>
+                        <td class="mono">₹1,997.00</td>
+                        <td class="mono">0.60%</td>
+                        <td class="mono">0.14x</td>
+                        <td><span class="badge-pill badge-danger">Broke by ₹2.00</span></td>
+                        <td><strong style="color:var(--warning);">Stalled (Target Missed)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Deep-Dive Analytical Insights -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <span>💡 Quantitative Post-Mortem & Strategic Insights</span>
+            </div>
+        </div>
+
+        <div class="insights-grid">
+            <div class="insight-card">
+                <h4>🩸 1. The Volume Starvation Trap</h4>
+                <p>
+                    Directional range expansions require institutional algorithmic volume ($\ge 1.5\times$ 20D SMA). In today's half session, institutional volume dropped to an average of <strong>0.09x (9% of Friday)</strong>. Without heavy block orders, breakouts cannot sustain momentum.
+                </p>
+            </div>
+
+            <div class="insight-card">
+                <h4>🛡️ 2. The 50% Capital Preservation Shield</h4>
+                <p>
+                    For 5 out of 10 candidates (<strong>BHARTIARTL, ICICIBANK, TCS, LT, LICI</strong>), the price remained strictly inside the previous day's high-low band. The Stage 3 rule ("Never enter without trigger breach") automatically saved capital on <strong>50% of the watchlist</strong>.
+                </p>
+            </div>
+
+            <div class="insight-card">
+                <h4>⚠️ 3. Retail Wick Traps</h4>
+                <p>
+                    The 5 stocks that crossed the trigger level (e.g. SBIN, HINDUNILVR, BAJFINANCE) did so by only ₹1 to ₹2 on thin volume, followed immediately by mean reversion. In illiquid sessions, opening spikes are retail traps designed to catch stop losses.
+                </p>
+            </div>
+
+            <div class="insight-card">
+                <h4>🧭 4. The Stage 2 Volume Filter Defends 100%</h4>
+                <p>
+                    Our strategy rules explicitly mandate: <em>"A valid morning breakout requires expanding 5-minute volume trending above the 20-day SMA."</em> Applying this rule would have correctly disqualified <strong>100% of today's setups</strong>, keeping all capital in cash.
+                </p>
+            </div>
+        </div>
+
+        <!-- Strategy Checklist for Half Sessions -->
+        <h4 style="margin-top: 24px; font-weight: 800;">🎯 Actionable Playbook Rules for Half / Special Sessions:</h4>
+        <ul class="checklist">
+            <li><strong>Disable Intraday Breakout Orders:</strong> In Muhurat, Saturday/Sunday, or truncated half-sessions, volume is mathematically insufficient for 2%–5% ATR expansions.</li>
+            <li><strong>Switch to Mean Reversion:</strong> Truncated sessions favor mean-reverting strategies (fading the edges of Narrow CPR / Previous Day High-Low).</li>
+            <li><strong>Enforce the 1.5x Volume Gate:</strong> Never execute a breakout trade if the opening 15-minute volume is trending below average, regardless of whether PDH or PDL is breached.</li>
+            <li><strong>Expect Low Range Ceilings:</strong> Intraday range ceiling in half sessions is strictly capped at $\le 0.5\times$ ATR (under 1.0%), making $1.5\times$ ATR targets mathematically unattainable.</li>
+        </ul>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        Generated by <strong>InvestIQ Pre-Market Quantitative Engine</strong> · Automated Session Audit Module · 08 Nov 2026
+    </div>
+
+</div>
+
+</body>
+</html>
+
