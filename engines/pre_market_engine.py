@@ -605,13 +605,25 @@ class PreMarketEngine:
         currently in the Consolidated High-Conviction Breakout Table.
         Computes 2x2 Confusion Matrix, Precision, Recall, F1 score, and trade-by-trade outcomes.
         """
-        if high_conv_df is None or high_conv_df.empty:
+        if high_conv_df is None or not isinstance(high_conv_df, pd.DataFrame) or high_conv_df.empty:
             return {
                 "success": False,
                 "message": "No candidates found in High-Conviction Breakout Table to evaluate."
             }
 
-        tickers = high_conv_df["Ticker"].tolist()
+        if "Ticker" not in high_conv_df.columns:
+            return {
+                "success": False,
+                "message": "Missing 'Ticker' column in High-Conviction Breakout Table."
+            }
+
+        tickers = high_conv_df["Ticker"].dropna().astype(str).tolist()
+        if not tickers:
+            return {
+                "success": False,
+                "message": "No valid tickers found in High-Conviction Breakout Table."
+            }
+
         yf_symbols = [f"{t}.NS" for t in tickers]
 
         batch_data = None
@@ -624,10 +636,11 @@ class PreMarketEngine:
                     interval="1d",
                     group_by="ticker",
                     progress=False,
-                    timeout=8
+                    timeout=10
                 )
             except Exception as e:
                 logger.warning(f"Live batch download for accuracy audit failed: {e}")
+                batch_data = None
 
         audit_rows = []
         tp, fp, tn, fn = 0, 0, 0, 0
@@ -635,41 +648,53 @@ class PreMarketEngine:
         total_range_pcts = []
 
         for _, row in high_conv_df.iterrows():
-            sym = str(row["Ticker"]).strip()
+            sym = str(row.get("Ticker", "")).strip()
+            if not sym:
+                continue
             yf_k = f"{sym}.NS"
             bias = str(row.get("Direction", "NEUTRAL")).upper()
-            pdh = float(row.get("PDH", 0.0))
-            pdl = float(row.get("PDL", 0.0))
-            atr = float(row.get("Daily_ATR", 0.0))
-            sl = float(row.get("Stop_Loss", 0.0))
+            pdh = float(row.get("PDH", 0.0) or 0.0)
+            pdl = float(row.get("PDL", 0.0) or 0.0)
+            atr = float(row.get("Daily_ATR", 0.0) or 0.0)
+            sl = float(row.get("Stop_Loss", 0.0) or 0.0)
 
             t_open, t_high, t_low, t_close, t_vol, p_vol = None, None, None, None, 0, 1
             has_bar = False
 
-            if batch_data is not None:
+            if batch_data is not None and isinstance(batch_data, pd.DataFrame) and not batch_data.empty:
                 try:
+                    sub = None
                     if isinstance(batch_data.columns, pd.MultiIndex):
-                        if yf_k in batch_data.columns.levels[0]:
+                        cols_0 = batch_data.columns.get_level_values(0).unique()
+                        if yf_k in cols_0:
                             sub = batch_data[yf_k].dropna(subset=["Close"])
-                        elif sym in batch_data.columns.levels[0]:
+                        elif sym in cols_0:
                             sub = batch_data[sym].dropna(subset=["Close"])
-                        else:
-                            sub = None
-                        if sub is not None and len(sub) >= 2:
-                            today_bar = sub.iloc[-1]
-                            prev_bar = sub.iloc[-2]
-                            t_open = float(today_bar["Open"])
-                            t_high = float(today_bar["High"])
-                            t_low = float(today_bar["Low"])
-                            t_close = float(today_bar["Close"])
-                            t_vol = int(today_bar["Volume"])
-                            p_vol = int(prev_bar["Volume"])
-                            has_bar = True
-                except Exception:
-                    pass
+                    else:
+                        sub = batch_data.dropna(subset=["Close"])
+
+                    if sub is not None and len(sub) >= 2:
+                        today_bar = sub.iloc[-1]
+                        prev_bar = sub.iloc[-2]
+                        
+                        def _get_val(series_or_bar, key):
+                            val = series_or_bar[key]
+                            if isinstance(val, (pd.Series, np.ndarray, list)):
+                                return float(val[0])
+                            return float(val)
+
+                        t_open = _get_val(today_bar, "Open")
+                        t_high = _get_val(today_bar, "High")
+                        t_low = _get_val(today_bar, "Low")
+                        t_close = _get_val(today_bar, "Close")
+                        t_vol = int(_get_val(today_bar, "Volume"))
+                        p_vol = int(_get_val(prev_bar, "Volume"))
+                        has_bar = True
+                except Exception as ex:
+                    logger.debug(f"Could not parse live bar for {sym}: {ex}")
 
             if not has_bar:
-                t_close = float(row.get("Close", pdh))
+                t_close = float(row.get("Close", pdh) or pdh)
                 t_open = t_close
                 t_high = pdh
                 t_low = pdl

@@ -8,12 +8,15 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import altair as alt
+import importlib
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-from utils.page_utils import render_sidebar, require_auth
+import engines.pre_market_engine
+importlib.reload(engines.pre_market_engine)
 from engines.pre_market_engine import PreMarketEngine
+from utils.page_utils import render_sidebar, require_auth
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page Config & Security
@@ -962,12 +965,6 @@ with tab_guide:
 with tab_audit:
     st.markdown('<div class="section-hdr">📊 Breakout Performance & Classification Accuracy Audit</div>', unsafe_allow_html=True)
     st.caption("Evaluates whichever candidates are currently in your **Consolidated High-Conviction Breakout Table** against the actual trading session bars, computing the Confusion Matrix, F1 Score, and trade outcomes.")
-# ─────────────────────────────────────────────────────────────────────────────
-# TAB 5: Session Accuracy & Performance Audit
-# ─────────────────────────────────────────────────────────────────────────────
-with tab_audit:
-    st.markdown('<div class="section-hdr">📊 Breakout Performance & Classification Accuracy Audit</div>', unsafe_allow_html=True)
-    st.caption("Evaluates whichever candidates are currently in your **Consolidated High-Conviction Breakout Table** against the actual trading session bars, computing the Confusion Matrix, F1 Score, and trade outcomes.")
 
     audit_ctl1, audit_ctl2 = st.columns([3.8, 1.4])
     with audit_ctl1:
@@ -984,13 +981,18 @@ with tab_audit:
         st.write("")
         run_audit_btn = st.button("🚀 Run Accuracy Check", type="primary", key="btn_run_accuracy_audit", width="stretch")
 
-    # Run audit logic on button click or default initial evaluation
-    if run_audit_btn or "session_audit_result" not in st.session_state:
-        with st.spinner("Analyzing high-conviction breakout candidates against session executions..."):
-            audit_res = PreMarketEngine.evaluate_session_accuracy(high_conv_df, force_live=True)
-            st.session_state["session_audit_result"] = audit_res
-            if run_audit_btn:
-                st.toast("✅ Breakout Accuracy Audit Completed!", icon="📊")
+    # Run audit logic on button click
+    if run_audit_btn:
+        if high_conv_df is None or not isinstance(high_conv_df, pd.DataFrame) or high_conv_df.empty:
+            st.warning("⚠️ No High-Conviction Breakout candidates currently found to evaluate. Please run the screener above first.")
+        else:
+            with st.spinner("Analyzing high-conviction breakout candidates against session executions..."):
+                try:
+                    audit_res = PreMarketEngine.evaluate_session_accuracy(high_conv_df, force_live=True)
+                    st.session_state["session_audit_result"] = audit_res
+                    st.toast("✅ Breakout Accuracy Audit Completed!", icon="📊")
+                except Exception as e:
+                    st.error(f"⚠️ Error running session accuracy audit: {e}")
 
     audit_res = st.session_state.get("session_audit_result")
 
@@ -1166,7 +1168,9 @@ with tab_audit:
                 - **4. Switch to Mean Reversion:** During Muhurat, special weekend, or truncated sessions, favor mean-reversion strategies (fading the edges of Narrow CPR / PDH / PDL) rather than chasing breakouts.
                 """
             )
+    elif audit_res and not audit_res.get("success"):
+        st.warning(f"⚠️ {audit_res.get('message', 'Unable to complete audit.')}")
     else:
-        st.warning("No High-Conviction candidates available to audit. Run the screener in Tab 1 first.")
+        st.info("👉 Click **🚀 Run Accuracy Check** above to evaluate today's trading session performance, confusion matrix, and breakout accuracy for your current high-conviction candidates.")
 
 
