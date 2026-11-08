@@ -983,20 +983,6 @@ with tab_audit:
     with audit_ctl2:
         st.write("")
         run_audit_btn = st.button("🚀 Run Accuracy Check", type="primary", key="btn_run_accuracy_audit", width="stretch")
-    audit_ctl1, audit_ctl2 = st.columns([3.8, 1.4])
-    with audit_ctl1:
-        st.markdown(
-            """
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; font-size:0.88rem; color:#334155;">
-                📌 <strong>How it works:</strong> Click <strong>Run Accuracy Check</strong> after any market session (or half session). 
-                The audit engine pulls the actual OHLCV bars for your current High-Conviction stocks, checks whether the PDH/PDL trigger was breached, whether the 1.5x ATR target was achieved (True Positive), or if the trade was safely filtered out (True Negative).
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    with audit_ctl2:
-        st.write("")
-        run_audit_btn = st.button("🚀 Run Accuracy Check", type="primary", key="btn_run_accuracy_audit", width="stretch")
 
     # Run audit logic on button click or default initial evaluation
     if run_audit_btn or "session_audit_result" not in st.session_state:
