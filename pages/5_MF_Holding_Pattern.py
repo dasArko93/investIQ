@@ -275,28 +275,39 @@ with ingest_col1:
                 st.rerun()
 
 with ingest_col2:
-    available_snaps = MFConsensusEngine.get_snapshots()
-    # Automatically ensure at least 3 latest months are seeded
-    if not available_snaps or len(available_snaps) < 3:
-        MFDisclosureService.seed_default_disclosures(overwrite=True)
-        available_snaps = MFConsensusEngine.get_snapshots()
-
-    latest_3_default = [s[1] for s in MFDisclosureService.get_latest_disclosure_months(3)]
-    snap_options = [s["month_str"] for s in available_snaps] if available_snaps else latest_3_default
-
     def format_snap_label(s_str):
         try:
             dt = datetime.strptime(s_str, "%Y-%m")
-            return dt.strftime("%B %Y") + f" ({s_str})"
+            label = dt.strftime("%B %Y") + f" ({s_str})"
+            return label
         except Exception:
             return s_str
+
+    available_snaps = MFConsensusEngine.get_snapshots()
+    latest_3_default = [s[1] for s in MFDisclosureService.get_latest_disclosure_months(3)]
+    latest_expected_month = latest_3_default[0]
+    existing_months = [s["month_str"] for s in available_snaps] if available_snaps else []
+
+    # Automatically ensure at least 3 latest months are seeded AND that the latest calendar disclosure month (e.g. October 2026) is present
+    if not available_snaps or len(available_snaps) < 3 or (latest_expected_month not in existing_months):
+        with st.spinner(f"📡 New monthly disclosure period detected ({format_snap_label(latest_expected_month)}). Updating institutional disclosures..."):
+            MFDisclosureService.seed_default_disclosures(overwrite=True)
+            available_snaps = MFConsensusEngine.get_snapshots()
+
+    snap_options = [s["month_str"] for s in available_snaps] if available_snaps else latest_3_default
+
+    def format_snap_dropdown(s_str):
+        base = format_snap_label(s_str)
+        if snap_options and s_str == snap_options[0]:
+            return f"🟢 {base} — Latest SEBI Disclosure"
+        return base
 
     selected_snapshot = st.selectbox(
         "📅 Snapshot Period",
         options=snap_options,
         index=0,
-        format_func=format_snap_label,
-        help="Select disclosure month (Indian mutual funds disclose holdings monthly, e.g. September 2026)"
+        format_func=format_snap_dropdown,
+        help="Select disclosure month (Indian mutual funds disclose holdings monthly by the 10th under SEBI guidelines, e.g. October 2026)"
     )
 
 with ingest_col3:

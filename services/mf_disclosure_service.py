@@ -327,14 +327,17 @@ class MFDisclosureService:
         try:
             existing_schemes = db.query(MFScheme).count()
             existing_snaps = db.query(MFPortfolioSnapshot).count()
-            if existing_schemes > 0 and existing_snaps >= 3 and not overwrite:
+            latest_expected_month = cls.get_latest_disclosure_months(1)[0][1]
+            existing_months = [s.month_str for s in db.query(MFPortfolioSnapshot).all()]
+
+            if existing_schemes > 0 and existing_snaps >= 3 and (latest_expected_month in existing_months) and not overwrite:
                 return {
                     "status": "already_seeded",
                     "schemes_count": existing_schemes,
                     "snapshots": [s.month_str for s in db.query(MFPortfolioSnapshot).order_by(MFPortfolioSnapshot.snapshot_date.desc()).all()]
                 }
 
-            if overwrite or (existing_schemes > 0 and existing_snaps < 3):
+            if overwrite or (existing_schemes == 0 or existing_snaps < 3 or latest_expected_month not in existing_months):
                 db.query(MFSchemeHolding).delete()
                 db.query(MFPortfolioSnapshot).delete()
                 db.query(MFScheme).delete()
