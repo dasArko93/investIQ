@@ -63,7 +63,12 @@ class MFConsensusEngine:
             # Schemes query with optional category filter & AUM ranking
             scheme_query = db.query(MFScheme)
             if category_filter and category_filter not in ("All", "All Categories"):
-                scheme_query = scheme_query.filter(MFScheme.category == category_filter)
+                if isinstance(category_filter, (list, tuple, set)):
+                    clean_cats = [c for c in category_filter if c and c not in ("All", "All Categories")]
+                    if clean_cats:
+                        scheme_query = scheme_query.filter(MFScheme.category.in_(clean_cats))
+                else:
+                    scheme_query = scheme_query.filter(MFScheme.category == category_filter)
             
             # Order schemes dynamically by AUM descending for cohort selection
             scheme_query = scheme_query.order_by(MFScheme.aum_cr.desc())
@@ -770,6 +775,10 @@ class MFConsensusEngine:
                     added_qty = 0.0
                     stock_budget = 0.0
 
+                conf_val = float(c["row"].get("Confidence %", 0.0))
+                mf_wt_val = float(c["row"].get("MF Consensus Weight %", 0.0))
+                u_wt_val = float(c["row"].get("User Weight %", 0.0))
+
                 if curr_qty <= 0.01 and added_qty > 0.01:
                     action = "BUY NEW"
                     qty_change = added_qty
@@ -789,11 +798,22 @@ class MFConsensusEngine:
                 post_val = target_qty * ltp
                 new_weight = round((post_val / new_total_val) * 100.0, 2) if new_total_val > 0 else target_weight
 
+                if action == "BUY NEW":
+                    if conf_val >= 50.0:
+                        rationale = f"Establish position: Strong institutional consensus ({conf_val:.0f}% confidence, {new_weight:.1f}% target)"
+                    else:
+                        rationale = f"Initiate position to improve portfolio diversification ({new_weight:.1f}% target)"
+                elif action == "BUY MORE":
+                    rationale = f"Scale underweight holding: Currently {u_wt_val:.1f}% vs {new_weight:.1f}% target"
+                else:
+                    rationale = f"Maintain holding: Consensus aligned ({u_wt_val:.1f}%)"
+
                 trade_orders.append({
                     "Security": ticker,
                     "Stock Name": c["row"].get("Stock Name", ticker),
                     "Market Cap Tier": c["row"].get("Market Cap Tier", "Mid Cap"),
                     "Action": action,
+                    "Rationale": rationale,
                     "Current Qty": int(round(curr_qty)),
                     "Qty Change": int(round(qty_change)),
                     "Target Qty": int(round(target_qty)),
@@ -802,7 +822,9 @@ class MFConsensusEngine:
                     "Target Weight %": new_weight,
                     "Sector": c["row"].get("Sector", "Diversified"),
                     "User Weight %": round(float(c["row"].get("User Weight %", 0.0)), 2),
-                    "Capital Shift ₹": int(round(trade_amt))
+                    "Capital Shift ₹": int(round(trade_amt)),
+                    "Confidence %": round(conf_val, 1),
+                    "MF Consensus Weight %": round(mf_wt_val, 2)
                 })
 
         else:
@@ -823,11 +845,19 @@ class MFConsensusEngine:
                 target_qty = round(target_val / ltp, 2) if ltp > 0 else 0.0
                 raw_qty_change = target_qty - curr_qty
                 
+                conf_val = float(row.get("Confidence %", 0.0))
+                mf_wt_val = float(row.get("MF Consensus Weight %", 0.0))
+                u_wt_val = float(row.get("User Weight %", 0.0))
+
                 if curr_qty <= 0.01 and target_qty > 0.01:
                     action = "BUY NEW"
                     qty_change = round(target_qty, 2)
                     target_qty = round(curr_qty + qty_change, 2)
                     trade_amt = round(-qty_change * ltp, 2)
+                    if conf_val >= 50.0:
+                        rationale = f"Establish position: Strong institutional consensus ({conf_val:.0f}% confidence, {target_weight:.1f}% target)"
+                    else:
+                        rationale = f"Initiate position to meet benchmark allocation ({target_weight:.1f}% target)"
                 elif raw_qty_change < -0.05:
                     if is_hybrid:
                         qty_change = round(raw_qty_change * 0.5, 2)
@@ -839,22 +869,35 @@ class MFConsensusEngine:
                         target_qty = round(max(0.0, curr_qty + qty_change), 2)
                         action = "TRIM" if target_qty > 0.01 else "SELL ALL"
                         trade_amt = round(abs(qty_change) * ltp, 2)
+
+                    if mf_wt_val <= 0.05:
+                        if action in ("SELL ALL", "SELL"):
+                            rationale = f"Full exit: 0% institutional consensus backing (unbacked speculative holding)"
+                        else:
+                            rationale = f"Trim non-benchmark holding ({conf_val:.0f}% MF confidence) to release capital for target buys"
+                    elif u_wt_val > 15.0:
+                        rationale = f"Trim heavy concentration ({u_wt_val:.1f}% vs {target_weight:.1f}% target) — capture LTCG exemption"
+                    else:
+                        rationale = f"Rebalance overweight position ({u_wt_val:.1f}% vs {target_weight:.1f}% target) to align with peer cohort"
                 elif raw_qty_change > 0.05 and curr_qty > 0.01:
                     action = "BUY MORE"
                     qty_change = round(raw_qty_change, 2)
                     target_qty = round(curr_qty + qty_change, 2)
                     trade_amt = round(-qty_change * ltp, 2)
+                    rationale = f"Scale underweight holding: Currently {u_wt_val:.1f}% vs {target_weight:.1f}% institutional target"
                 else:
                     action = "HOLD"
                     qty_change = 0.0
                     target_qty = curr_qty
                     trade_amt = 0.0
+                    rationale = f"Position aligned: Current weight ({u_wt_val:.1f}%) within tolerance of target ({target_weight:.1f}%)"
                 
                 trade_orders.append({
                     "Security": ticker,
                     "Stock Name": row.get("Stock Name", ticker),
                     "Market Cap Tier": row.get("Market Cap Tier", "Mid Cap"),
                     "Action": action,
+                    "Rationale": rationale,
                     "Current Qty": int(round(curr_qty)),
                     "Qty Change": int(round(qty_change)),
                     "Target Qty": int(round(target_qty)),
@@ -863,7 +906,9 @@ class MFConsensusEngine:
                     "Target Weight %": round(target_weight, 2),
                     "Sector": row.get("Sector", "Diversified"),
                     "User Weight %": round(float(row.get("User Weight %", 0.0)), 2),
-                    "Capital Shift ₹": int(round(float(row.get("Capital Shift ₹", 0.0))))
+                    "Capital Shift ₹": int(round(float(row.get("Capital Shift ₹", 0.0)))),
+                    "Confidence %": round(conf_val, 1),
+                    "MF Consensus Weight %": round(mf_wt_val, 2)
                 })
 
         orders_df = pd.DataFrame(trade_orders)
