@@ -311,8 +311,15 @@ with ingest_col2:
     )
 
 with ingest_col3:
-    categories = ["All", "Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
-    selected_category = st.selectbox("🎯 Fund Category", options=categories, index=0, help="Filter consensus by SEBI fund peer group")
+    cat_options = ["Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
+    selected_cats_multi = st.multiselect(
+        "🎯 Fund Category",
+        options=cat_options,
+        default=[],
+        placeholder="All Categories (or select e.g. Large Cap + ELSS)",
+        help="Filter consensus by one or more SEBI fund peer groups (e.g. Large Cap + ELSS). Leave empty for All Categories."
+    )
+    selected_category = selected_cats_multi if selected_cats_multi else "All"
 
 # ─── AMFI Scheme Browser ────────────────────────────────────────────────────
 with st.expander("📊 AMFI Scheme Universe Browser (Live — All Indian MF Schemes)", expanded=False):
@@ -515,10 +522,11 @@ with tab_consensus:
                 finally:
                     db_s.close()
                 if matched_stock:
+                    cat_label = " + ".join(selected_category) if isinstance(selected_category, list) else selected_category
                     st.info(
                         f"ℹ️ **{matched_stock.name} ({matched_stock.ticker})** is tracked in the Stock Universe "
                         f"(Sector: {matched_stock.sub_sector or 'General'}, MCap: ₹{matched_stock.market_cap or 0:,.0f} Cr), "
-                        f"but has **0% holding** across tracked mutual fund schemes in the **{selected_category}** category for **{selected_snapshot}**."
+                        f"but has **0% holding** across tracked mutual fund schemes in the **{cat_label}** category for **{selected_snapshot}**."
                     )
                 else:
                     st.info(f"No mutual fund holdings or universe stocks matched: **{search_stock.strip()}**")
@@ -527,6 +535,8 @@ with tab_consensus:
         top15_cons = filtered_cons.head(15).copy()
         if not top15_cons.empty:
             sorted_tickers = top15_cons["Ticker"].tolist()
+            cat_label = " + ".join(selected_category) if isinstance(selected_category, list) else selected_category
+            title_cat = cat_filter if cat_filter != 'All Categories' else cat_label
             cons_chart = (
                 alt.Chart(top15_cons)
                 .mark_bar(cornerRadiusTopRight=5, cornerRadiusBottomRight=5)
@@ -549,7 +559,7 @@ with tab_consensus:
                         "Schemes Holding:Q"
                     ]
                 )
-                .properties(height=max(380, len(top15_cons) * 26), title=f"Top Institutional Consensus Stocks — {cat_filter if cat_filter != 'All Categories' else selected_category} ({selected_snapshot})")
+                .properties(height=max(380, len(top15_cons) * 26), title=f"Top Institutional Consensus Stocks — {title_cat} ({selected_snapshot})")
             )
             st.altair_chart(cons_chart, width="stretch")
 
@@ -1174,16 +1184,18 @@ with tab_sim:
     sim_col1, sim_col2 = st.columns([1.8, 2.2])
 
     with sim_col1:
-        st.markdown("**1️⃣ Fund Category:**")
-        sim_cat_options = ["All Categories", "Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
-        chosen_sim_cat = st.selectbox(
-            "Select Fund Category",
+        st.markdown("**1️⃣ Fund Category (Multi-Select):**")
+        sim_cat_options = ["Large Cap", "Mid Cap", "Small Cap", "Flexi/Multi Cap", "ELSS", "Thematic/Sectoral"]
+        chosen_sim_cats = st.multiselect(
+            "Select Fund Categories",
             options=sim_cat_options,
-            index=0,
+            default=[],
             key="sim_category_choice",
-            help="Filter the institutional universe to a specific fund category."
+            placeholder="All Categories (or select e.g. Large Cap + ELSS...)",
+            help="Select one or more fund categories to benchmark against (e.g. Large Cap + ELSS, Mid Cap + Large Cap). Leave empty for All Categories."
         )
-        active_sim_cat = None if chosen_sim_cat == "All Categories" else chosen_sim_cat
+        active_sim_cat = chosen_sim_cats if chosen_sim_cats else None
+        chosen_sim_cat = " + ".join(chosen_sim_cats) if chosen_sim_cats else "All Categories"
 
         st.markdown("**2️⃣ Institutional Benchmark AUM Cohort:**")
         cohort_options = [
@@ -1227,16 +1239,16 @@ with tab_sim:
 
         st.markdown("**4️⃣ Capital Deployment Strategy:**")
         strat_options = [
-            "💰 Fresh Capital Injection (Zero Selling — Pure Buy)",
-            "💼 Self-Funding (Trim Overweights to Fund Buys)",
-            "⚖️ Hybrid (Inject Fresh Cash + Selective Trimming)"
+            "⚖️ Hybrid Deployment (Sell Some Existings & Buy New with Fresh Cash)",
+            "💰 Fresh Stock Buying (Deploy Fresh Cash for Pure Diversification — Zero Selling)",
+            "💼 Self-Funding (Zero Fresh Cash — Trim Overweights to Fund Buys)"
         ]
         chosen_strat = st.radio(
             "Select Rebalance Execution Mode",
             options=strat_options,
             index=0,
             key="sim_rebalance_strategy_mode",
-            help="Fresh Capital Injection preserves 100% of existing holdings and buys institutional consensus using new capital. Self-funding trims overweighted or non-MF stocks to fund buys."
+            help="Choose how fresh capital is deployed: Hybrid combines fresh cash with selective trims; Fresh Stock Buying deploys cash with 0 shares sold to maximize diversification."
         )
 
     # Probe baseline fresh capital required for Zero Selling / Pure Buy
@@ -1252,7 +1264,15 @@ with tab_sim:
     injected_capital_input = 0.0
     mode_key = "self_funding"
 
-    if "Fresh Capital Injection" in chosen_strat:
+    if "Hybrid Deployment" in chosen_strat or "Hybrid" in chosen_strat:
+        mode_key = "hybrid"
+        injected_capital_input = 0.0
+        st.info(
+            f"💡 **Dynamic Hybrid Alignment ({alignment_pct}%)**: "
+            f"Existing overweight holdings will be selectively trimmed, and the simulator will automatically calculate "
+            f"the exact fresh cash flow needed to meet target investments based on {chosen_sim_cat} ({cohort_short_name})."
+        )
+    elif "Fresh Stock Buying" in chosen_strat or "Fresh Capital" in chosen_strat:
         mode_key = "fresh_injection"
         st.info(
             f"💡 **Fresh Capital Needed for {alignment_pct}% Alignment with {chosen_sim_cat} ({cohort_short_name})**: "
@@ -1268,19 +1288,12 @@ with tab_sim:
             format="%.0f",
             key="sim_fresh_capital_input"
         )
-    elif "Hybrid" in chosen_strat:
-        mode_key = "hybrid"
-        injected_capital_input = 0.0
-        st.info(
-            f"💡 **Dynamic Hybrid Alignment ({alignment_pct}%)**: "
-            f"Existing overweight holdings will be selectively trimmed, and the simulator will automatically calculate "
-            f"the exact fresh cash flow needed to meet target investments based on {chosen_sim_cat} ({cohort_short_name})."
-        )
     else:
         mode_key = "self_funding"
         injected_capital_input = 0.0
         st.info(
-            f"💡 **Self-Funding Strategy**: Overweighted and non-consensus stocks in {chosen_sim_cat} will be trimmed "
+            f"💡 **Self-Funding Strategy (Zero Fresh Cash)**: "
+            f"Overweighted and non-consensus stocks in {chosen_sim_cat} will be trimmed "
             f"to fund high-conviction buys across Large, Mid, and Small Cap."
         )
 
@@ -1427,20 +1440,129 @@ with tab_sim:
         st.markdown("**📋 Actionable Rebalancing Orders & Execution Plan:**")
         st.caption("Detailed trade execution orders specifying stocks to trim and buy across market caps. Note: `Current Qty + Qty Change = Target Qty` (all share counts and amounts in neat integer values).")
 
+        # ── Quick Decision Matrix Reference Card ────────────────────────────
+        st.markdown(
+            """
+            <div style="background: #0f172a; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; border: 1px solid #1e293b; color: #f8fafc;">
+                <div style="font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+                    <span>⚡</span> Quick Decision Matrix
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #334155; color: #94a3b8; text-align: left;">
+                            <th style="padding: 8px 10px; width: 38%;">Portfolio Condition</th>
+                            <th style="padding: 8px 10px; width: 42%;">Primary Action</th>
+                            <th style="padding: 8px 10px; width: 20%;">Tax &amp; Cost Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #1e293b;">
+                            <td style="padding: 8px 10px; font-weight: 600;">Drift within ±25% of target</td>
+                            <td style="padding: 8px 10px; color: #38bdf8;">Hold / Do Nothing</td>
+                            <td style="padding: 8px 10px; color: #a3e635;">Zero cost</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #1e293b;">
+                            <td style="padding: 8px 10px; font-weight: 600;">Stock overweight + Strong thesis + Fresh cash available</td>
+                            <td style="padding: 8px 10px; color: #38bdf8;">Pause buying winner; route new cash to laggards</td>
+                            <td style="padding: 8px 10px; color: #a3e635;">Zero tax</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #1e293b;">
+                            <td style="padding: 8px 10px; font-weight: 600;">Stock overweight (&gt;15%) + No fresh cash</td>
+                            <td style="padding: 8px 10px; color: #38bdf8;">Trim lots &gt;12 months old (utilize ₹1.25L LTCG limit)</td>
+                            <td style="padding: 8px 10px; color: #fbbf24;">Low / Tax-optimized</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 10px; font-weight: 600;">Thesis broken (any weight)</td>
+                            <td style="padding: 8px 10px; color: #38bdf8;">Full exit immediately &amp; redeploy</td>
+                            <td style="padding: 8px 10px; color: #f87171;">Necessary risk control</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
         if not orders_df.empty:
+            with st.expander("📖 Decision Matrix Execution Guide — When & How to Use Each Filter", expanded=False):
+                st.markdown("""
+                The **Quick Decision Matrix** translates high-level portfolio rebalancing into practical, disciplined trade execution rules used by institutional portfolio managers. Rather than executing all trades at once, you can filter your orders based on your immediate tax, cash, and risk priorities:
+
+                * **🌐 Show All Orders (Complete Plan):** Review every proposed buy, trim, sell, and hold order before executing.
+                * **🛡️ Drift within ±25% (Hold / Do Nothing):** Positions within the acceptable tolerance band. **Zero cost, zero tax**—prevents unnecessary trading churn.
+                * **🚀 Route Cash to Laggards (Zero Tax):** Deploys fresh capital into underweighted/consensus stocks without selling winning holdings, avoiding capital gains tax.
+                * **✂️ Tax-Optimized Trims (>15% Overweight):** Focuses on trimming concentrated positions, utilizing the annual ₹1.25 Lakh tax-free LTCG exemption under Indian tax laws.
+                * **⚠️ Thesis Broken (Full Exit):** Identifies unbacked speculative bets or zero-consensus stocks for immediate liquidation and capital redeployment.
+                """)
+
+            st.markdown("##### 🎯 Filter Execution Plan by Decision Matrix Rule:")
+            filter_plan_choice = st.radio(
+                "Select Decision Matrix Filter to Apply:",
+                options=[
+                    "🌐 Show All Orders (Complete Execution Plan)",
+                    "🛡️ Drift within ±25% of target → Hold / Do Nothing (Zero cost)",
+                    "🚀 Stock overweight + Strong thesis + Fresh cash → Route cash to laggards (Zero tax)",
+                    "✂️ Stock overweight (>15%) + No fresh cash → Tax-Optimized Trims (₹1.25L LTCG limit)",
+                    "⚠️ Thesis broken (any weight) → Full exit immediately & redeploy (Risk control)"
+                ],
+                index=0,
+                key="execution_plan_matrix_filter_choice"
+            )
+
+            # Filter execution orders based on selection
+            if "Drift within ±25%" in filter_plan_choice:
+                mask = (orders_df["Action"] == "HOLD") | (
+                    (orders_df["Target Weight %"] > 0) & 
+                    (abs(orders_df["Target Weight %"] - orders_df["User Weight %"]) / orders_df["Target Weight %"] <= 0.25)
+                )
+                filtered_orders = orders_df[mask].copy()
+                plan_file_suffix = "hold_within_25pct_drift"
+                plan_status_note = "🛡️ **Plan Filter: Drift within ±25% of target** — Positions to hold; zero execution cost."
+            elif "Route cash to laggards" in filter_plan_choice:
+                mask = orders_df["Action"].isin(["BUY NEW", "BUY MORE"])
+                filtered_orders = orders_df[mask].copy()
+                plan_file_suffix = "buy_laggards_zero_tax"
+                plan_status_note = "🚀 **Plan Filter: Route cash to laggards** — Pauses buying winners; routes new cash to underweights with zero tax impact."
+            elif "Tax-Optimized Trims" in filter_plan_choice:
+                mask = (orders_df["Action"].isin(["TRIM", "SELL"])) | (
+                    (orders_df["User Weight %"] > 15.0) & (orders_df["User Weight %"] > orders_df["Target Weight %"])
+                )
+                filtered_orders = orders_df[mask].copy()
+                plan_file_suffix = "tax_optimized_trims"
+                plan_status_note = "✂️ **Plan Filter: Stock overweight (>15%) + No fresh cash** — Trims lots to utilize the ₹1.25L annual LTCG exemption."
+            elif "Thesis broken" in filter_plan_choice:
+                mask = (orders_df["Action"].isin(["SELL ALL", "SELL"])) | (
+                    (orders_df["User Weight %"] > 0) & (orders_df["Confidence %"] <= 10.0)
+                )
+                filtered_orders = orders_df[mask].copy()
+                plan_file_suffix = "thesis_broken_full_exit"
+                plan_status_note = "⚠️ **Plan Filter: Thesis broken (any weight)** — Complete liquidation and capital recovery for unbacked bets."
+            else:
+                filtered_orders = orders_df.copy()
+                plan_file_suffix = "all_orders"
+                plan_status_note = "🌐 **Complete Execution Plan** — Displaying all actionable buy, trim, sell, and hold rebalancing orders."
+
+            st.caption(plan_status_note)
+
             exec_cols = [
                 "Security",
                 "Stock Name",
                 "Market Cap Tier",
                 "Action",
+                "Rationale",
                 "Current Qty",
                 "Qty Change",
                 "Target Qty",
                 "LTP (₹)",
                 "Trade Amount (₹)",
+                "User Weight %",
                 "Target Weight %"
             ]
-            display_exec = orders_df[exec_cols].copy()
+            for col in exec_cols:
+                if col not in filtered_orders.columns:
+                    filtered_orders[col] = ""
+
+            display_exec = filtered_orders[exec_cols].copy()
 
             # Ensure all quantity and currency columns are integer
             display_exec["Current Qty"] = display_exec["Current Qty"].round().astype(int)
@@ -1448,37 +1570,55 @@ with tab_sim:
             display_exec["Target Qty"] = display_exec["Target Qty"].round().astype(int)
             display_exec["LTP (₹)"] = display_exec["LTP (₹)"].round().astype(int)
             display_exec["Trade Amount (₹)"] = display_exec["Trade Amount (₹)"].round().astype(int)
+            display_exec["User Weight %"] = display_exec["User Weight %"].round(2)
+            display_exec["Target Weight %"] = display_exec["Target Weight %"].round(2)
 
-            # CSV Download Button
+            # CSV Download Button & Summary Bar
             csv_data = display_exec.to_csv(index=False)
-            down_col1, down_col2 = st.columns([2.0, 3.0])
+            down_col1, down_col2 = st.columns([2.2, 2.8])
             with down_col1:
                 st.download_button(
                     label=f"📥 Download Execution Report ({cohort_short_name}) (CSV)",
                     data=csv_data,
-                    file_name=f"investiq_rebalance_orders_{cohort_short_name.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                    file_name=f"investiq_orders_{plan_file_suffix}_{cohort_short_name.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                     mime="text/csv",
                     width="stretch",
                     type="primary"
                 )
+            with down_col2:
+                filtered_buy_sum = abs(int(display_exec[display_exec["Action"].str.startswith("BUY")]["Trade Amount (₹)"].sum())) if not display_exec.empty else 0
+                filtered_trim_sum = int(display_exec[display_exec["Action"].isin(["TRIM", "SELL ALL", "SELL"])]["Trade Amount (₹)"].sum()) if not display_exec.empty else 0
+                st.markdown(
+                    f"<div style='padding-top:8px; color:#475569; font-size:0.9rem;'>"
+                    f"Orders: <strong>{len(display_exec)}</strong> &nbsp;|&nbsp; "
+                    f"Buy Value: <strong style='color:#16a34a;'>₹{filtered_buy_sum:,}</strong> &nbsp;|&nbsp; "
+                    f"Trim/Sell Value: <strong style='color:#dc2626;'>₹{filtered_trim_sum:,}</strong>"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
 
-            st.dataframe(
-                display_exec,
-                width="stretch",
-                hide_index=True,
-                column_config={
-                    "Security": st.column_config.TextColumn("Security", width="small"),
-                    "Stock Name": st.column_config.TextColumn("Stock Name", width="medium"),
-                    "Market Cap Tier": st.column_config.TextColumn("Market Cap Tier", width="small"),
-                    "Action": st.column_config.TextColumn("Action", width="small"),
-                    "Current Qty": st.column_config.NumberColumn("Current Qty", format="%d"),
-                    "Qty Change": st.column_config.NumberColumn("Qty Change", format="%+d"),
-                    "Target Qty": st.column_config.NumberColumn("Target Qty", format="%d"),
-                    "LTP (₹)": st.column_config.NumberColumn("LTP (₹)", format="₹%,d"),
-                    "Trade Amount (₹)": st.column_config.NumberColumn("Trade Amount (₹)", format="₹%+,d"),
-                    "Target Weight %": st.column_config.NumberColumn("Target Weight %", format="%.2f%%"),
-                }
-            )
+            if display_exec.empty:
+                st.info("ℹ️ No orders in the current portfolio match this specific matrix filter condition.")
+            else:
+                st.dataframe(
+                    display_exec,
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Security": st.column_config.TextColumn("Security", width="small"),
+                        "Stock Name": st.column_config.TextColumn("Stock Name", width="medium"),
+                        "Market Cap Tier": st.column_config.TextColumn("Market Cap Tier", width="small"),
+                        "Action": st.column_config.TextColumn("Action", width="small"),
+                        "Rationale": st.column_config.TextColumn("Action Rationale", width="large", help="Fundamental and institutional consensus rationale for this action"),
+                        "Current Qty": st.column_config.NumberColumn("Current Qty", format="%d"),
+                        "Qty Change": st.column_config.NumberColumn("Qty Change", format="%+d"),
+                        "Target Qty": st.column_config.NumberColumn("Target Qty", format="%d"),
+                        "LTP (₹)": st.column_config.NumberColumn("LTP (₹)", format="₹%,d"),
+                        "Trade Amount (₹)": st.column_config.NumberColumn("Trade Amount (₹)", format="₹%+,d"),
+                        "User Weight %": st.column_config.NumberColumn("Current Wt %", format="%.2f%%"),
+                        "Target Weight %": st.column_config.NumberColumn("Target Wt %", format="%.2f%%"),
+                    }
+                )
 
         # ── Expandable Detailed Allocation & Capital Shift Analysis ──────────
         with st.expander("🔍 View Detailed Portfolio Allocation & Capital Shift Breakdown", expanded=False):
