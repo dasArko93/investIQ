@@ -1320,6 +1320,39 @@ with tab_sim:
         new_port_base = int(round(sim_results.get("effective_portfolio_base", 0)))
         orders_df = sim_results.get("trade_orders_df", pd.DataFrame())
 
+        def _eval_action_rationale(r):
+            act = str(r.get("Action", "")).upper()
+            u_w = float(r.get("User Weight %", 0.0) or 0.0)
+            t_w = float(r.get("Target Weight %", 0.0) or 0.0)
+            cf = float(r.get("Confidence %", 0.0) or 0.0)
+            mf_w = float(r.get("MF Consensus Weight %", 0.0) or 0.0)
+
+            if "BUY NEW" in act:
+                if cf >= 50.0:
+                    return f"Establish position: Strong institutional consensus ({cf:.0f}% confidence, {t_w:.1f}% target)"
+                return f"Initiate position to improve portfolio diversification ({t_w:.1f}% target)"
+            elif "BUY" in act:
+                return f"Scale underweight holding: Currently {u_w:.1f}% vs {t_w:.1f}% institutional target"
+            elif "TRIM" in act:
+                if mf_w <= 0.05:
+                    return f"Trim non-benchmark holding ({cf:.0f}% MF confidence) to release capital for target buys"
+                elif u_w > 15.0:
+                    return f"Trim heavy concentration ({u_w:.1f}% vs {t_w:.1f}% target) — capture LTCG exemption"
+                return f"Rebalance overweight position ({u_w:.1f}% vs {t_w:.1f}% target) to align with peer cohort"
+            elif "SELL" in act:
+                return "Full exit: 0% institutional consensus backing (unbacked speculative holding)"
+            elif "HOLD" in act:
+                return f"Position aligned: Current weight ({u_w:.1f}%) within tolerance of target ({t_w:.1f}%)"
+            return f"Maintain holding aligned with target weight ({t_w:.1f}%)"
+
+        if not orders_df.empty:
+            if "Rationale" not in orders_df.columns:
+                orders_df["Rationale"] = orders_df.apply(_eval_action_rationale, axis=1)
+            else:
+                empty_mask = orders_df["Rationale"].isna() | orders_df["Rationale"].astype(str).str.strip().eq("")
+                if empty_mask.any():
+                    orders_df.loc[empty_mask, "Rationale"] = orders_df[empty_mask].apply(_eval_action_rationale, axis=1)
+
         num_trims = len(orders_df[orders_df["Action"].isin(["TRIM", "SELL ALL", "SELL"])]) if not orders_df.empty else 0
         num_buys = len(orders_df[orders_df["Action"].str.startswith("BUY")]) if not orders_df.empty else 0
 
@@ -1561,6 +1594,10 @@ with tab_sim:
             for col in exec_cols:
                 if col not in filtered_orders.columns:
                     filtered_orders[col] = ""
+
+            # Ensure Rationale is strictly populated in filtered_orders
+            if "Rationale" not in filtered_orders.columns or filtered_orders["Rationale"].fillna("").astype(str).str.strip().eq("").any():
+                filtered_orders["Rationale"] = filtered_orders.apply(_eval_action_rationale, axis=1)
 
             display_exec = filtered_orders[exec_cols].copy()
 
